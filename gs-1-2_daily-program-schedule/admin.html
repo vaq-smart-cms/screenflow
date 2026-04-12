@@ -1081,7 +1081,7 @@
       color: #74899d;
       font-size: 0.74rem;
       line-height: 1.35;
-      text-align: right;
+      text-align: center;
     }
 
     .site-attribution small {
@@ -1347,7 +1347,7 @@
     .page-attribution {
       margin-top: 20px;
       padding: 8px 0 4px;
-      text-align: right;
+      text-align: center;
       font-size: 0.72rem;
       color: #646e78;
     }
@@ -3434,14 +3434,14 @@
 
     function bindCoreEvents() {
       ui.scheduleToolsToggle.addEventListener('click', toggleScheduleTools);
-      ui.signInButton.addEventListener('click', handleSignIn);
-      ui.reloadButton.addEventListener('click', loadAllData);
-      ui.loadDateButton.addEventListener('click', loadAllData);
-      ui.      ui.addProgramButton.addEventListener('click', addProgramRow);
-      ui.validateButton.addEventListener('click', handleValidateClick);
-      ui.saveDraftButton.addEventListener('click', handleSaveDraft);
-      ui.createDraftButton.addEventListener('click', handleCreateDraft);
-      ui.publishButton.addEventListener('click', handlePublish);
+      signInButton.addEventListener('click', handleSignIn);
+      reloadButton.addEventListener('click', loadAllData);
+      loadDateButton.addEventListener('click', loadAllData);
+      ui.      addProgramButton.addEventListener('click', addProgramRow);
+      validateButton.addEventListener('click', handleValidateClick);
+      saveDraftButton.addEventListener('click', handleSaveDraft);
+      createDraftButton.addEventListener('click', handleCreateDraft);
+      publishButton.addEventListener('click', handlePublish);
     if (topSignOutButton) topSignOutButton.addEventListener('click', handleSignOut);
       ui.copyFromDateButton.addEventListener('click', handleCopyFromDate);
       ui.copyLastWeekButton.addEventListener('click', handleCopySameWeekdayFromLastWeek);
