@@ -1307,7 +1307,8 @@
       },
       pendingDeleteIndex: null,
       pendingDeleteExpiresAt: 0,
-      deleteConfirmTimerId: null
+      deleteConfirmTimerId: null,
+      timeUiState: {}
     };
 
     const DEBUG = false;
@@ -1434,8 +1435,26 @@
       };
     }
 
+    function getTimeUiStateKey(entryId, field) {
+      return `${entryId || 'noid'}:${field}`;
+    }
+
+    function getEffectiveTimeUiParts(entry, field, storedTime) {
+      const entryId = entry?.id || '';
+      const key = getTimeUiStateKey(entryId, field);
+      const parsedStored = parseStoredTimeToUiParts(storedTime);
+
+      if (parsedStored.hour12 && parsedStored.minute && parsedStored.period) {
+        appState.timeUiState[key] = { ...parsedStored };
+        return parsedStored;
+      }
+
+      return appState.timeUiState[key] || parsedStored;
+    }
+
     function getTimeControlHtml(index, field, storedTime) {
-      const parts = parseStoredTimeToUiParts(storedTime);
+      const entry = appState.editableEntries[index] || null;
+      const parts = getEffectiveTimeUiParts(entry, field, storedTime);
 
       return `
         <div class="time-control-group">
@@ -1952,13 +1971,25 @@
       return { data: result.data || null, error: result.error || null };
     }
 
+        function getSanitizedEditableEntries() {
+      return cloneEntries(appState.editableEntries).map((entry) => {
+        const cleanedEntry = { ...entry };
+        Object.keys(cleanedEntry).forEach((key) => {
+          if (key.endsWith('__ui')) {
+            delete cleanedEntry[key];
+          }
+        });
+        return cleanedEntry;
+      });
+    }
+
     async function saveDraftSchedule() {
       if (!appState.draftSchedule) {
         return { error: { message: 'No draft schedule row is currently loaded.' } };
       }
 
       const payload = {
-        entries_json: appState.editableEntries,
+        entries_json: getSanitizedEditableEntries(),
         day_note: ui.dayNoteInput.value.trim(),
         saved_at: new Date().toISOString()
       };
@@ -2262,17 +2293,27 @@
       const entry = appState.editableEntries[index];
       if (!entry) return;
 
-      const currentParts = parseStoredTimeToUiParts(entry[field] || '');
+      const key = getTimeUiStateKey(entry.id, field);
+      const existingState = appState.timeUiState[key] || parseStoredTimeToUiParts(entry[field] || '');
+      const nextParts = {
+        hour12: existingState.hour12 || '',
+        minute: existingState.minute || '',
+        period: existingState.period || ''
+      };
 
-      if (part === 'hour') currentParts.hour12 = partValue;
-      if (part === 'minute') currentParts.minute = partValue;
-      if (part === 'period') currentParts.period = partValue;
+      if (part === 'hour') nextParts.hour12 = partValue;
+      if (part === 'minute') nextParts.minute = partValue;
+      if (part === 'period') nextParts.period = partValue;
 
-      entry[field] = convertUiPartsToStoredTime(
-        currentParts.hour12,
-        currentParts.minute,
-        currentParts.period
+      appState.timeUiState[key] = nextParts;
+
+      const completedStoredTime = convertUiPartsToStoredTime(
+        nextParts.hour12,
+        nextParts.minute,
+        nextParts.period
       );
+
+      entry[field] = completedStoredTime || '';
 
       setSaveStatus('Unsaved changes.', 'neutral');
 
@@ -2284,7 +2325,7 @@
       }
     }
 
-    function updateEntryField(index, field, value, options = {}) {
+        function updateEntryField(index, field, value, options = {}) {
       if (!appState.editableEntries[index]) return;
 
       appState.editableEntries[index][field] = value;
@@ -2583,7 +2624,7 @@
         }
 
         const writeResult = await overwriteDraftFromSource(targetDraft.id, {
-          entries_json: appState.editableEntries,
+          entries_json: getSanitizedEditableEntries(),
           day_note: ui.dayNoteInput.value.trim(),
           timezone_name: appState.draftSchedule.timezone_name || 'America/Vancouver'
         });
@@ -2879,6 +2920,7 @@
 
     async function loadAllData() {
       clearPendingDeleteState();
+      appState.timeUiState = {};
       const selectedDate = getSelectedDate();
 
       if (!selectedDate) {
