@@ -6,6 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
+    @font-face {
+      font-family: 'BlissPro';
+      src:
+        url('assets/fonts/BlissPro-Bold.woff2') format('woff2'),
+        url('assets/fonts/BlissPro-Bold.woff') format('woff'),
+        url('assets/BlissPro-Bold.woff2') format('woff2'),
+        url('assets/BlissPro-Bold.woff') format('woff');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
       --vaq-green: #7d9b2d;
       --vaq-blue: #64a5c3;
@@ -79,6 +91,21 @@
     h1, h2, h3, h4 {
       margin-top: 0;
       color: var(--text-heading);
+    }
+
+    h1 {
+      font-family: 'BlissPro', Arial, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    h2 {
+      color: #355f79;
+    }
+
+    h3 {
+      color: #325770;
+      padding-left: 4px;
     }
 
     p {
@@ -352,18 +379,39 @@
     .tools-actions > button,
     .controls-row > button {
       flex: 1 1 210px;
+      min-width: 190px;
     }
 
     .controls-row > .field-block {
       flex: 1 1 220px;
     }
 
+    .button-publish-live {
+      position: relative;
+      background: linear-gradient(180deg, #f08a3f 0%, var(--accent) 100%);
+      border-color: #f0ab76;
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 18px rgba(230,120,45,0.22);
+      animation: pulsePublish 1.8s ease-in-out infinite;
+    }
+
+    .button-publish-live:hover:not(:disabled) {
+      background: linear-gradient(180deg, #ed8040 0%, var(--accent-hover) 100%);
+      border-color: #ee9f66;
+    }
+
+    @keyframes pulsePublish {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
+
     .summary-card {
-      background: linear-gradient(180deg, var(--report-panel) 0%, var(--report-panel-dark) 100%);
-      border: 1px solid #c4d4dc;
+      background: linear-gradient(180deg, #425360 0%, #2d3d4a 100%);
+      border: 1px solid #526675;
       border-radius: 14px;
-      padding: 18px;
-      color: var(--text-heading);
+      padding: 20px;
+      color: #eef5fa;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
     .summary-topline {
@@ -376,55 +424,115 @@
     }
 
     .summary-date {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      color: var(--text-heading);
+      color: #ffffff;
     }
 
-    .summary-grid {
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #f7fbff;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .summary-report {
       display: grid;
-      grid-template-columns: repeat(4, minmax(150px, 1fr));
-      gap: 12px;
+      grid-template-columns: 190px 1fr;
+      gap: 8px 16px;
       margin-bottom: 14px;
+      font-size: 0.96rem;
+      line-height: 1.45;
     }
 
-    .summary-stat {
-      background: rgba(255, 255, 255, 0.84);
-      border: 1px solid #cddbe1;
-      border-radius: 12px;
-      padding: 12px;
-    }
-
-    .summary-stat-label {
-      display: block;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--neutral);
-      margin-bottom: 5px;
-    }
-
-    .summary-stat-value {
-      font-size: 1rem;
+    .summary-report dt {
+      margin: 0;
+      color: #b7cad7;
       font-weight: 700;
-      color: #1f2d3a;
-      line-height: 1.35;
-      word-break: break-word;
+    }
+
+    .summary-report dd {
+      margin: 0;
+      color: #f2f7fb;
+    }
+
+    .summary-divider {
+      height: 1px;
+      margin: 16px 0 14px;
+      background: rgba(255,255,255,0.12);
     }
 
     .summary-note {
-      padding: 12px 14px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      line-height: 1.5;
-      color: var(--text-soft);
+      padding: 0;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      line-height: 1.55;
+      color: #e9f2f8;
+      margin-bottom: 8px;
     }
 
     .summary-note strong {
       display: block;
       margin-bottom: 5px;
-      color: var(--text-heading);
+      color: #c8d7e2;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    .summary-mini-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #c8d7e2;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .summary-mini-list {
+      display: grid;
+      gap: 6px;
+      font-size: 0.86rem;
+    }
+
+    .summary-mini-row {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 6px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .summary-mini-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .summary-mini-meta {
+      color: #b7cad7;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .summary-mini-text {
+      color: #f4f9fc;
+      min-width: 0;
+    }
+
+    .summary-mini-text strong {
+      font-weight: 700;
+    }
+
+    .summary-empty {
+      color: #d7e3eb;
+      font-style: italic;
     }
 
 
@@ -450,6 +558,11 @@
     .accordion-toggle:hover:not(:disabled) {
       transform: none;
       background: #f6f9fb;
+    }
+
+    .accordion-toggle:focus-visible {
+      outline: 3px solid rgba(100, 165, 195, 0.18);
+      outline-offset: -3px;
     }
 
     .accordion-toggle-text {
@@ -624,6 +737,33 @@
       flex-wrap: wrap;
     }
 
+    .row-actions > button {
+      flex: 1 1 116px;
+      min-width: 116px;
+    }
+
+    .row-title-input {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.01em;
+    }
+
+    .row-description-input {
+      font-size: 0.94rem;
+    }
+
+    .col-title {
+      width: 24%;
+    }
+
+    .col-description {
+      width: 20%;
+    }
+
+    .col-actions {
+      width: 168px;
+    }
+
     .small-note {
       font-size: 0.92rem;
       color: var(--text-soft);
@@ -765,8 +905,8 @@
       <section class="panel">
         <div class="section-heading">
           <div>
-            <h3>Schedule Summary</h3>
-            <p>A quick read on what is loaded and what is live.</p>
+            <h3>📋 Schedule Summary</h3>
+            <p>A read-only report of the loaded schedule and a miniature preview.</p>
           </div>
         </div>
         <div id="schedule-summary" class="summary-card">No schedule loaded yet.</div>
@@ -775,7 +915,7 @@
       <section class="panel accordion-panel panel-soft" id="schedule-tools-panel">
         <button id="schedule-tools-toggle" type="button" class="accordion-toggle" aria-expanded="false" aria-controls="schedule-tools-content">
           <span class="accordion-toggle-text">
-            <span class="field-label" style="margin-bottom:0;">Schedule Tools</span>
+            <span class="field-label" style="margin-bottom:0;">🧰 Schedule Tools</span>
             <span class="muted">Copy from another date or repeat a validated draft into future weeks.</span>
           </span>
           <span class="accordion-chevron" aria-hidden="true">▾</span>
@@ -822,22 +962,22 @@
       <section class="panel">
         <div class="section-heading">
           <div>
-            <h3>Day Note</h3>
-            <p>Optional note for closures, special messaging, or day-specific context.</p>
+            <h3>📝 Day Note</h3>
+            <p>Internal note for staff context and schedule identification.</p>
           </div>
         </div>
 
         <label>
-          <span class="field-label">Displayed Day Note</span>
-          <textarea id="day-note-input" placeholder="Example: B.C. Family Day hours in effect. Sea Lions Talk moved to the upper plaza due to weather."></textarea>
+          <span class="field-label">Internal Day Note</span>
+          <textarea id="day-note-input" placeholder="Example: Family Day template. Rainy-day schedule. Spring break weekday version."></textarea>
         </label>
-        <div class="field-help">This note saves with the draft and is carried to live when published.</div>
+        <div class="field-help">This note is for admin reference only. It saves with the schedule record and is not currently shown on signage.</div>
       </section>
 
       <section class="panel">
         <div class="section-heading">
           <div>
-            <h3>Draft Schedule Entries</h3>
+            <h3>🗓️ Draft Schedule Entries</h3>
             <p>Edit program rows below, then validate, save, and publish.</p>
           </div>
         </div>
@@ -852,7 +992,7 @@
           <button id="add-program-button" type="button" class="button-secondary">Add Program</button>
           <button id="validate-button" type="button" class="button-accent">Validate Schedule</button>
           <button id="save-draft-button" type="button" class="button-primary">Save Draft</button>
-          <button id="publish-button" type="button" class="button-secondary">Publish to Live</button>
+          <button id="publish-button" type="button" class="button-publish-live">Publish Live</button>
         </div>
 
         <div id="save-status" class="save-status neutral"></div>
@@ -956,7 +1096,7 @@
     }
 
     function setSaveStatus(message, type = 'neutral') {
-      ui.saveStatus.textContent = message;
+      ui.saveStatus.innerHTML = message;
       ui.saveStatus.className = `save-status ${type}`;
     }
 
@@ -1168,6 +1308,87 @@
       }
 
       return `${parts.hour12}:${parts.minute} ${parts.period}`;
+    }
+
+    function formatFriendlyDateYmd(ymd) {
+      if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) {
+        return '—';
+      }
+
+      const [year, month, day] = ymd.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day);
+
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Vancouver',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(dateObj);
+    }
+
+    function formatFriendlyTimestamp(isoString) {
+      if (!isoString) {
+        return 'Not yet recorded';
+      }
+
+      const dateObj = new Date(isoString);
+      if (Number.isNaN(dateObj.getTime())) {
+        return isoString;
+      }
+
+      const dateText = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Vancouver',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(dateObj);
+
+      const timeText = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Vancouver',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).format(dateObj).replace(' a.m.', ' a.m.').replace(' p.m.', ' p.m.');
+
+      return `${dateText} at ${timeText}`;
+    }
+
+    function getLocationDisplayName(locationKey) {
+      if (!locationKey) return 'No location';
+      const style = getLocationStyleByKey(locationKey);
+      return style?.display_name || locationKey;
+    }
+
+    function getSummaryMiniPreviewHtml(entries) {
+      const safeEntries = Array.isArray(entries) ? entries : [];
+      if (!safeEntries.length) {
+        return '<div class="summary-empty">No program rows are currently in this draft.</div>';
+      }
+
+      const sortedEntries = [...safeEntries].sort((a, b) => {
+        const aStart = parseTimeToMinutes(a.start_time || '') ?? 9999;
+        const bStart = parseTimeToMinutes(b.start_time || '') ?? 9999;
+        return aStart - bStart;
+      });
+
+      return sortedEntries.slice(0, 10).map((entry) => {
+        const metaParts = [
+          formatStoredTimeForDisplay(entry.start_time || ''),
+          getLocationDisplayName(entry.location_key || '')
+        ].filter(Boolean);
+
+        const titleText = entry.title ? escapeHtml(entry.title) : 'Untitled program';
+        const cancelText = entry.is_cancelled ? ' <em>(cancelled)</em>' : '';
+        const descText = entry.description ? `<div>${escapeHtml(entry.description)}</div>` : '';
+
+        return `
+          <div class="summary-mini-row">
+            <div class="summary-mini-meta">${escapeHtml(metaParts.join(' · '))}</div>
+            <div class="summary-mini-text"><strong>${titleText}</strong>${cancelText}${descText}</div>
+          </div>
+        `;
+      }).join('');
     }
 
     function getTodayInVancouverYmd() {
@@ -1541,10 +1762,10 @@
         ui.scheduleSummary.innerHTML = `
           <div class="summary-topline">
             <div class="summary-date">No draft loaded</div>
-            <span class="status-pill">Awaiting draft</span>
+            <span class="summary-pill">Awaiting draft</span>
           </div>
           <div class="summary-note">
-            <strong>What to do next</strong>
+            <strong>Next step</strong>
             Load a date with an existing draft, or create a new empty draft for the selected date.
           </div>
         `;
@@ -1560,53 +1781,44 @@
       const lastEnd = [...activeEntries]
         .filter((entry) => entry.end_time)
         .sort((a, b) => String(a.end_time).localeCompare(String(b.end_time))).slice(-1)[0];
-      const publishedText = appState.liveSchedule?.published_at || 'Not yet published';
-      const draftSavedText = appState.draftSchedule.saved_at || 'Not yet saved';
+      const publishedText = appState.liveSchedule?.published_at
+        ? formatFriendlyTimestamp(appState.liveSchedule.published_at)
+        : 'Not yet published';
+      const draftSavedText = appState.draftSchedule.saved_at
+        ? formatFriendlyTimestamp(appState.draftSchedule.saved_at)
+        : 'Not yet saved';
 
       ui.scheduleSummary.innerHTML = `
         <div class="summary-topline">
-          <div class="summary-date">${escapeHtml(appState.draftSchedule.schedule_date)}</div>
-          <span class="status-pill">${appState.liveSchedule ? 'Live version exists' : 'Draft only'}</span>
+          <div class="summary-date">${escapeHtml(formatFriendlyDateYmd(appState.draftSchedule.schedule_date))}</div>
+          <span class="summary-pill">${appState.liveSchedule ? 'Live version exists' : 'Draft only'}</span>
         </div>
 
-        <div class="summary-grid">
-          <div class="summary-stat">
-            <span class="summary-stat-label">Programs</span>
-            <div class="summary-stat-value">${entries.length}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">Active</span>
-            <div class="summary-stat-value">${activeEntries.length}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">Cancelled</span>
-            <div class="summary-stat-value">${cancelledEntries.length}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">Timezone</span>
-            <div class="summary-stat-value">${escapeHtml(appState.draftSchedule.timezone_name || 'America/Vancouver')}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">First Start</span>
-            <div class="summary-stat-value">${escapeHtml(formatStoredTimeForDisplay(firstStart?.start_time || ''))}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">Last End</span>
-            <div class="summary-stat-value">${escapeHtml(formatStoredTimeForDisplay(lastEnd?.end_time || ''))}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">Draft Saved</span>
-            <div class="summary-stat-value">${escapeHtml(draftSavedText)}</div>
-          </div>
-          <div class="summary-stat">
-            <span class="summary-stat-label">Live Published</span>
-            <div class="summary-stat-value">${escapeHtml(publishedText)}</div>
-          </div>
-        </div>
+        <dl class="summary-report">
+          <dt>Programs</dt>
+          <dd>${entries.length} total, ${activeEntries.length} active, ${cancelledEntries.length} cancelled</dd>
 
-        <div class="summary-note">
-          <strong>Day Note</strong>
-          ${escapeHtml(ui.dayNoteInput.value.trim() || 'None')}
+          <dt>Timezone</dt>
+          <dd>${escapeHtml(appState.draftSchedule.timezone_name || 'America/Vancouver')}</dd>
+
+          <dt>Coverage</dt>
+          <dd>${escapeHtml(formatStoredTimeForDisplay(firstStart?.start_time || ''))} to ${escapeHtml(formatStoredTimeForDisplay(lastEnd?.end_time || ''))}</dd>
+
+          <dt>Draft saved</dt>
+          <dd>${escapeHtml(draftSavedText)}</dd>
+
+          <dt>Live published</dt>
+          <dd>${escapeHtml(publishedText)}</dd>
+
+          <dt>Internal day note</dt>
+          <dd>${escapeHtml(ui.dayNoteInput.value.trim() || 'None')}</dd>
+        </dl>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-mini-title">Mini Schedule Preview</div>
+        <div class="summary-mini-list">
+          ${getSummaryMiniPreviewHtml(entries)}
         </div>
       `;
     }
@@ -1657,11 +1869,11 @@
       }
 
       if (!appState.draftSchedule) {
-        ui.editingDateMessage.textContent = `Selected date: ${selectedDate}. No draft exists yet for this date.`;
+        ui.editingDateMessage.textContent = `Selected date: ${formatFriendlyDateYmd(selectedDate)}. No draft exists yet for this date.`;
         return;
       }
 
-      ui.editingDateMessage.textContent = `Editing draft schedule for ${selectedDate}.`;
+      ui.editingDateMessage.textContent = `Editing draft schedule for ${formatFriendlyDateYmd(selectedDate)}.`;
     }
 
     function updateTimeFieldPart(index, field, part, partValue, options = {}) {
@@ -1769,7 +1981,7 @@
       renderEditableScheduleTable();
 
       if (!isSameRow) {
-        setSaveStatus('Press delete again to confirm.', 'neutral');
+        setSaveStatus('⚠️&nbsp;Press delete again to confirm.', 'neutral');
       }
     }
 
@@ -1824,20 +2036,20 @@
           <tr class="${rowClass}">
             <td>${getTimeControlHtml(index, 'start_time', entry.start_time || '')}</td>
             <td>${getTimeControlHtml(index, 'end_time', entry.end_time || '')}</td>
-            <td>
-              <input type="text" value="${escapeHtml(entry.title || '')}" data-index="${index}" data-field="title">
+            <td class="col-title">
+              <input class="row-title-input" type="text" value="${escapeHtml(entry.title || '')}" data-index="${index}" data-field="title">
             </td>
             <td>
               ${getLocationCellHtml(index, entry.location_key || '')}
             </td>
+            <td class="col-description">
+              <input class="row-description-input" type="text" value="${escapeHtml(entry.description || '')}" data-index="${index}" data-field="description">
+              ${rowErrorsHtml}
+            </td>
             <td class="checkbox-cell">
               <input type="checkbox" ${entry.is_cancelled ? 'checked' : ''} data-index="${index}" data-field="is_cancelled">
             </td>
-            <td>
-              <input type="text" value="${escapeHtml(entry.description || '')}" data-index="${index}" data-field="description">
-              ${rowErrorsHtml}
-            </td>
-            <td>
+            <td class="col-actions">
               <div class="row-actions">
                 <button type="button" class="button-secondary button-small" data-action="duplicate" data-index="${index}">Duplicate</button>
                 <button type="button" class="${isConfirmingDelete ? 'button-confirm-delete' : 'button-danger'} button-small" data-action="delete" data-index="${index}">${isConfirmingDelete ? 'Confirm?' : 'Delete'}</button>
@@ -1854,11 +2066,11 @@
               <tr>
                 <th>Start</th>
                 <th>End</th>
-                <th>Title</th>
+                <th class="col-title">Title</th>
                 <th>Location</th>
+                <th class="col-description">Optional Description</th>
                 <th>Cancelled</th>
-                <th>Description / Row Errors</th>
-                <th>Actions</th>
+                <th class="col-actions">Actions</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
@@ -2145,7 +2357,7 @@
       updateDebugOutput();
 
       if (appState.validation.isValid) {
-        setSaveStatus('Validation passed.', 'success');
+        setSaveStatus('✅&nbsp;Validation passed.', 'success');
       } else {
         setSaveStatus('Validation failed. Fix errors before saving.', 'error');
       }
@@ -2273,7 +2485,7 @@
       ui.scheduleSummary.textContent = 'Loading...';
       ui.scheduleTableContainer.innerHTML = '';
       ui.dayNoteInput.value = '';
-      setSaveStatus('', 'neutral');
+      setSaveStatus('&nbsp;', 'neutral');
 
       const locationStylesResult = await loadLocationStyles();
       const liveScheduleResult = await loadLiveSchedule(selectedDate);
@@ -2301,9 +2513,9 @@
       ui.dayNoteInput.value = appState.draftSchedule?.day_note || '';
 
       if (!appState.draftSchedule) {
-        setSaveStatus('No draft exists for this date. Click "Create Empty Draft" to begin.', 'neutral');
+        setSaveStatus('⚠️&nbsp;No draft exists for this date. Click &quot;Create Empty Draft&quot; to begin.', 'neutral');
       } else {
-        setSaveStatus('', 'neutral');
+        setSaveStatus('&nbsp;', 'neutral');
       }
 
       appState.validation = {
@@ -2393,7 +2605,7 @@
       ui.scheduleTableContainer.innerHTML = '';
       ui.dayNoteInput.value = '';
       ui.validationPanel.style.display = 'none';
-      setSaveStatus('', 'neutral');
+      setSaveStatus('&nbsp;', 'neutral');
       await showCorrectPanel();
     }
 
@@ -2414,14 +2626,14 @@
       }
 
       const ok = window.confirm(
-        `Publish the draft schedule for ${appState.draftSchedule.schedule_date} to live?`
+        `Publish the draft schedule for ${formatFriendlyDateYmd(appState.draftSchedule.schedule_date)} live?`
       );
 
       if (!ok) {
         return;
       }
 
-      setSaveStatus('Publishing to live...', 'neutral');
+      setSaveStatus('Publishing live...', 'neutral');
       ui.publishButton.disabled = true;
 
       const result = await publishDraftToLive();
@@ -2436,10 +2648,11 @@
       appState.liveSchedule = result.data;
       updateDebugOutput();
       renderScheduleSummary();
-      setSaveStatus('Draft published to live successfully.', 'success');
+      setSaveStatus('Draft published live successfully.', 'success');
     }
 
     function bindCoreEvents() {
+      ui.scheduleToolsToggle.addEventListener('click', toggleScheduleTools);
       ui.signInButton.addEventListener('click', handleSignIn);
       ui.reloadButton.addEventListener('click', loadAllData);
       ui.loadDateButton.addEventListener('click', loadAllData);
@@ -2465,6 +2678,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      setScheduleToolsOpen(false);
       bindCoreEvents();
       bindTableDelegatedEvents();
       showCorrectPanel();
