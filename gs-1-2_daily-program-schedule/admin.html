@@ -466,6 +466,18 @@
       font-size: 0.88rem;
     }
 
+    .summary-pill.is-live {
+      background: #e6782d;
+      border-color: #e6782d;
+      color: #ffffff;
+    }
+
+    .summary-pill.is-draft {
+      background: #7d9b2d;
+      border-color: #7d9b2d;
+      color: #ffffff;
+    }
+
     .summary-report {
       display: grid;
       grid-template-columns: 190px 1fr;
@@ -600,9 +612,9 @@
 
     .accordion-chevron {
       flex: 0 0 auto;
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       line-height: 1;
-      width: 20px;
+      width: 24px;
       text-align: center;
       color: var(--neutral);
       transition: transform 160ms ease;
@@ -637,6 +649,21 @@
 
     #schedule-tools-content .tools-actions {
       align-items: stretch;
+      margin-top: auto !important;
+    }
+
+    #schedule-tools-content .grid-2 {
+      align-items: stretch;
+    }
+
+    #schedule-tools-content .schedule-tool-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #schedule-tools-content .tools-grid {
+      align-items: end;
     }
 
     #schedule-tools-content .tools-actions > button {
@@ -778,6 +805,20 @@
 
     .has-row-errors {
       background: #fff8f8;
+    }
+
+    .schedule-row {
+      transition: opacity 500ms ease, transform 500ms ease, max-height 500ms ease;
+      max-height: 200px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .schedule-row.is-removing {
+      opacity: 0;
+      transform: translateY(-8px);
+      max-height: 0;
+      overflow: hidden;
     }
 
     .time-control-group {
@@ -1135,6 +1176,7 @@
         rowErrors: {}
       },
       pendingDeleteIndex: null,
+      pendingDeleteExpiresAt: 0,
       deleteConfirmTimerId: null
     };
 
@@ -1892,10 +1934,17 @@
         ? formatFriendlyTimestamp(appState.draftSchedule.saved_at)
         : 'Not yet saved';
 
+      const summaryPillClass = appState.liveSchedule
+        ? 'is-live'
+        : (appState.draftSchedule ? 'is-draft' : '');
+      const summaryPillLabel = appState.liveSchedule
+        ? 'Live version exists'
+        : (appState.draftSchedule ? 'Draft version exists' : 'Awaiting draft');
+
       ui.scheduleSummary.innerHTML = `
         <div class="summary-topline">
           <div class="summary-date">${escapeHtml(formatFriendlyDateYmd(appState.draftSchedule.schedule_date))}</div>
-          <span class="summary-pill ${appState.liveSchedule ? 'is-live' : ''}">${appState.liveSchedule ? 'Live version exists' : 'Draft only'}</span>
+          <span class="summary-pill ${summaryPillClass}">${summaryPillLabel}</span>
         </div>
 
         <dl class="summary-report">
@@ -2053,6 +2102,15 @@
       setSaveStatus('Unsaved changes.', 'neutral');
       refreshEditorView();
     }
+    function getDeleteRowElement(index, fallbackElement = null) {
+      if (fallbackElement && fallbackElement.closest) {
+        const fallbackRow = fallbackElement.closest('tr');
+        if (fallbackRow) return fallbackRow;
+      }
+
+      return ui.scheduleTableContainer.querySelector(`tr[data-row-index="${index}"]`);
+    }
+
 
     function clearPendingDeleteState(options = {}) {
       if (appState.deleteConfirmTimerId) {
@@ -2062,6 +2120,7 @@
 
       const hadPendingDelete = appState.pendingDeleteIndex !== null;
       appState.pendingDeleteIndex = null;
+      appState.pendingDeleteExpiresAt = 0;
 
       if (options.refresh && hadPendingDelete) {
         renderEditableScheduleTable();
@@ -2077,8 +2136,10 @@
       }
 
       appState.pendingDeleteIndex = index;
+      appState.pendingDeleteExpiresAt = Date.now() + 4000;
       appState.deleteConfirmTimerId = window.setTimeout(() => {
         appState.pendingDeleteIndex = null;
+        appState.pendingDeleteExpiresAt = 0;
         appState.deleteConfirmTimerId = null;
         renderEditableScheduleTable();
       }, 4000);
@@ -2090,16 +2151,33 @@
       }
     }
 
-    function deleteProgramRow(index, forceDelete = false) {
+    function deleteProgramRow(index, forceDelete = false, rowElement = null) {
       const entry = appState.editableEntries[index];
       if (!entry) return;
 
-      if (!forceDelete && appState.pendingDeleteIndex !== index) {
+      const isArmed = appState.pendingDeleteIndex === index && appState.pendingDeleteExpiresAt > Date.now();
+
+      if (!forceDelete && !isArmed) {
         armDeleteConfirmation(index);
         return;
       }
 
+      const row = getDeleteRowElement(index, rowElement);
+
       clearPendingDeleteState();
+
+      if (row) {
+        row.classList.add('is-removing');
+
+        window.setTimeout(() => {
+          appState.editableEntries.splice(index, 1);
+          setSaveStatus('Unsaved changes.', 'neutral');
+          refreshEditorView();
+        }, 500);
+
+        return;
+      }
+
       appState.editableEntries.splice(index, 1);
       setSaveStatus('Unsaved changes.', 'neutral');
       refreshEditorView();
@@ -2138,7 +2216,7 @@
         const isConfirmingDelete = appState.pendingDeleteIndex === index;
 
         return `
-          <tr class="${rowClass}">
+          <tr class="schedule-row ${rowClass}" data-row-index="${index}">
             <td>${getTimeControlHtml(index, 'start_time', entry.start_time || '')}</td>
             <td>${getTimeControlHtml(index, 'end_time', entry.end_time || '')}</td>
             <td class="col-title">
@@ -2454,8 +2532,9 @@
       }
 
       if (action === 'delete') {
-        const isConfirmingDelete = button.classList.contains('button-confirm-delete') || appState.pendingDeleteIndex === index;
-        deleteProgramRow(index, isConfirmingDelete);
+        const isConfirmingDelete = button.classList.contains('button-confirm-delete')
+          || (appState.pendingDeleteIndex === index && appState.pendingDeleteExpiresAt > Date.now());
+        deleteProgramRow(index, isConfirmingDelete, button);
       }
     }
 
