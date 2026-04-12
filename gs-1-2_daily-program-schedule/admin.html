@@ -1072,6 +1072,166 @@
       display: none;
     }
 
+    
+    .site-attribution {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin: 14px 0 6px;
+      color: #74899d;
+      font-size: 0.74rem;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .site-attribution small {
+      display: inline-block;
+      max-width: 720px;
+    }
+
+    @media (max-width: 1200px) {
+      .page-shell {
+        max-width: 100%;
+      }
+
+      .page-title {
+        font-size: 1.82rem;
+      }
+
+      .page-subtitle {
+        max-width: none;
+      }
+
+      .section-heading,
+      .summary-topline,
+      .summary-live-header {
+        align-items: start;
+      }
+
+      .controls-row,
+      .toolbar-cluster,
+      .button-row,
+      .tools-grid,
+      .tools-actions,
+      .utility-row {
+        gap: 10px;
+      }
+
+      .controls-row > button,
+      .toolbar-cluster > button,
+      .tools-actions > button,
+      .button-row > button {
+        flex: 1 1 calc(50% - 10px);
+        min-width: 0;
+      }
+
+      .summary-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-report {
+        grid-template-columns: 168px minmax(0, 1fr);
+      }
+
+      .live-mini-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .table-wrap {
+        overflow: visible;
+      }
+
+      .table-wrap table,
+      .table-wrap thead,
+      .table-wrap tbody,
+      .table-wrap tr,
+      .table-wrap th,
+      .table-wrap td {
+        display: block;
+        width: 100%;
+      }
+
+      .table-wrap table {
+        min-width: 0;
+        border-collapse: separate;
+      }
+
+      .table-wrap thead {
+        display: none;
+      }
+
+      .table-wrap tbody {
+        display: grid;
+        gap: 14px;
+      }
+
+      .table-wrap .schedule-row {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(16, 39, 60, 0.06);
+        padding: 10px 12px 12px;
+      }
+
+      .table-wrap .schedule-row td {
+        border: 0;
+        padding: 0;
+        margin: 0 0 12px;
+      }
+
+      .table-wrap .schedule-row td:last-child {
+        margin-bottom: 0;
+      }
+
+      .table-wrap .schedule-row td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+      }
+
+      .table-wrap .checkbox-cell {
+        text-align: left;
+      }
+
+      .table-wrap .checkbox-cell input[type="checkbox"] {
+        transform: scale(1.12);
+        transform-origin: left center;
+      }
+
+      .table-wrap .col-title,
+      .table-wrap .col-description,
+      .table-wrap .col-actions {
+        width: auto;
+      }
+
+      .table-wrap .row-actions {
+        gap: 10px;
+      }
+
+      .table-wrap .row-actions > button {
+        min-width: 0;
+        flex: 1 1 calc(50% - 10px);
+      }
+
+      .time-control-group {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .site-attribution {
+        justify-content: center;
+        text-align: center;
+        margin-top: 18px;
+      }
+    }
+
+
     @media (max-width: 1100px) {
       .summary-grid {
         grid-template-columns: repeat(2, minmax(160px, 1fr));
@@ -1092,7 +1252,15 @@
         padding: 16px;
       }
 
+      .page-title {
+        font-size: 1.58rem;
+      }
+
       .panel {
+        padding: 16px;
+      }
+
+      .accordion-toggle {
         padding: 16px;
       }
 
@@ -1104,7 +1272,41 @@
         align-items: start;
       }
 
+      .summary-report {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .summary-mini-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .summary-live-header {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      .summary-live-subtitle {
+        white-space: normal;
+      }
+
       .live-mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls-row > button,
+      .toolbar-cluster > button,
+      .tools-actions > button,
+      .button-row > button {
+        flex-basis: 100%;
+      }
+
+      .row-actions > button {
+        flex-basis: 100%;
+      }
+
+      .time-control-group {
         grid-template-columns: 1fr;
       }
     }
@@ -2525,22 +2727,22 @@
 
         return `
           <tr class="schedule-row ${rowClass}" data-row-index="${index}">
-            <td>${getTimeControlHtml(index, 'start_time', entry.start_time || '')}</td>
-            <td>${getTimeControlHtml(index, 'end_time', entry.end_time || '')}</td>
-            <td class="col-title">
+            <td data-label="Start">${getTimeControlHtml(index, 'start_time', entry.start_time || '')}</td>
+            <td data-label="End">${getTimeControlHtml(index, 'end_time', entry.end_time || '')}</td>
+            <td class="col-title" data-label="Title">
               <input class="row-title-input" type="text" value="${escapeHtml(entry.title || '')}" data-index="${index}" data-field="title">
             </td>
-            <td>
+            <td data-label="Location">
               ${getLocationCellHtml(index, entry.location_key || '')}
             </td>
-            <td class="col-description">
+            <td class="col-description" data-label="Optional Description">
               <input class="row-description-input" type="text" value="${escapeHtml(entry.description || '')}" data-index="${index}" data-field="description">
               ${rowErrorsHtml}
             </td>
-            <td class="checkbox-cell">
+            <td class="checkbox-cell" data-label="Cancelled">
               <input type="checkbox" ${entry.is_cancelled ? 'checked' : ''} data-index="${index}" data-field="is_cancelled">
             </td>
-            <td class="col-actions">
+            <td class="col-actions" data-label="Actions">
               <div class="row-actions">
                 <button type="button" class="button-secondary button-small" data-action="duplicate" data-index="${index}">Duplicate</button>
                 <button type="button" class="${isConfirmingDelete ? 'button-confirm-delete' : 'button-danger'} button-small" data-action="delete" data-index="${index}">${isConfirmingDelete ? 'Confirm?' : 'Delete'}</button>
@@ -3176,6 +3378,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      const copyrightYearEl = document.getElementById('copyright-year');
+      if (copyrightYearEl) {
+        copyrightYearEl.textContent = String(new Date().getFullYear());
+      }
       setScheduleToolsOpen(false);
       bindCoreEvents();
       bindTableDelegatedEvents();
