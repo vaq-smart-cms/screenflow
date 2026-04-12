@@ -575,6 +575,128 @@
       font-style: italic;
     }
 
+    .summary-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .summary-live-panel {
+      background: rgba(15, 38, 61, 0.78);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px 16px 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      min-height: 280px;
+    }
+
+    .summary-live-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .summary-live-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #d5e4ef;
+      font-weight: 700;
+    }
+
+    .summary-live-subtitle {
+      color: #bcd0de;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .live-mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .live-mini-card {
+      min-width: 0;
+      min-height: 40px;
+      border-radius: 7px;
+      padding: 7px 8px;
+      color: #ffffff;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14), 0 3px 10px rgba(0,0,0,0.14);
+    }
+
+    .live-mini-icon {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      display: block;
+      filter: brightness(0) invert(1);
+      opacity: 0.98;
+    }
+
+    .live-mini-icon.is-missing {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+      display: inline-block;
+    }
+
+    .live-mini-text {
+      min-width: 0;
+      line-height: 1.15;
+    }
+
+    .live-mini-title-text {
+      display: block;
+      font-size: 0.67rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .live-mini-meta-text {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.55rem;
+      opacity: 0.94;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .summary-live-placeholder {
+      min-height: 220px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.05), inset 0 0 0 10px rgba(255,255,255,0.015);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .summary-live-placeholder strong {
+      display: block;
+      color: #eef6fb;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .summary-live-placeholder span {
+      color: #bcd0de;
+      font-size: 0.86rem;
+    }
+
 
     .accordion-panel {
       padding: 0;
@@ -944,6 +1066,10 @@
         grid-template-columns: repeat(2, minmax(160px, 1fr));
       }
 
+      .summary-layout {
+        grid-template-columns: 1fr;
+      }
+
       .grid-2,
       .grid-3 {
         grid-template-columns: 1fr;
@@ -965,6 +1091,10 @@
 
       .summary-topline {
         align-items: start;
+      }
+
+      .live-mini-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -1506,6 +1636,95 @@
       return style?.display_name || locationKey;
     }
 
+    function getCurrentVancouverMinutes() {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Vancouver',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: false
+      }).formatToParts(new Date());
+
+      const hour = Number(parts.find((part) => part.type === 'hour')?.value || '0');
+      const minute = Number(parts.find((part) => part.type === 'minute')?.value || '0');
+      return (hour * 60) + minute;
+    }
+
+    function getVisibleLivePreviewEntries(entries, scheduleDate) {
+      const safeEntries = Array.isArray(entries) ? entries : [];
+      const activeEntries = safeEntries
+        .filter((entry) => !entry.is_cancelled)
+        .map((entry) => ({
+          ...entry,
+          startMinutes: parseTimeToMinutes(entry.start_time || ''),
+          endMinutes: parseTimeToMinutes(entry.end_time || '')
+        }))
+        .filter((entry) => entry.startMinutes !== null && entry.endMinutes !== null && entry.endMinutes > entry.startMinutes)
+        .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
+
+      if (!activeEntries.length) {
+        return [];
+      }
+
+      const todayYmd = getTodayInVancouverYmd();
+      const referenceMinutes = scheduleDate === todayYmd
+        ? getCurrentVancouverMinutes()
+        : activeEntries[0].startMinutes;
+
+      const currentOrUpcoming = activeEntries.filter((entry) => entry.endMinutes > referenceMinutes);
+      return (currentOrUpcoming.length ? currentOrUpcoming : activeEntries).slice(0, 8);
+    }
+
+    function getCurrentlyLivePreviewHtml(liveSchedule) {
+      if (!liveSchedule || !Array.isArray(liveSchedule.entries_json) || !liveSchedule.entries_json.length) {
+        return `
+          <div class="summary-live-panel">
+            <div class="summary-live-header">
+              <div class="summary-live-title">Currently Live</div>
+            </div>
+            <div class="summary-live-placeholder">
+              <div>
+                <strong>Draft editing in-progress</strong>
+                <span>No live schedule published for this date yet.</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const visibleEntries = getVisibleLivePreviewEntries(liveSchedule.entries_json, liveSchedule.schedule_date);
+      const subtitle = liveSchedule.published_at
+        ? `Published ${escapeHtml(formatFriendlyTimestamp(liveSchedule.published_at))}`
+        : 'Live schedule loaded';
+
+      const cardsHtml = visibleEntries.map((entry) => {
+        const style = getLocationStyleByKey(entry.location_key || '');
+        const bg = style?.hex_color || '#5e7b95';
+        const iconHtml = style?.icon_path
+          ? `<img class="live-mini-icon" src="${escapeHtml(style.icon_path)}" alt="">`
+          : '<span class="live-mini-icon is-missing"></span>';
+        const meta = `${formatStoredTimeForDisplay(entry.start_time || '')} • ${getLocationDisplayName(entry.location_key || '')}`;
+        return `
+          <div class="live-mini-card" style="background:${escapeHtml(bg)};">
+            ${iconHtml}
+            <div class="live-mini-text">
+              <span class="live-mini-title-text">${escapeHtml(entry.title || 'Untitled')}</span>
+              <span class="live-mini-meta-text">${escapeHtml(meta)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="summary-live-panel">
+          <div class="summary-live-header">
+            <div class="summary-live-title">Currently Live</div>
+            <div class="summary-live-subtitle">${subtitle}</div>
+          </div>
+          <div class="live-mini-grid">${cardsHtml || '<div class="summary-empty">No active live entries.</div>'}</div>
+        </div>
+      `;
+    }
+
     function getSummaryMiniPreviewHtml(entries) {
       const safeEntries = Array.isArray(entries) ? entries : [];
       if (!safeEntries.length) {
@@ -1914,6 +2133,7 @@
             <strong>Next step</strong>
             Load a date with an existing draft, or create a new empty draft for the selected date.
           </div>
+          ${getCurrentlyLivePreviewHtml(null)}
         `;
         return;
       }
@@ -1942,36 +2162,44 @@
         : (appState.draftSchedule ? 'Draft version exists' : 'Awaiting draft');
 
       ui.scheduleSummary.innerHTML = `
-        <div class="summary-topline">
-          <div class="summary-date">${escapeHtml(formatFriendlyDateYmd(appState.draftSchedule.schedule_date))}</div>
-          <span class="summary-pill ${summaryPillClass}">${summaryPillLabel}</span>
-        </div>
+        <div class="summary-layout">
+          <div class="summary-main-column">
+            <div class="summary-topline">
+              <div class="summary-date">${escapeHtml(formatFriendlyDateYmd(appState.draftSchedule.schedule_date))}</div>
+              <span class="summary-pill ${summaryPillClass}">${summaryPillLabel}</span>
+            </div>
 
-        <dl class="summary-report">
-          <dt>Programs</dt>
-          <dd>${entries.length} total, ${activeEntries.length} active, ${cancelledEntries.length} cancelled</dd>
+            <dl class="summary-report">
+              <dt>Programs</dt>
+              <dd>${entries.length} total, ${activeEntries.length} active, ${cancelledEntries.length} cancelled</dd>
 
-          <dt>Timezone</dt>
-          <dd>${escapeHtml(appState.draftSchedule.timezone_name || 'America/Vancouver')}</dd>
+              <dt>Timezone</dt>
+              <dd>${escapeHtml(appState.draftSchedule.timezone_name || 'America/Vancouver')}</dd>
 
-          <dt>Coverage</dt>
-          <dd>${escapeHtml(formatStoredTimeForDisplay(firstStart?.start_time || ''))} to ${escapeHtml(formatStoredTimeForDisplay(lastEnd?.end_time || ''))}</dd>
+              <dt>Coverage</dt>
+              <dd>${escapeHtml(formatStoredTimeForDisplay(firstStart?.start_time || ''))} to ${escapeHtml(formatStoredTimeForDisplay(lastEnd?.end_time || ''))}</dd>
 
-          <dt>Draft saved</dt>
-          <dd>${escapeHtml(draftSavedText)}</dd>
+              <dt>Draft saved</dt>
+              <dd>${escapeHtml(draftSavedText)}</dd>
 
-          <dt>Live published</dt>
-          <dd>${escapeHtml(publishedText)}</dd>
+              <dt>Live published</dt>
+              <dd>${escapeHtml(publishedText)}</dd>
 
-          <dt>Internal day note</dt>
-          <dd>${escapeHtml(ui.dayNoteInput.value.trim() || 'None')}</dd>
-        </dl>
+              <dt>Internal day note</dt>
+              <dd>${escapeHtml(ui.dayNoteInput.value.trim() || 'None')}</dd>
+            </dl>
 
-        <div class="summary-divider"></div>
+            <div class="summary-divider"></div>
 
-        <div class="summary-mini-title">Mini Schedule Preview</div>
-        <div class="summary-mini-list">
-          ${getSummaryMiniPreviewHtml(entries)}
+            <div class="summary-mini-title">Mini Schedule Preview</div>
+            <div class="summary-mini-list">
+              ${getSummaryMiniPreviewHtml(entries)}
+            </div>
+          </div>
+
+          <div class="summary-live-column">
+            ${getCurrentlyLivePreviewHtml(appState.liveSchedule)}
+          </div>
         </div>
       `;
     }
