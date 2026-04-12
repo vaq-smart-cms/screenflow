@@ -600,7 +600,10 @@
 
     .accordion-chevron {
       flex: 0 0 auto;
-      font-size: 1rem;
+      font-size: 1.25rem;
+      line-height: 1;
+      width: 20px;
+      text-align: center;
       color: var(--neutral);
       transition: transform 160ms ease;
     }
@@ -611,7 +614,7 @@
 
     .accordion-content {
       display: none;
-      padding: 0 20px 20px;
+      padding: 20px 20px 20px;
       border-top: 1px solid var(--line);
       background: #fbfcfd;
     }
@@ -630,6 +633,21 @@
     #schedule-tools-content {
       background: #e8f2d0;
       border-top-color: #ccdbab;
+    }
+
+    #schedule-tools-content .tools-actions {
+      align-items: stretch;
+    }
+
+    #schedule-tools-content .tools-actions > button {
+      background: #8f6bb3;
+      border-color: #8f6bb3;
+      color: #fff;
+    }
+
+    #schedule-tools-content .tools-actions > button:hover:not(:disabled) {
+      background: #7c599f;
+      border-color: #7c599f;
     }
 
     #schedule-tools-content h4 {
@@ -1165,6 +1183,10 @@
     function setScheduleToolsOpen(isOpen) {
       ui.scheduleToolsPanel.classList.toggle('is-open', !!isOpen);
       ui.scheduleToolsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      const chevron = ui.scheduleToolsToggle.querySelector('.accordion-chevron');
+      if (chevron) {
+        chevron.textContent = isOpen ? '🔼' : '🔽';
+      }
     }
 
     function toggleScheduleTools() {
@@ -1873,7 +1895,7 @@
       ui.scheduleSummary.innerHTML = `
         <div class="summary-topline">
           <div class="summary-date">${escapeHtml(formatFriendlyDateYmd(appState.draftSchedule.schedule_date))}</div>
-          <span class="summary-pill">${appState.liveSchedule ? 'Live version exists' : 'Draft only'}</span>
+          <span class="summary-pill ${appState.liveSchedule ? 'is-live' : ''}">${appState.liveSchedule ? 'Live version exists' : 'Draft only'}</span>
         </div>
 
         <dl class="summary-report">
@@ -2064,15 +2086,15 @@
       renderEditableScheduleTable();
 
       if (!isSameRow) {
-        setSaveStatus('⚠️&nbsp;Press delete again to confirm.', 'neutral');
+        setSaveStatus('⚠️ Press Delete again within 4 seconds to confirm.', 'neutral');
       }
     }
 
-    function deleteProgramRow(index) {
+    function deleteProgramRow(index, forceDelete = false) {
       const entry = appState.editableEntries[index];
       if (!entry) return;
 
-      if (appState.pendingDeleteIndex !== index) {
+      if (!forceDelete && appState.pendingDeleteIndex !== index) {
         armDeleteConfirmation(index);
         return;
       }
@@ -2418,6 +2440,9 @@
       const button = event.target.closest('button[data-action]');
       if (!button) return;
 
+      event.preventDefault();
+      event.stopPropagation();
+
       const action = button.dataset.action;
       const index = Number(button.dataset.index);
 
@@ -2429,7 +2454,8 @@
       }
 
       if (action === 'delete') {
-        deleteProgramRow(index);
+        const isConfirmingDelete = button.classList.contains('button-confirm-delete') || appState.pendingDeleteIndex === index;
+        deleteProgramRow(index, isConfirmingDelete);
       }
     }
 
