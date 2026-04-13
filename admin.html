@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GA Pricing Admin - Stage 1</title>
+<title>VAQ Daily Rates 2026</title>
 
 <!--
   Shared asset path note:
@@ -124,7 +124,8 @@
     color: #ffffff;
   }
 
-  #logoutBtn {
+  #logoutBtn,
+  #logoutBtnHeader {
     background: var(--blue);
     color: #ffffff;
     border-color: var(--blue-dark);
@@ -133,7 +134,8 @@
     gap: 8px;
   }
 
-  #logoutBtn::before {
+  #logoutBtn::before,
+  #logoutBtnHeader::before {
     content: "✖";
     color: #c62828;
     font-weight: 800;
@@ -167,7 +169,7 @@
   .page-title-block {
     min-width: 0;
     flex: 1 1 auto;
-    max-width: 520px;
+    max-width: 620px;
   }
 
   .page-title {
@@ -180,7 +182,7 @@
   }
 
   .page-kicker {
-    color: var(--text);
+    color: var(--orange);
     font-family: 'BlissPro', Arial, sans-serif;
     font-size: 1.18rem;
     font-weight: 700;
@@ -195,10 +197,18 @@
     margin: 0;
   }
 
+  .page-topbar-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex: 0 0 auto;
+  }
+
   .page-brand-lockup {
     display: flex;
     justify-content: flex-end;
-    padding: 10px 6px 4px;
+    padding: 0;
   }
 
   .page-brand-logo {
@@ -550,6 +560,14 @@
       width: 100%;
     }
 
+    .page-topbar {
+      flex-direction: column;
+    }
+
+    .page-topbar-actions {
+      align-items: flex-start;
+    }
+
     .page-brand-logo-header {
       width: 128px;
     }
@@ -564,13 +582,16 @@
   <header class="page-header">
     <div class="page-topbar">
       <div class="page-title-block">
-        <h1 class="page-title">VAQ Pricing Manager</h1>
-        <h2 class="page-kicker">Update today’s rates in a few clicks.</h2>
-        <p class="page-subtitle">Draft new prices, preview how they look, and send the final rates directly to the admissions signs.</p>
+        <h2 class="page-kicker">VAQ Daily Rates</h2>
+        <h1 class="page-title">General Admissions Screen Editor</h1>
+        <p class="page-subtitle">Draft new prices, preview how they look, and publish them live to the digital signage.</p>
       </div>
-    </div>
-    <div class="page-brand-lockup">
-      <img src="assets/vaq-full-logo.svg" alt="Vancouver Aquarium" class="page-brand-logo page-brand-logo-header">
+      <div class="page-topbar-actions">
+        <button id="logoutBtnHeader" type="button">Sign Out</button>
+        <div class="page-brand-lockup">
+          <img src="assets/vaq-full-logo.svg" alt="Vancouver Aquarium" class="page-brand-logo page-brand-logo-header">
+        </div>
+      </div>
     </div>
   </header>
 
@@ -602,9 +623,6 @@
       <h1>Edit each row, then save or publish.</h1>
       <p>Use Save Draft if you want to come back later and resume editing. When everything looks right, choose Publish Live to update the admissions signs.</p>
 
-      <div class="button-row">
-        <button id="logoutBtn" type="button">Sign Out</button>
-      </div>
 
       <div class="field-group">
         <h2>Row 1</h2>
@@ -1004,7 +1022,21 @@
       return value;
     }
 
-    return date.toLocaleString();
+    const weekday = date.toLocaleDateString(undefined, { weekday: "long" });
+    const month = date.toLocaleDateString(undefined, { month: "long" });
+    const day = date.toLocaleDateString(undefined, { day: "numeric" });
+    const year = date.toLocaleDateString(undefined, { year: "numeric" });
+
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const meridiem = hours >= 12 ? "p.m." : "a.m.";
+
+    hours = hours % 12;
+    if (hours === 0) {
+      hours = 12;
+    }
+
+    return `${weekday}, ${month} ${day}, ${year}. ${hours}:${minutes} ${meridiem}`;
   }
 
   function updateLastSavedStatus(value) {
@@ -1113,7 +1145,7 @@
   }
 
   document.getElementById("loginBtn").addEventListener("click", signInAdmin);
-  document.getElementById("logoutBtn").addEventListener("click", signOutAdmin);
+  document.getElementById("logoutBtnHeader").addEventListener("click", signOutAdmin);
 
   document.getElementById("loginEmail").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -1244,7 +1276,7 @@
   </div>
 
   <footer class="page-attribution">
-    Created by <a href="mailto:matt.dobo@vanaqua.org?subject=VAQ%20Pricing%20Manager%20Support">Matt Dobo</a>, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
+    Created by <a href="mailto:matt.dobo@vanaqua.org?subject=VAQ%20Daily%20Rates%20Support">Matt Dobo</a>, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
   </footer>
 </div>
 
