@@ -1089,11 +1089,6 @@
       max-width: 720px;
     }
 
-    @media (max-width: 1200px) {
-      .page-shell {
-        max-width: 100%;
-      }
-
       .page-title {
         font-size: 1.82rem;
       }
@@ -1231,12 +1226,6 @@
       }
     }
 
-
-    @media (max-width: 1100px) {
-      .summary-grid {
-        grid-template-columns: repeat(2, minmax(160px, 1fr));
-      }
-
       .summary-layout {
         grid-template-columns: 1fr;
       }
@@ -1246,11 +1235,6 @@
         grid-template-columns: 1fr;
       }
     }
-
-    @media (max-width: 720px) {
-      body {
-        padding: 16px;
-      }
 
       .page-title {
         font-size: 1.58rem;
@@ -1352,13 +1336,6 @@
       color: #646e78;
     }
 
-    @media (max-width: 900px) {
-      .page-topbar {
-        align-items: stretch;
-        flex-direction: column;
-        gap: 10px;
-      }
-
       .top-sign-out-button {
         align-self: flex-end;
       }
@@ -1390,6 +1367,129 @@
       .page-attribution {
         margin-top: 24px;
         font-size: 0.68rem;
+      }
+    }
+
+  
+    @media (max-width: 1100px) {
+      body {
+        min-width: 1100px;
+        padding: 18px;
+      }
+
+      .page-shell {
+        max-width: 100%;
+      }
+
+      .page-header {
+        margin-bottom: 18px;
+      }
+
+      .page-topbar,
+      .section-heading,
+      .summary-topline,
+      .summary-live-header {
+        gap: 12px;
+      }
+
+      .panel {
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+
+      .controls-row,
+      .toolbar-cluster,
+      .button-row,
+      .tools-grid,
+      .tools-actions,
+      .utility-row {
+        gap: 12px;
+        align-items: end;
+      }
+
+      .field-block {
+        flex: 1 1 200px;
+      }
+
+      .controls-row > button,
+      .toolbar-cluster > button,
+      .tools-actions > button,
+      .button-row > button {
+        flex: 1 1 180px;
+        min-width: 180px;
+      }
+
+      .summary-layout {
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 16px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-report {
+        grid-template-columns: 150px minmax(0, 1fr);
+        gap: 8px 12px;
+      }
+
+      .summary-live-panel {
+        min-height: 260px;
+      }
+
+      .live-mini-grid {
+        gap: 8px;
+      }
+
+      .live-mini-card {
+        min-height: 38px;
+        padding: 7px 8px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      .table-wrap table {
+        min-width: 1040px;
+      }
+
+      th,
+      td {
+        padding: 10px;
+      }
+
+      #schedule-table-container input,
+      #schedule-table-container select,
+      #schedule-table-container textarea {
+        font-size: 0.94rem;
+      }
+
+      .time-control-group {
+        gap: 5px;
+      }
+
+      .time-control-group select {
+        min-width: 62px;
+      }
+
+      .small-note {
+        margin-top: 16px;
+        padding: 14px 16px;
+        line-height: 1.5;
+      }
+
+      .save-status {
+        padding: 10px 0 2px;
+        line-height: 1.45;
+      }
+
+      .page-attribution,
+      .site-attribution {
+        margin-top: 18px;
+        text-align: center;
+        justify-content: center;
       }
     }
 
@@ -1609,7 +1709,6 @@
     const DEBUG = false;
 
     const ui = {
-      topSignOutButton: document.getElementById('top-sign-out-button'),
       errorPanel: document.getElementById('error-panel'),
       errorOutput: document.getElementById('error-output'),
       authPanel: document.getElementById('auth-panel'),
@@ -1645,9 +1744,10 @@
       saveDayNoteButton: document.getElementById('save-day-note-button'),
       scheduleToolsPanel: document.getElementById('schedule-tools-panel'),
       scheduleToolsToggle: document.getElementById('schedule-tools-toggle')
+         topSignOutButton: document.getElementById('top-sign-out-button'),
     };
 
-    const topSignOutButton = document.getElementById('top-sign-out-button');
+    const ui.topSignOutButton = document.getElementById('top-sign-out-button');
 
     ui.scheduleDateInput.value = DEFAULT_DATE;
 
@@ -3445,14 +3545,14 @@
       if (ui.saveDraftButton) ui.saveDraftButton.addEventListener('click', handleSaveDraft);
       if (ui.createDraftButton) ui.createDraftButton.addEventListener('click', handleCreateDraft);
       if (ui.publishButton) ui.publishButton.addEventListener('click', handlePublish);
-
       if (ui.topSignOutButton) ui.topSignOutButton.addEventListener('click', handleSignOut);
-
       if (ui.copyFromDateButton) ui.copyFromDateButton.addEventListener('click', handleCopyFromDate);
       if (ui.copyLastWeekButton) ui.copyLastWeekButton.addEventListener('click', handleCopySameWeekdayFromLastWeek);
       if (ui.repeatWeeklyButton) ui.repeatWeeklyButton.addEventListener('click', handleRepeatWeeklyUntilDate);
       if (ui.dayNoteInput) ui.dayNoteInput.addEventListener('input', handleDayNoteInput);
       if (ui.saveDayNoteButton) ui.saveDayNoteButton.addEventListener('click', handleSaveDraft);
+      if (ui.emailInput) ui.emailInput.addEventListener('keydown', handleLoginKeydown);
+      if (ui.passwordInput) ui.passwordInput.addEventListener('keydown', handleLoginKeydown);
     }
 
     function bindTableDelegatedEvents() {
@@ -3475,7 +3575,7 @@
   </script>
 
   <footer class="page-attribution">
-    Created by Matt Dobo, Design Specialist, Exhibits Department. <span id="copyright-year"></span> Vancouver Aquarium Ltd.
+    Created by Matt Dobo, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
   </footer>
 
 </body>
