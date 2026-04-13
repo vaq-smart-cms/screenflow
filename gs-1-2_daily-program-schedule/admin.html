@@ -1609,6 +1609,7 @@
     const DEBUG = false;
 
     const ui = {
+      topSignOutButton: document.getElementById('top-sign-out-button'),
       errorPanel: document.getElementById('error-panel'),
       errorOutput: document.getElementById('error-output'),
       authPanel: document.getElementById('auth-panel'),
@@ -3444,14 +3445,14 @@
       if (ui.saveDraftButton) ui.saveDraftButton.addEventListener('click', handleSaveDraft);
       if (ui.createDraftButton) ui.createDraftButton.addEventListener('click', handleCreateDraft);
       if (ui.publishButton) ui.publishButton.addEventListener('click', handlePublish);
-      if (topSignOutButton) topSignOutButton.addEventListener('click', handleSignOut);
+
+      if (ui.topSignOutButton) ui.topSignOutButton.addEventListener('click', handleSignOut);
+
       if (ui.copyFromDateButton) ui.copyFromDateButton.addEventListener('click', handleCopyFromDate);
       if (ui.copyLastWeekButton) ui.copyLastWeekButton.addEventListener('click', handleCopySameWeekdayFromLastWeek);
       if (ui.repeatWeeklyButton) ui.repeatWeeklyButton.addEventListener('click', handleRepeatWeeklyUntilDate);
       if (ui.dayNoteInput) ui.dayNoteInput.addEventListener('input', handleDayNoteInput);
       if (ui.saveDayNoteButton) ui.saveDayNoteButton.addEventListener('click', handleSaveDraft);
-      if (ui.emailInput) ui.emailInput.addEventListener('keydown', handleLoginKeydown);
-      if (ui.passwordInput) ui.passwordInput.addEventListener('keydown', handleLoginKeydown);
     }
 
     function bindTableDelegatedEvents() {
