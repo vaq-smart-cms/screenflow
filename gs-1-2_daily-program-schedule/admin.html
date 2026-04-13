@@ -1295,52 +1295,7 @@
       }
     }
   
-    .page-topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .page-topbar h1 {
-      margin-bottom: 0;
-      color: #7d9b2d;
-      font-family: 'BlissProBold', Arial, sans-serif;
-      font-weight: 700;
-    }
-
-    .top-sign-out-button {
-      flex: 0 0 auto;
-      min-height: 40px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid #d6dfe8;
-      background: #ffffff;
-      color: #233443;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .top-sign-out-button:hover {
-      background: #f4f7fb;
-    }
-
-    .page-attribution {
-      margin-top: 20px;
-      padding: 8px 0 4px;
-      text-align: center;
-      font-size: 0.72rem;
-      color: #646e78;
-    }
-
-      .top-sign-out-button {
-        align-self: flex-end;
-      }
-
-      .controls-row,
+    .controls-row,
       .table-toolbar,
       .tools-grid,
       .tools-actions {
@@ -1493,14 +1448,119 @@
       }
     }
 
+  
+    .page-header {
+      margin-bottom: 22px;
+    }
+
+    .page-topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .page-title-block {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .page-brand-lockup {
+      display: flex;
+      justify-content: flex-end;
+      padding: 20px 20px 2px 20px;
+    }
+
+    .page-footer-brand {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    .page-brand-logo {
+      display: block;
+      height: auto;
+      max-width: 100%;
+    }
+
+    .page-brand-logo-header {
+      width: 230px;
+    }
+
+    .page-brand-logo-footer {
+      width: 160px;
+      opacity: 0.95;
+    }
+
+    .top-sign-out-button {
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #d6dfe8;
+      background: #ffffff;
+      color: #233443;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .top-sign-out-button:hover {
+      background: #f4f7fb;
+    }
+
+    .page-attribution {
+      margin-top: 6px;
+      padding: 8px 0 4px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #646e78;
+    }
+
+    @media (max-width: 1100px) {
+      .page-topbar {
+        align-items: flex-start;
+      }
+
+      .page-brand-lockup {
+        padding: 16px 12px 0 12px;
+      }
+
+      .page-brand-logo-header {
+        width: 210px;
+      }
+
+      .page-brand-logo-footer {
+        width: 145px;
+      }
+    }
+
   </style>
 </head>
 <body>
   <div class="page-shell">
+    
     <header class="page-header">
-      <h1 class="page-title">VAQ Program Schedule Admin</h1>
-      <p class="page-subtitle">Manage draft schedules, copy forward proven day structures, validate timing conflicts, and publish the live version used by the full program schedule sign.</p>
+      <div class="page-topbar">
+        <div class="page-title-block">
+          <h1 class="page-title">VAQ Program Schedule Admin</h1>
+          <p class="page-subtitle">Manage draft schedules, copy forward proven day structures, validate timing conflicts, and publish the live version used by the full program schedule sign.</p>
+        </div>
+        <button id="top-sign-out-button" type="button" class="top-sign-out-button" style="display:none">✖ Sign Out</button>
+      </div>
+
+      <div class="page-brand-lockup">
+        <img
+          src="assets/vaq-full-logo.svg"
+          alt="Vancouver Aquarium"
+          class="page-brand-logo page-brand-logo-header"
+        >
+      </div>
     </header>
+
 
     <div id="error-panel" class="panel">
       <div class="section-heading">
@@ -1743,11 +1803,9 @@
       dayNoteInput: document.getElementById('day-note-input'),
       saveDayNoteButton: document.getElementById('save-day-note-button'),
       scheduleToolsPanel: document.getElementById('schedule-tools-panel'),
-      scheduleToolsToggle: document.getElementById('schedule-tools-toggle')
-         topSignOutButton: document.getElementById('top-sign-out-button'),
+      scheduleToolsToggle: document.getElementById('schedule-tools-toggle'),
+      topSignOutButton: document.getElementById('top-sign-out-button')
     };
-
-    const ui.topSignOutButton = document.getElementById('top-sign-out-button');
 
     ui.scheduleDateInput.value = DEFAULT_DATE;
 
@@ -3418,6 +3476,7 @@
         if (error) {
           ui.authPanel.style.display = 'block';
           ui.appPanel.style.display = 'none';
+          if (ui.topSignOutButton) ui.topSignOutButton.style.display = 'none';
           ui.authMessage.textContent = 'Session check failed.';
           showFatalError('Session check failed', error.message || '');
           return;
@@ -3428,6 +3487,7 @@
         if (session) {
           ui.authPanel.style.display = 'none';
           ui.appPanel.style.display = 'block';
+          if (ui.topSignOutButton) ui.topSignOutButton.style.display = 'inline-flex';
           ui.sessionStatus.textContent = `Signed in as ${session.user.email}`;
 
           if (!ui.scheduleDateInput.value) {
@@ -3438,11 +3498,13 @@
         } else {
           ui.authPanel.style.display = 'block';
           ui.appPanel.style.display = 'none';
+          if (ui.topSignOutButton) ui.topSignOutButton.style.display = 'none';
           ui.authMessage.textContent = 'Please sign in.';
         }
       } catch (err) {
         ui.authPanel.style.display = 'block';
         ui.appPanel.style.display = 'none';
+        if (ui.topSignOutButton) ui.topSignOutButton.style.display = 'none';
         showFatalError('Unexpected error in showCorrectPanel()', err?.message || String(err));
       }
     }
@@ -3574,9 +3636,19 @@
     });
   </script>
 
+  
+  <div class="page-footer-brand">
+    <img
+      src="assets/vaq-full-logo.svg"
+      alt="Vancouver Aquarium"
+      class="page-brand-logo page-brand-logo-footer"
+    >
+  </div>
+
   <footer class="page-attribution">
     Created by Matt Dobo, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
   </footer>
+
 
 </body>
 </html>
