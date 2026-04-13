@@ -544,7 +544,7 @@
       font-size: 0.82rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #c8d7e2;
+      color: #ffffff;
       margin-bottom: 8px;
       font-weight: 700;
     }
@@ -585,6 +585,10 @@
 
     .summary-mini-text strong {
       font-weight: 700;
+    }
+
+    .summary-mini-text strong.is-happening-now {
+      color: #f3bc43;
     }
 
     .summary-empty {
@@ -633,7 +637,10 @@
     .live-mini-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(4, minmax(0, auto));
+      grid-auto-flow: column;
       gap: 10px;
+      align-items: start;
     }
 
     .live-mini-card {
@@ -689,6 +696,10 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .live-mini-title-text.is-happening-now {
+      color: #f3bc43;
     }
 
     .live-mini-meta-text {
@@ -2039,6 +2050,26 @@
       return (hour * 60) + minute;
     }
 
+    function isEntryHappeningNow(entry, scheduleDate) {
+      if (!entry || entry.is_cancelled) {
+        return false;
+      }
+
+      if (scheduleDate !== getTodayInVancouverYmd()) {
+        return false;
+      }
+
+      const startMinutes = parseTimeToMinutes(entry.start_time || '');
+      const endMinutes = parseTimeToMinutes(entry.end_time || '');
+      const currentMinutes = getCurrentVancouverMinutes();
+
+      if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+        return false;
+      }
+
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    }
+
     function getVisibleLivePreviewEntries(entries, scheduleDate) {
       const safeEntries = Array.isArray(entries) ? entries : [];
       const activeEntries = safeEntries
@@ -2090,12 +2121,14 @@
         const style = getLocationStyleByKey(entry.location_key || '');
         const bg = (style && style.hex_color) ? style.hex_color : '#3f5877';
         const iconEmoji = getLocationEmoji(entry.location_key || '');
-        const meta = `${formatStoredTimeForDisplay(entry.start_time || '')} • ${getLocationDisplayName(entry.location_key || '')}`;
+        const isHappeningNow = isEntryHappeningNow(entry, liveSchedule.schedule_date);
+        const titleClass = isHappeningNow ? 'live-mini-title-text is-happening-now' : 'live-mini-title-text';
+        const meta = `${formatStoredTimeForDisplay(entry.start_time || '')} @ ${getLocationDisplayName(entry.location_key || '')}`;
         return `
           <div class="live-mini-card" style="background:${escapeHtml(bg)};">
             <div class="live-mini-icon"><span class="currently-live-emoji" aria-hidden="true">${iconEmoji}</span></div>
             <div class="live-mini-text">
-              <span class="live-mini-title-text">${escapeHtml(entry.title || 'Untitled')}</span>
+              <span class="${titleClass}">${escapeHtml(entry.title || 'Untitled')}</span>
               <span class="live-mini-meta-text">${escapeHtml(meta)}</span>
             </div>
           </div>
@@ -2125,6 +2158,8 @@
         return aStart - bStart;
       });
 
+      const scheduleDate = appState.draftSchedule?.schedule_date || '';
+
       return sortedEntries.slice(0, 10).map((entry) => {
         const metaParts = [
           formatStoredTimeForDisplay(entry.start_time || ''),
@@ -2134,11 +2169,12 @@
         const titleText = entry.title ? escapeHtml(entry.title) : 'Untitled program';
         const cancelText = entry.is_cancelled ? ' <em>(cancelled)</em>' : '';
         const descText = entry.description ? `<div>${escapeHtml(entry.description)}</div>` : '';
+        const strongClass = isEntryHappeningNow(entry, scheduleDate) ? ' class="is-happening-now"' : '';
 
         return `
           <div class="summary-mini-row">
-            <div class="summary-mini-meta">${escapeHtml(metaParts.join(' · '))}</div>
-            <div class="summary-mini-text"><strong>${titleText}</strong>${cancelText}${descText}</div>
+            <div class="summary-mini-meta">${escapeHtml(metaParts.join(' @ '))}</div>
+            <div class="summary-mini-text"><strong${strongClass}>${titleText}</strong>${cancelText}${descText}</div>
           </div>
         `;
       }).join('');
