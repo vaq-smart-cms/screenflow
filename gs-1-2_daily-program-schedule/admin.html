@@ -1325,13 +1325,6 @@
       }
     }
 
-  
-    @media (max-width: 1100px) {
-      body {
-        min-width: 1100px;
-        padding: 18px;
-      }
-
       .page-shell {
         max-width: 100%;
       }
@@ -1464,19 +1457,14 @@
     .page-title-block {
       min-width: 0;
       flex: 1 1 auto;
+      max-width: 520px;
     }
 
     .page-brand-lockup {
       display: flex;
       justify-content: flex-end;
       padding: 20px 20px 2px 20px;
-    }
-
-    .page-footer-brand {
-      display: flex;
-      justify-content: center;
-      margin-top: 16px;
-      margin-bottom: 8px;
+      margin-top: -8px;
     }
 
     .page-brand-logo {
@@ -1489,27 +1477,33 @@
       width: 230px;
     }
 
-    .page-brand-logo-footer {
-      width: 160px;
-      opacity: 0.95;
-    }
-
     .top-sign-out-button {
       flex: 0 0 auto;
       min-height: 40px;
       padding: 10px 14px;
       border-radius: 10px;
-      border: 1px solid #d6dfe8;
-      background: #ffffff;
-      color: #233443;
+      border: 1px solid #4f8fae;
+      background: #64a5c3;
+      color: #ffffff;
       cursor: pointer;
       font: inherit;
-      font-weight: 600;
+      font-weight: 700;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(79, 143, 174, 0.18);
     }
 
     .top-sign-out-button:hover {
-      background: #f4f7fb;
+      background: #4f8fae;
+      border-color: #447d99;
+    }
+
+    .top-sign-out-button .signout-x {
+      color: #c62828;
+      font-weight: 800;
+      line-height: 1;
     }
 
     .page-attribution {
@@ -1520,10 +1514,15 @@
       color: #646e78;
     }
 
-    @media (max-width: 1100px) {
-      .page-topbar {
-        align-items: flex-start;
-      }
+    .page-attribution a {
+      color: #4f8fae;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .page-attribution a:hover {
+      text-decoration: underline;
+    }
 
       .page-brand-lockup {
         padding: 16px 12px 0 12px;
@@ -1533,8 +1532,116 @@
         width: 210px;
       }
 
-      .page-brand-logo-footer {
-        width: 145px;
+      }
+
+  
+    @media (max-width: 1100px) {
+      body {
+        padding: 18px;
+      }
+
+      .page-shell {
+        max-width: 100%;
+      }
+
+      .page-topbar {
+        gap: 14px;
+      }
+
+      .page-title-block {
+        max-width: 520px;
+      }
+
+      .page-brand-logo-header {
+        width: 205px;
+      }
+
+      .panel {
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+
+      .controls-row,
+      .toolbar-cluster,
+      .button-row,
+      .tools-grid,
+      .tools-actions,
+      .utility-row {
+        gap: 14px;
+        align-items: end;
+      }
+
+      .controls-row {
+        margin-bottom: 8px;
+      }
+
+      .summary-layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-report {
+        gap: 8px 12px;
+      }
+
+      .summary-live-panel {
+        min-height: 245px;
+      }
+
+      .live-mini-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+
+      .table-wrap table {
+        min-width: 1040px;
+      }
+
+      th,
+      td {
+        padding: 10px;
+      }
+
+      .time-control-group {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(62px, 1fr));
+        gap: 6px;
+      }
+
+      #schedule-table-container input,
+      #schedule-table-container select,
+      #schedule-table-container textarea {
+        font-size: 0.94rem;
+      }
+
+      .row-actions {
+        gap: 8px;
+      }
+
+      .small-note {
+        margin-top: 16px;
+        padding: 14px 16px;
+        line-height: 1.5;
+      }
+
+      .save-status {
+        padding-top: 8px;
+        padding-bottom: 8px;
+        line-height: 1.45;
+      }
+
+      .page-attribution {
+        margin-top: 20px;
       }
     }
 
@@ -1549,7 +1656,7 @@
           <h1 class="page-title">VAQ Program Schedule Admin</h1>
           <p class="page-subtitle">Manage draft schedules, copy forward proven day structures, validate timing conflicts, and publish the live version used by the full program schedule sign.</p>
         </div>
-        <button id="top-sign-out-button" type="button" class="top-sign-out-button" style="display:none">✖ Sign Out</button>
+        <button id="top-sign-out-button" type="button" class="top-sign-out-button" style="display:none"><span class="signout-x" aria-hidden="true">✖</span><span>Sign Out</span></button>
       </div>
 
       <div class="page-brand-lockup">
@@ -3635,18 +3742,8 @@
       showCorrectPanel();
     });
   </script>
-
-  
-  <div class="page-footer-brand">
-    <img
-      src="assets/vaq-full-logo.svg"
-      alt="Vancouver Aquarium"
-      class="page-brand-logo page-brand-logo-footer"
-    >
-  </div>
-
   <footer class="page-attribution">
-    Created by Matt Dobo, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
+    Created by <a href="mailto:matt.dobo@vanaqua.org?subject=VAQ%20Program%20Schedule%20Admin%20Support">Matt Dobo</a>, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
   </footer>
 
 
