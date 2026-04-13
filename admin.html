@@ -113,14 +113,14 @@
   }
 
   #publishBtn {
-    background: var(--green);
+    background: var(--orange);
     color: #ffffff;
-    box-shadow: 0 0 0 0 rgba(125, 155, 45, 0.28);
+    box-shadow: 0 0 0 0 rgba(230, 120, 45, 0.28);
     animation: publishPulse 2.1s ease-in-out infinite;
   }
 
   #saveDraftBtn {
-    background: var(--orange);
+    background: var(--green);
     color: #ffffff;
   }
 
@@ -177,6 +177,15 @@
     font-weight: 700;
     line-height: 1.12;
     margin-bottom: 6px;
+  }
+
+  .page-kicker {
+    color: var(--text);
+    font-family: 'BlissPro', Arial, sans-serif;
+    font-size: 1.18rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 8px;
   }
 
   .page-subtitle {
@@ -368,7 +377,7 @@
     left: -1924px;
     pointer-events: none;
     position: absolute;
-    top: -2095px;
+    top: -3500px;
     transform-origin: center center;
     width: 5000px;
     z-index: 1;
@@ -449,6 +458,10 @@
     font-size: 29px;
     font-weight: 700;
     line-height: 1.1;
+  }
+
+  .footer .footnote-star {
+    color: #f3bc43;
   }
 
   .validation-errors {
@@ -551,8 +564,9 @@
   <header class="page-header">
     <div class="page-topbar">
       <div class="page-title-block">
-        <h1 class="page-title">GA Pricing Builder Admin</h1>
-        <p class="page-subtitle">Manage draft pricing, preview the current layout, save approved changes, and publish the live version used on the admissions sign.</p>
+        <h1 class="page-title">VAQ Pricing Manager</h1>
+        <h2 class="page-kicker">Update today’s rates in a few clicks.</h2>
+        <p class="page-subtitle">Draft new prices, preview how they look, and send the final rates directly to the admissions signs.</p>
       </div>
     </div>
     <div class="page-brand-lockup">
@@ -561,8 +575,8 @@
   </header>
 
   <div id="loginScreen" style="display: none;">
-    <h1>GA Pricing Builder Login</h1>
-    <p>Sign in to access the Stage 1 pricing editor.</p>
+    <h1>Dive In 🌊</h1>
+    <p>Please use your Exhibits Department login to start.</p>
 
     <div class="field">
       <label for="loginEmail">Email</label>
@@ -585,8 +599,8 @@
 
   <div class="page">
     <div class="panel">
-      <h1>GA Pricing Builder</h1>
-      <p>Stage 1 pricing editor connected to Supabase. Review the draft on the left, compare it against the live preview on the right, and publish only when you are confident in the update.</p>
+      <h1>Edit each row, then save or publish.</h1>
+      <p>Use Save Draft if you want to come back later and resume editing. When everything looks right, choose Publish Live to update the admissions signs.</p>
 
       <div class="button-row">
         <button id="logoutBtn" type="button">Sign Out</button>
@@ -671,7 +685,7 @@
       <div class="button-row">
         <button id="previewBtn" type="button">Preview Draft</button>
         <button id="saveDraftBtn" type="button">Save Draft</button>
-        <button id="publishBtn" type="button">Publish to Live</button>
+        <button id="publishBtn" type="button">Publish Live</button>
         <button id="resetBtn" class="secondary" type="button">Reset Draft</button>
       </div>
 
@@ -856,6 +870,20 @@
     };
   }
 
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function formatFooterText(text) {
+    return escapeHtml(text).replace(/\*/g, '<span class="footnote-star">*</span>');
+  }
+
   function renderPricing(data, gridId, footerId) {
     const grid = document.getElementById(gridId);
     const footer = document.getElementById(footerId);
@@ -880,7 +908,7 @@
       grid.appendChild(rowEl);
     });
 
-    footer.textContent = data.footer;
+    footer.innerHTML = formatFooterText(data.footer);
   }
 
   function clearValidationUI() {
@@ -1216,7 +1244,7 @@
   </div>
 
   <footer class="page-attribution">
-    Created by <a href="mailto:matt.dobo@vanaqua.org?subject=VAQ%20Program%20Schedule%20Admin%20Support">Matt Dobo</a>, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
+    Created by <a href="mailto:matt.dobo@vanaqua.org?subject=VAQ%20Pricing%20Manager%20Support">Matt Dobo</a>, Design Specialist, Exhibits Department. &copy; <span id="copyright-year"></span> Vancouver Aquarium Ltd.
   </footer>
 </div>
 
