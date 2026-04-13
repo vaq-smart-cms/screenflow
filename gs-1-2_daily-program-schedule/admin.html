@@ -3433,23 +3433,23 @@
     }
 
     function bindCoreEvents() {
-      ui.scheduleToolsToggle.addEventListener('click', toggleScheduleTools);
-      ui.signInButton.addEventListener('click', handleSignIn);
-      ui.reloadButton.addEventListener('click', loadAllData);
-      ui.loadDateButton.addEventListener('click', loadAllData);
-      ui.addProgramButton.addEventListener('click', addProgramRow);
-      ui.validateButton.addEventListener('click', handleValidateClick);
-      ui.saveDraftButton.addEventListener('click', handleSaveDraft);
-      ui.createDraftButton.addEventListener('click', handleCreateDraft);
-      ui.publishButton.addEventListener('click', handlePublish);
-    if (topSignOutButton) topSignOutButton.addEventListener('click', handleSignOut);
-      ui.copyFromDateButton.addEventListener('click', handleCopyFromDate);
-      ui.copyLastWeekButton.addEventListener('click', handleCopySameWeekdayFromLastWeek);
-      ui.repeatWeeklyButton.addEventListener('click', handleRepeatWeeklyUntilDate);
-      ui.dayNoteInput.addEventListener('input', handleDayNoteInput);
-      ui.saveDayNoteButton.addEventListener('click', handleSaveDraft);
-      ui.emailInput.addEventListener('keydown', handleLoginKeydown);
-      ui.passwordInput.addEventListener('keydown', handleLoginKeydown);
+      if (ui.scheduleToolsToggle) ui.scheduleToolsToggle.addEventListener('click', toggleScheduleTools);
+      if (ui.signInButton) ui.signInButton.addEventListener('click', handleSignIn);
+      if (ui.reloadButton) ui.reloadButton.addEventListener('click', loadAllData);
+      if (ui.loadDateButton) ui.loadDateButton.addEventListener('click', loadAllData);
+      if (ui.addProgramButton) ui.addProgramButton.addEventListener('click', addProgramRow);
+      if (ui.validateButton) ui.validateButton.addEventListener('click', handleValidateClick);
+      if (ui.saveDraftButton) ui.saveDraftButton.addEventListener('click', handleSaveDraft);
+      if (ui.createDraftButton) ui.createDraftButton.addEventListener('click', handleCreateDraft);
+      if (ui.publishButton) ui.publishButton.addEventListener('click', handlePublish);
+      if (topSignOutButton) topSignOutButton.addEventListener('click', handleSignOut);
+      if (ui.copyFromDateButton) ui.copyFromDateButton.addEventListener('click', handleCopyFromDate);
+      if (ui.copyLastWeekButton) ui.copyLastWeekButton.addEventListener('click', handleCopySameWeekdayFromLastWeek);
+      if (ui.repeatWeeklyButton) ui.repeatWeeklyButton.addEventListener('click', handleRepeatWeeklyUntilDate);
+      if (ui.dayNoteInput) ui.dayNoteInput.addEventListener('input', handleDayNoteInput);
+      if (ui.saveDayNoteButton) ui.saveDayNoteButton.addEventListener('click', handleSaveDraft);
+      if (ui.emailInput) ui.emailInput.addEventListener('keydown', handleLoginKeydown);
+      if (ui.passwordInput) ui.passwordInput.addEventListener('keydown', handleLoginKeydown);
     }
 
     function bindTableDelegatedEvents() {
