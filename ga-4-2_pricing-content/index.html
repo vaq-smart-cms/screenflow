@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=1152, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
-<title>GA Screen 4 of 4 - Dynamic Pricing</title>
+<title>VAQ Daily Rates 2026 - Admissions Screen 4 of 4</title>
 
 <!--
   Target container: 1152 x 810 px
@@ -70,7 +70,7 @@
     left: -1924px;
     pointer-events: none;
     position: absolute;
-    top: -2095px;
+    top: -3500px;
     transform-origin: center center;
     width: 5000px;
     z-index: 1;
@@ -158,6 +158,10 @@
     line-height: 1.1;
   }
 
+  .footer .footnote-star {
+    color: #f3bc43;
+  }
+
   /* =========================
      Animation
   ========================= */
@@ -194,6 +198,19 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatFooterText(text) {
+      return escapeHtml(text).replace(/\*/g, '<span class="footnote-star">*</span>');
+    }
+
     function renderPricing(data, gridId, footerId) {
       const grid = document.getElementById(gridId);
       const footer = document.getElementById(footerId);
@@ -218,7 +235,7 @@
         grid.appendChild(rowEl);
       });
 
-      footer.textContent = data.footer;
+      footer.innerHTML = formatFooterText(data.footer);
     }
 
     function renderFallbackMessage(message, footerId) {
