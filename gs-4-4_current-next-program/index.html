@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1152, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VAQ Current + Next Programs</title>
+
+  <!--
+    Focused signage module
+    Target container: 1152 x 810 px
+    Reuses Supabase schedule logic from the full Program Schedule signage.
+    Background rotation direction intentionally reversed to counterclockwise.
+  -->
+
+  <style>
+    @font-face {
+      font-display: swap;
+      font-family: 'BlissPro';
+      font-style: normal;
+      font-weight: 700;
+      src:
+        url('../assets/BlissPro-Bold.woff2') format('woff2'),
+        url('../assets/BlissPro-Bold.woff') format('woff');
+    }
+
+    @font-face {
+      font-display: swap;
+      font-family: 'BlissPro';
+      font-style: italic;
+      font-weight: 400;
+      src:
+        url('../assets/BlissPro-Italic.woff2') format('woff2'),
+        url('../assets/BlissPro-Italic.woff') format('woff');
+    }
+
+    :root {
+      --page-width: 1152px;
+      --page-height: 810px;
+
+      --page-fallback: #113466;
+      --section-label-color: #f3bc43;
+      --title-current: #f3bc43;
+      --title-default: rgba(255,255,255,0.98);
+      --meta-color: rgba(255,255,255,0.96);
+
+      --current-stroke: #0dff0d;
+      --next-stroke: #ead79f;
+      --divider-color: rgba(0,0,0,0.14);
+      --inner-stroke: rgba(255,255,255,0.10);
+
+      --tile-fill-left: rgba(10, 58, 108, 0.92);
+      --tile-fill-right: rgba(24, 73, 145, 0.92);
+      --tile-shadow: 0 12px 24px rgba(0,0,0,0.18);
+
+      --status-bg: rgba(0,0,0,0.22);
+      --status-text: #ffffff;
+
+      --anim-main: 420ms;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: var(--page-width);
+      height: var(--page-height);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--page-fallback);
+    }
+
+    body {
+      position: relative;
+      font-family: 'BlissPro', Arial, sans-serif;
+      color: #fff;
+    }
+
+    .page {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--page-fallback);
+    }
+
+    .bg-rotator {
+      position: absolute;
+      width: 5000px;
+      height: 5000px;
+      top: -3578px;
+      left: -1924px;
+      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+      background-repeat: no-repeat;
+      background-size: 5000px 5000px;
+      transform-origin: center center;
+      animation: slowRotateCCW 200s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .content-layer {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      padding: 50px 80px 52px 80px;
+    }
+
+    .status-panel {
+      position: absolute;
+      inset: 40px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      border-radius: 20px;
+      background: var(--status-bg);
+      color: var(--status-text);
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .status-panel[hidden],
+    .module[hidden] {
+      display: none !important;
+    }
+
+    .module {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 40px;
+      opacity: 1;
+      transition: opacity var(--anim-main) ease;
+    }
+
+    .program-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      opacity: 1;
+      transform: translateY(0);
+      transition:
+        opacity var(--anim-main) ease,
+        transform var(--anim-main) ease;
+    }
+
+    .program-block[hidden] {
+      display: none !important;
+    }
+
+    .program-block.entering {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .section-label {
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--section-label-color);
+      margin: 0 0 2px 10px;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    }
+
+    .program-card {
+      position: relative;
+      width: 992px;
+      min-height: 220px;
+      border-radius: 22px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 236px 1fr;
+      background:
+        linear-gradient(90deg, var(--tile-fill-left) 0%, var(--tile-fill-right) 100%);
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        var(--tile-shadow);
+    }
+
+    .program-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0,0,0,0.18) 0%,
+          rgba(0,0,0,0.08) 18%,
+          rgba(0,0,0,0.00) 42%
+        );
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    .program-card.is-current {
+      box-shadow:
+        inset 0 0 0 8px var(--current-stroke),
+        0 12px 28px rgba(0,0,0,0.22);
+    }
+
+    .program-card.is-next {
+      box-shadow:
+        inset 0 0 0 8px var(--next-stroke),
+        0 12px 28px rgba(0,0,0,0.22);
+    }
+
+    .program-icon {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 22px;
+      border-right: 2px solid var(--divider-color);
+    }
+
+    .program-icon img {
+      display: block;
+      width: auto;
+      max-width: 132px;
+      max-height: 132px;
+      filter: drop-shadow(0 0 12px rgba(0,0,0,0.14));
+    }
+
+    .program-card.is-current .program-icon img,
+    .program-card.is-next .program-icon img {
+      transform: scale(1.12);
+      transform-origin: center center;
+    }
+
+    .program-content {
+      position: relative;
+      z-index: 2;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 30px 36px 28px 30px;
+    }
+
+    .program-title {
+      margin: 0 0 12px 0;
+      font-size: 51px;
+      line-height: 1.04;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--title-default);
+    }
+
+    .program-card.is-current .program-title {
+      color: var(--title-current);
+    }
+
+    .program-meta {
+      font-size: 45px;
+      line-height: 1.08;
+      font-style: italic;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--meta-color);
+    }
+
+    @keyframes slowRotateCCW {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(-360deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="bg-rotator" aria-hidden="true"></div>
+
+    <div class="content-layer">
+      <div id="status-panel" class="status-panel" hidden></div>
+
+      <section id="module" class="module" hidden>
+        <div id="current-block" class="program-block" hidden>
+          <h2 class="section-label">Current Program</h2>
+          <article id="current-card" class="program-card is-current">
+            <div class="program-icon">
+              <img id="current-icon" alt="" />
+            </div>
+            <div class="program-content">
+              <div id="current-title" class="program-title"></div>
+              <div id="current-meta" class="program-meta"></div>
+            </div>
+          </article>
+        </div>
+
+        <div id="next-block" class="program-block" hidden>
+          <h2 class="section-label">Next Program</h2>
+          <article id="next-card" class="program-card is-next">
+            <div class="program-icon">
+              <img id="next-icon" alt="" />
+            </div>
+            <div class="program-content">
+              <div id="next-title" class="program-title"></div>
+              <div id="next-meta" class="program-meta"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://csxuuwbtxgdpvskggcux.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_jPeweysUr7DZvFxG7F1-LQ_UR8MT1F9';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const TIMEZONE_NAME = 'America/Vancouver';
+    const BOUNDARY_FUDGE_MS = 250;
+
+    const state = {
+      allEntries: [],
+      renderedCurrentId: null,
+      renderedNextId: null,
+      refreshTimerId: null
+    };
+
+    const statusPanel = document.getElementById('status-panel');
+    const moduleEl = document.getElementById('module');
+    const currentBlock = document.getElementById('current-block');
+    const nextBlock = document.getElementById('next-block');
+
+    function clearRefreshTimer() {
+      if (state.refreshTimerId) {
+        clearTimeout(state.refreshTimerId);
+        state.refreshTimerId = null;
+      }
+    }
+
+    function showStatus(message) {
+      clearRefreshTimer();
+      statusPanel.hidden = false;
+      statusPanel.textContent = message;
+      moduleEl.hidden = true;
+    }
+
+    function showModule() {
+      statusPanel.hidden = true;
+      moduleEl.hidden = false;
+    }
+
+    function getCurrentVancouverParts() {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE_NAME,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      const parts = formatter.formatToParts(new Date());
+      const get = type => parts.find(part => part.type === type)?.value ?? '00';
+
+      return {
+        year: +get('year'),
+        month: +get('month'),
+        day: +get('day'),
+        hour: +get('hour'),
+        minute: +get('minute'),
+        second: +get('second')
+      };
+    }
+
+    function getCurrentMinutesInVancouver() {
+      const p = getCurrentVancouverParts();
+      return (p.hour * 60) + p.minute;
+    }
+
+    function getMillisecondsUntilVancouverMinute(targetMinutes) {
+      const now = getCurrentVancouverParts();
+      const currentMinutes = (now.hour * 60) + now.minute;
+
+      let delta = targetMinutes - currentMinutes;
+      if (delta < 0) delta += 1440;
+
+      const msRemaining = (60 - now.second) * 1000;
+
+      return delta === 0
+        ? msRemaining
+        : msRemaining + ((delta - 1) * 60000);
+    }
+
+    function parseTimeToMinutes(value) {
+      if (!/^\d{2}:\d{2}$/.test(value || '')) return null;
+      const [hours, minutes] = value.split(':').map(Number);
+      return (hours * 60) + minutes;
+    }
+
+    function formatTime12Hour(value) {
+      if (!value) return '';
+      const [hours, minutes] = value.split(':').map(Number);
+      const suffix = hours >= 12 ? 'p.m.' : 'a.m.';
+      const hour12 = hours % 12 || 12;
+      return `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}`;
+    }
+
+    function resolveProgramStates(entries, nowMinutes) {
+      const currentIndex = entries.findIndex(entry => (
+        entry.start_minutes !== null &&
+        entry.end_minutes !== null &&
+        entry.start_minutes <= nowMinutes &&
+        nowMinutes < entry.end_minutes
+      ));
+
+      const currentProgram = currentIndex >= 0 ? entries[currentIndex] : null;
+      const nextProgram = currentProgram
+        ? (entries[currentIndex + 1] || null)
+        : (entries.find(entry => entry.start_minutes !== null && entry.start_minutes > nowMinutes) || null);
+
+      return {
+        currentProgram,
+        nextProgram
+      };
+    }
+
+    function getNextBoundaryMinutes(entries, nowMinutes) {
+      return entries
+        .flatMap(entry => [entry.start_minutes, entry.end_minutes])
+        .filter(minutes => Number.isInteger(minutes) && minutes > nowMinutes)
+        .sort((a, b) => a - b)[0] ?? null;
+    }
+
+    function buildMetaLine(entry) {
+      return `${formatTime12Hour(entry.start_time)} @ ${entry.location_name}`;
+    }
+
+    function setCardContent(prefix, entry) {
+      document.getElementById(`${prefix}-icon`).src = entry.icon_path;
+      document.getElementById(`${prefix}-icon`).alt = `${entry.location_name} icon`;
+      document.getElementById(`${prefix}-title`).textContent = entry.title || '';
+      document.getElementById(`${prefix}-meta`).textContent = buildMetaLine(entry);
+    }
+
+    function animateBlockIn(block) {
+      block.classList.add('entering');
+      block.hidden = false;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          block.classList.remove('entering');
+        });
+      });
+    }
+
+    function renderPrograms(currentProgram, nextProgram) {
+      const currentId = currentProgram?.id || null;
+      const nextId = nextProgram?.id || null;
+
+      if (currentId !== state.renderedCurrentId) {
+        if (currentProgram) {
+          setCardContent('current', currentProgram);
+          animateBlockIn(currentBlock);
+        } else {
+          currentBlock.hidden = true;
+        }
+        state.renderedCurrentId = currentId;
+      } else if (currentProgram && currentBlock.hidden) {
+        currentBlock.hidden = false;
+      }
+
+      if (nextId !== state.renderedNextId) {
+        if (nextProgram) {
+          setCardContent('next', nextProgram);
+          animateBlockIn(nextBlock);
+        } else {
+          nextBlock.hidden = true;
+        }
+        state.renderedNextId = nextId;
+      } else if (nextProgram && nextBlock.hidden) {
+        nextBlock.hidden = false;
+      }
+
+      if (!currentProgram && !nextProgram) {
+        return showStatus('No upcoming programs scheduled today');
+      }
+
+      showModule();
+    }
+
+    function scheduleBoundaryRefresh() {
+      clearRefreshTimer();
+      const nowMinutes = getCurrentMinutesInVancouver();
+      const nextBoundary = getNextBoundaryMinutes(state.allEntries, nowMinutes);
+      if (nextBoundary === null) return;
+
+      const waitMs = getMillisecondsUntilVancouverMinute(nextBoundary) + BOUNDARY_FUDGE_MS;
+      state.refreshTimerId = setTimeout(refreshProgramsFromCache, waitMs);
+    }
+
+    function refreshProgramsFromCache() {
+      const nowMinutes = getCurrentMinutesInVancouver();
+      const { currentProgram, nextProgram } = resolveProgramStates(state.allEntries, nowMinutes);
+      renderPrograms(currentProgram, nextProgram);
+      scheduleBoundaryRefresh();
+    }
+
+    async function initialize() {
+      showStatus('Loading program schedule...');
+
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE_NAME }).format(new Date());
+
+      const [locationResponse, scheduleResponse] = await Promise.all([
+        supabaseClient
+          .from('program_location_styles')
+          .select('*')
+          .eq('is_active', true),
+        supabaseClient
+          .from('program_schedule_sets')
+          .select('*')
+          .eq('schedule_date', today)
+          .eq('mode', 'live')
+          .maybeSingle()
+      ]);
+
+      if (locationResponse.error || scheduleResponse.error || !scheduleResponse.data) {
+        return showStatus('Schedule unavailable');
+      }
+
+      const locationMap = Object.fromEntries(
+        locationResponse.data.map(location => [location.location_key, location])
+      );
+
+      state.allEntries = (scheduleResponse.data.entries_json || [])
+        .filter(entry => !entry.is_cancelled)
+        .map(entry => ({
+          ...entry,
+          start_minutes: parseTimeToMinutes(entry.start_time),
+          end_minutes: parseTimeToMinutes(entry.end_time),
+          location_name: locationMap[entry.location_key]?.display_name || entry.location_key,
+          icon_path: `./assets/icons/${entry.location_key}.svg`
+        }))
+        .sort((a, b) => a.start_minutes - b.start_minutes);
+
+      if (!state.allEntries.length) {
+        return showStatus('No programs scheduled today');
+      }
+
+      refreshProgramsFromCache();
+    }
+
+    document.addEventListener('DOMContentLoaded', initialize);
+  </script>
+</body>
+</html>
