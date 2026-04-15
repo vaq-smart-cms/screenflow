@@ -546,7 +546,7 @@
           start_minutes: parseTimeToMinutes(entry.start_time),
           end_minutes: parseTimeToMinutes(entry.end_time),
           location_name: locationMap[entry.location_key]?.display_name || entry.location_key,
-          icon_path: `./assets/icons/${entry.location_key}.svg`
+          icon_path: `../gs-1-2_daily-program-schedule/program-schedule-full/assets/icons/${entry.location_key}.svg`
         }))
         .sort((a, b) => a.start_minutes - b.start_minutes);
 
