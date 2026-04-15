@@ -51,6 +51,11 @@
       --icon-column-width: 154px;
       --icon-max-width: 154px;
       --icon-max-height: 95px;
+      --emphasis-icon-max-width: 172px;
+      --emphasis-icon-max-height: 106px;
+      --next-inner-stroke: rgba(243, 188, 67, 0.30);
+      --current-inner-stroke-base: rgba(243, 188, 67, 0.90);
+      --current-inner-stroke-glow: rgba(254, 223, 153, 0.95);
 
       --tile-opacity: 0.80;
 
@@ -171,6 +176,12 @@
       opacity: 0;
       transform: translateY(8px);
       animation: tileEnter 380ms ease-out forwards;
+      transition:
+        left var(--page-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
+        top var(--page-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
+        opacity var(--page-fade-duration) ease,
+        transform var(--page-fade-duration) ease,
+        box-shadow 280ms ease;
     }
 
     .program-tile::before {
@@ -214,11 +225,18 @@
       width: auto;
       height: auto;
       transform-origin: center center;
+      transition:
+        max-width 280ms ease,
+        max-height 280ms ease,
+        filter 280ms ease,
+        transform 280ms ease;
     }
 
-    .program-tile.active .program-icon img {
-      animation: activeIconPulse 3.4s ease-in-out infinite;
-      filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.10));
+    .program-tile.is-current .program-icon img,
+    .program-tile.is-next .program-icon img {
+      max-width: var(--emphasis-icon-max-width);
+      max-height: var(--emphasis-icon-max-height);
+      filter: drop-shadow(0 0 13px rgba(0, 0, 0, 0.10));
     }
 
     .program-content {
@@ -243,10 +261,16 @@
       margin-top: -2px;
       margin-bottom: 6px;
       padding-bottom: 4px;
+      transition: color 240ms ease, font-size 280ms ease;
     }
 
-    .program-tile.active .program-title {
-      color: var(--active-title-color);
+    .program-tile.is-current .program-title,
+    .program-tile.is-next .program-title {
+      font-size: 38px;
+    }
+
+    .program-tile.is-current .program-title {
+      color: #f3bc43;
     }
 
     .program-line-slot {
@@ -273,12 +297,15 @@
       transform: translateY(4px);
       transition:
         opacity var(--line-fade-duration) ease,
-        transform var(--line-fade-duration) ease;
+        transform var(--line-fade-duration) ease,
+        color 240ms ease,
+        font-size 240ms ease;
       pointer-events: none;
     }
 
     .program-meta {
       color: var(--meta-color);
+      font-size: 32px;
     }
 
     .program-description {
@@ -287,12 +314,27 @@
       line-height: 1.18;
     }
 
-    .program-tile.active .program-meta {
+    .program-tile.is-current .program-meta {
       color: var(--active-meta-color);
     }
 
-    .program-tile.active .program-description {
+    .program-tile.is-current .program-description {
       color: var(--active-description-color);
+    }
+
+    .program-tile.is-current {
+      --inner-stroke: var(--current-inner-stroke-base);
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        0 12px 28px rgba(0, 0, 0, 0.22);
+      animation: tileEnter 380ms ease-out forwards, currentBorderPulse 1s ease-in-out infinite;
+    }
+
+    .program-tile.is-next {
+      --inner-stroke: var(--next-inner-stroke);
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        0 10px 24px rgba(0, 0, 0, 0.18);
     }
 
     .program-line-slot.show-meta .program-meta {
@@ -322,9 +364,19 @@
       to { transform: rotate(360deg); }
     }
 
-    @keyframes activeIconPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+    @keyframes currentBorderPulse {
+      0%, 100% {
+        --inner-stroke: var(--current-inner-stroke-base);
+        box-shadow:
+          inset 0 0 0 8px var(--current-inner-stroke-base),
+          0 12px 28px rgba(0, 0, 0, 0.22);
+      }
+      50% {
+        --inner-stroke: var(--current-inner-stroke-glow);
+        box-shadow:
+          inset 0 0 0 8px var(--current-inner-stroke-glow),
+          0 12px 28px rgba(0, 0, 0, 0.22);
+      }
     }
 
     @keyframes tileEnter {
@@ -495,11 +547,31 @@ function getVisibleEntries(entries, now) {
     .slice(0, PAGE_SIZE);
 }
 
+function resolveProgramStates(entries, now) {
+  const sortedEntries = Array.isArray(entries) ? entries : [];
+  const currentIndex = sortedEntries.findIndex((entry) => (
+    entry.start_minutes !== null
+    && entry.end_minutes !== null
+    && entry.start_minutes <= now
+    && now < entry.end_minutes
+  ));
+
+  const currentProgram = currentIndex >= 0 ? sortedEntries[currentIndex] : null;
+  const nextProgram = currentProgram
+    ? (sortedEntries[currentIndex + 1] || null)
+    : (sortedEntries.find((entry) => entry.start_minutes !== null && entry.start_minutes > now) || null);
+
+  return {
+    currentId: currentProgram?.id || null,
+    nextId: nextProgram?.id || null
+  };
+}
+
 function getNextBoundaryMinutes(entries, now) {
   return entries
-    .map(e => e.end_minutes)
-    .filter(m => m && m > now)
-    .sort((a,b)=>a-b)[0] ?? null;
+    .flatMap((entry) => [entry.start_minutes, entry.end_minutes])
+    .filter((minutes) => Number.isInteger(minutes) && minutes > now)
+    .sort((a, b) => a - b)[0] ?? null;
 }
 
 function buildMetaLine(e) {
@@ -528,10 +600,16 @@ function scheduleLineSwap(slot) {
   state.lineTimerIds.push(t1);
 }
 
-function createTile(entry, index) {
+function applyTileStateClasses(tile, entryId, programStates) {
+  tile.classList.toggle('is-current', programStates.currentId === entryId);
+  tile.classList.toggle('is-next', programStates.nextId === entryId);
+}
+
+function createTile(entry, index, programStates) {
   const tile = document.createElement('article');
   tile.className = 'program-tile';
   tile.dataset.entryId = entry.id;
+  applyTileStateClasses(tile, entry.id, programStates);
 
   const pos = getTilePosition(index);
 
@@ -580,7 +658,7 @@ function createTile(entry, index) {
   return tile;
 }
 
-function reconcile(newEntries) {
+function reconcile(newEntries, programStates) {
   clearLineTimers();
 
   const oldIds = new Set(state.visibleEntries.map(e => e.id));
@@ -610,8 +688,9 @@ function reconcile(newEntries) {
       existing.style.top = pos.top + 'px';
       existing.style.opacity = '1';
       existing.style.transform = 'translate(0,0)';
+      applyTileStateClasses(existing, e.id, programStates);
     } else {
-      const t = createTile(e, i);
+      const t = createTile(e, i, programStates);
       t.style.opacity = '0';
       t.style.transform = i >= 5 ? 'translateX(180px)' : 'translateY(12px)';
 
@@ -634,12 +713,13 @@ function reconcile(newEntries) {
 function refreshQueue() {
   const now = getCurrentMinutesInVancouver();
   const visible = getVisibleEntries(state.allEntries, now);
+  const programStates = resolveProgramStates(state.allEntries, now);
 
   if (!visible.length) return showStatus('No programs scheduled today');
 
-  reconcile(visible);
+  reconcile(visible, programStates);
 
-  const next = getNextBoundaryMinutes(visible, now);
+  const next = getNextBoundaryMinutes(state.allEntries, now);
   if (!next) return;
 
   const ms = getMillisecondsUntilVancouverMinute(next) + BOUNDARY_FUDGE_MS;
@@ -679,9 +759,10 @@ async function initialize() {
 
   const now = getCurrentMinutesInVancouver();
   const visible = getVisibleEntries(state.allEntries, now);
+  const programStates = resolveProgramStates(state.allEntries, now);
 
   visible.forEach((e,i)=> {
-    const t = createTile(e,i);
+    const t = createTile(e,i, programStates);
     grid.appendChild(t);
     state.tileElementsById.set(e.id, t);
   });
