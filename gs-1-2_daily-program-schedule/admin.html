@@ -609,7 +609,7 @@
       border-radius: 16px;
       padding: 16px 16px 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-      min-height: 280px;
+      min-height: 332px;
     }
 
     .summary-live-header {
@@ -637,9 +637,9 @@
     .live-mini-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: repeat(4, minmax(0, auto));
+      grid-template-rows: repeat(5, minmax(0, auto));
       grid-auto-flow: column;
-      gap: 10px;
+      gap: 8px;
       align-items: start;
     }
 
@@ -654,6 +654,15 @@
       gap: 8px;
       align-items: center;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14), 0 3px 10px rgba(0,0,0,0.14);
+      transition: box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .live-mini-card.is-current {
+      box-shadow: inset 0 0 0 1px #0dff0d, 0 3px 10px rgba(0,0,0,0.14);
+    }
+
+    .live-mini-card.is-next {
+      box-shadow: inset 0 0 0 1px #f3bc43, 0 3px 10px rgba(0,0,0,0.14);
     }
 
     .live-mini-icon {
@@ -700,6 +709,14 @@
 
     .live-mini-title-text.is-happening-now {
       color: #f3bc43;
+    }
+
+    .live-mini-card.is-current .live-mini-title-text {
+      color: #f3bc43;
+    }
+
+    .live-mini-card.is-next .live-mini-title-text {
+      color: #fff7d1;
     }
 
     .live-mini-meta-text {
@@ -1413,11 +1430,13 @@
       }
 
       .summary-live-panel {
-        min-height: 245px;
+        min-height: 300px;
       }
 
       .live-mini-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(5, minmax(0, auto));
+        grid-auto-flow: column;
         gap: 8px;
       }
 
@@ -2070,6 +2089,42 @@
       return currentMinutes >= startMinutes && currentMinutes < endMinutes;
     }
 
+    function resolvePreviewProgramStates(entries, scheduleDate) {
+      const safeEntries = Array.isArray(entries) ? entries : [];
+      const activeEntries = safeEntries
+        .filter((entry) => !entry.is_cancelled)
+        .map((entry) => ({
+          ...entry,
+          startMinutes: parseTimeToMinutes(entry.start_time || ''),
+          endMinutes: parseTimeToMinutes(entry.end_time || '')
+        }))
+        .filter((entry) => entry.startMinutes !== null && entry.endMinutes !== null && entry.endMinutes > entry.startMinutes)
+        .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
+
+      if (!activeEntries.length) {
+        return { currentId: null, nextId: null };
+      }
+
+      const todayYmd = getTodayInVancouverYmd();
+      const referenceMinutes = scheduleDate === todayYmd
+        ? getCurrentVancouverMinutes()
+        : activeEntries[0].startMinutes - 1;
+
+      const currentIndex = activeEntries.findIndex((entry) => (
+        entry.startMinutes <= referenceMinutes && referenceMinutes < entry.endMinutes
+      ));
+
+      const currentProgram = currentIndex >= 0 ? activeEntries[currentIndex] : null;
+      const nextProgram = currentProgram
+        ? (activeEntries[currentIndex + 1] || null)
+        : (activeEntries.find((entry) => entry.startMinutes > referenceMinutes) || null);
+
+      return {
+        currentId: currentProgram?.id || null,
+        nextId: nextProgram?.id || null
+      };
+    }
+
     function getVisibleLivePreviewEntries(entries, scheduleDate) {
       const safeEntries = Array.isArray(entries) ? entries : [];
       const activeEntries = safeEntries
@@ -2092,7 +2147,7 @@
         : activeEntries[0].startMinutes;
 
       const currentOrUpcoming = activeEntries.filter((entry) => entry.endMinutes > referenceMinutes);
-      return (currentOrUpcoming.length ? currentOrUpcoming : activeEntries).slice(0, 8);
+      return (currentOrUpcoming.length ? currentOrUpcoming : activeEntries).slice(0, 10);
     }
 
     function getCurrentlyLivePreviewHtml(liveSchedule) {
@@ -2113,6 +2168,7 @@
       }
 
       const visibleEntries = getVisibleLivePreviewEntries(liveSchedule.entries_json, liveSchedule.schedule_date);
+      const programStates = resolvePreviewProgramStates(liveSchedule.entries_json, liveSchedule.schedule_date);
       const subtitle = liveSchedule.published_at
         ? `Published ${escapeHtml(formatFriendlyTimestamp(liveSchedule.published_at))}`
         : 'Live schedule loaded';
@@ -2121,14 +2177,19 @@
         const style = getLocationStyleByKey(entry.location_key || '');
         const bg = (style && style.hex_color) ? style.hex_color : '#3f5877';
         const iconEmoji = getLocationEmoji(entry.location_key || '');
-        const isHappeningNow = isEntryHappeningNow(entry, liveSchedule.schedule_date);
-        const titleClass = isHappeningNow ? 'live-mini-title-text is-happening-now' : 'live-mini-title-text';
+        const isCurrent = programStates.currentId === entry.id;
+        const isNext = programStates.nextId === entry.id;
+        const cardClasses = [
+          'live-mini-card',
+          isCurrent ? 'is-current' : '',
+          isNext ? 'is-next' : ''
+        ].filter(Boolean).join(' ');
         const meta = `${formatStoredTimeForDisplay(entry.start_time || '')} @ ${getLocationDisplayName(entry.location_key || '')}`;
         return `
-          <div class="live-mini-card" style="background:${escapeHtml(bg)};">
+          <div class="${cardClasses}" style="background:${escapeHtml(bg)};">
             <div class="live-mini-icon"><span class="currently-live-emoji" aria-hidden="true">${iconEmoji}</span></div>
             <div class="live-mini-text">
-              <span class="${titleClass}">${escapeHtml(entry.title || 'Untitled')}</span>
+              <span class="live-mini-title-text">${escapeHtml(entry.title || 'Untitled')}</span>
               <span class="live-mini-meta-text">${escapeHtml(meta)}</span>
             </div>
           </div>
