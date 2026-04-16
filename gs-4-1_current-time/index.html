@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=768, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
+  <title>VAQ Titlebar – Current Time</title>
+
+<!--
+  Target container: 768 x 270 px
+  Scale fix applied for Kuusoft environment rendering oversized.
+  Shared asset path note:
+  This page uses the repo-level ../assets/ folder for common fonts and imagery.
+  Update these paths if the hosted folder structure changes later.
+-->
+
+  <style>
+    @font-face {
+      font-family: 'BlissPro';
+      src:
+        url('../assets/BlissPro-Bold.woff2') format('woff2'),
+        url('../assets/BlissPro-Bold.woff') format('woff');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    .wrapper {
+      position: relative; /* trying to close a visual gap on the left */
+      left: -8px; /* trying to close a visual gap on the left */
+      width: 776px; /* 768 + 8 */
+      height: 270px;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background-color: #ffffff;
+      background-image: url('../assets/Titlebar_RptX_10x270.jpg');
+      background-repeat: repeat-x;
+      background-position: left top;
+      background-size: auto 270px;
+
+      overflow: hidden;
+    }
+
+    #clock {
+      font-family: 'BlissPro', Arial, sans-serif;
+      font-size: 82px;
+      line-height: 1;
+      font-weight: 700;
+      color: #34495e;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      transform: translateY(-11px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <div id="todayDate">September 28, 2028</div>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes();
+
+      const isPM = hours >= 12;
+      const meridiem = isPM ? 'p.m.' : 'a.m.';
+
+      hours = hours % 12 || 12;
+
+      const minuteText = minutes < 10 ? '0' + minutes : minutes;
+
+      document.getElementById('clock').textContent =
+        hours + ':' + minuteText + ' ' + meridiem;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+
+</body>
+</html>
