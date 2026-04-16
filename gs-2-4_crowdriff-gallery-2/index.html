@@ -1,80 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<<meta name="viewport" content="width=768, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
-<title>VAQ (Mini) Crowdriff Gallery 2</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=768, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
+  <title>VAQ (Mini) Crowdriff Gallery 2</title>
 
-<!--
-  Target container: 768 x 810 px
-  Scale fix applied for Kuusoft environment rendering oversized.
-  Shared asset path note:
-  This page uses the repo-level ../assets/ folder for common fonts and imagery.
-  Update these paths if the hosted folder structure changes later.
--->
+  <!--
+    Target container: 768 x 810 px
+    Scale fix applied for Kuusoft environment rendering oversized.
+    Shared asset path note:
+    This page uses the repo-level ../assets/ folder for common fonts and imagery.
+    Update these paths if the hosted folder structure changes later.
+  -->
 
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 768px;
-    height: 810px;
-    overflow: hidden;
-    background: transparent;
-  }
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 768px;
+      height: 810px;
+      overflow: hidden;
+      background: transparent;
+    }
 
-  .frame {
-    position: relative;
-    width: 768px;
-    height: 810px;
-    overflow: hidden;
-    background: #000;
-  }
+    .frame {
+      position: relative;
+      width: 768px;
+      height: 810px;
+      overflow: hidden;
+      background: #000;
+    }
 
-  .bg-rotator {
-    position: absolute;
-    width: 5000px;
-    height: 5000px;
-    top: -3500px;
-    left: -2116px;
-    background-image: url('../assets/RotCircAnim_5000x5000.jpg');
-    background-repeat: no-repeat;
-    background-size: 5000px 5000px;
-    transform-origin: center center;
-    animation: slowRotate 200s linear infinite;
-    z-index: 1;
-    pointer-events: none;
-  }
+    .bg-rotator {
+      position: absolute;
+      width: 5000px;
+      height: 5000px;
+      top: -3500px;
+      left: -2116px;
+      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+      background-repeat: no-repeat;
+      background-size: 5000px 5000px;
+      transform-origin: center center;
+      animation: slowRotate 200s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-  @keyframes slowRotate {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
+    @keyframes slowRotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
 
-  .content-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-  }
+    .content-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
 
-  .gallery-band {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 768px;
-    height: 810px;
-    overflow: hidden;
-    background: transparent;
-  }
+    .gallery-band {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 768px;
+      height: 810px;
+      overflow: hidden;
+      background: transparent;
+    }
 
-  .gallery-band iframe,
-  .gallery-band div,
-  .gallery-band section,
-  .gallery-band article,
-  .gallery-band img {
-    box-sizing: border-box;
-  }
-</style>
+    .gallery-band iframe,
+    .gallery-band div,
+    .gallery-band section,
+    .gallery-band article,
+    .gallery-band img {
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 
 <body>
