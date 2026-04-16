@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=1152, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=1152, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
   <title>VAQ Current + Next Programs</title>
 
   <!--
-    Focused signage module
-    Target container: 1152 x 810 px
-    Reuses Supabase schedule logic from the full Program Schedule signage.
-    Background rotation direction intentionally reversed to counterclockwise.
-  -->
+  Target container: 1152 x 810 px
+  Scale fix applied for Kuusoft environment rendering oversized.
+  Shared asset path note:
+  This page uses the repo-level ../assets/ folder for common fonts and imagery.
+  Update these paths if the hosted folder structure changes later.
+-->
 
   <style>
     @font-face {
@@ -67,6 +68,9 @@
       padding: 0;
       overflow: hidden;
       background: var(--page-fallback);
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     body {
@@ -75,10 +79,10 @@
       color: #fff;
     }
 
-    .page {
+    .frame {
       position: relative;
-      width: 100%;
-      height: 100%;
+      width: var(--page-width);
+      height: var(--page-height);
       overflow: hidden;
       background: var(--page-fallback);
     }
@@ -99,10 +103,9 @@
     }
 
     .content-layer {
-      position: relative;
+      position: absolute;
+      inset: 0;
       z-index: 2;
-      width: 100%;
-      height: 100%;
       padding: 50px 80px 52px 80px;
     }
 
@@ -282,7 +285,7 @@
   </style>
 </head>
 <body>
-  <main class="page">
+  <main class="frame">
     <div class="bg-rotator" aria-hidden="true"></div>
 
     <div class="content-layer">
