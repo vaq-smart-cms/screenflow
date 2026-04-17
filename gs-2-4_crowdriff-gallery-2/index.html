@@ -69,18 +69,37 @@
 
     .gallery-stage {
       position: relative;
-      width: 80%;
-      height: 80%;
+      width: 82%;
+      height: 84%;
       overflow: hidden;
       background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
+    /* Force the injected CrowdRiff wrapper to occupy the stage */
+    .gallery-stage > * {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+    }
+
+    /* Defensive rules for injected content */
     .gallery-stage iframe,
     .gallery-stage div,
     .gallery-stage section,
     .gallery-stage article,
     .gallery-stage img {
       box-sizing: border-box;
+      max-width: 100% !important;
+      max-height: 100% !important;
+    }
+
+    /* If CrowdRiff renders images directly, this helps keep them inside */
+    .gallery-stage img {
+      object-fit: contain;
     }
   </style>
 </head>
