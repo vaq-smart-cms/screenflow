@@ -1497,7 +1497,7 @@
       <div class="page-topbar">
         <div class="page-title-block">
           <h1 class="page-title">VAQ Program Schedule Admin</h1>
-          <p class="page-subtitle">Manage draft schedules, copy forward proven day structures, validate timing conflicts, and publish the live version used by the full program schedule sign.</p>
+          <p class="page-subtitle">Manage draft schedules, copy forward proven day structures, validate required fields and timing format, and publish the live version used by the full program schedule sign.</p>
         </div>
         <button id="top-sign-out-button" type="button" class="top-sign-out-button" style="display:none"><span class="signout-x" aria-hidden="true">✖</span><span>Sign Out</span></button>
       </div>
@@ -2523,7 +2523,6 @@
     function validateEntries() {
       const summaryErrors = [];
       const rowErrors = {};
-      const activeTimedRows = [];
       const validLocationKeys = new Set(appState.locationStyles.map((style) => style.location_key));
       const seenIds = new Set();
 
@@ -2573,42 +2572,10 @@
           errors.push('End time must be later than start time.');
         }
 
-        if (!entry.is_cancelled && startMinutes !== null && endMinutes !== null && startMinutes < endMinutes) {
-          activeTimedRows.push({
-            index,
-            rowNumber,
-            startMinutes,
-            endMinutes
-          });
-        }
-
         if (errors.length) {
           rowErrors[index] = errors;
         }
       });
-
-      activeTimedRows.sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
-
-      for (let i = 0; i < activeTimedRows.length - 1; i += 1) {
-        const current = activeTimedRows[i];
-        const next = activeTimedRows[i + 1];
-
-        if (current.endMinutes > next.startMinutes) {
-          const overlapMessageCurrent = `Overlaps with row ${next.rowNumber}.`;
-          const overlapMessageNext = `Overlaps with row ${current.rowNumber}.`;
-
-          rowErrors[current.index] = rowErrors[current.index] || [];
-          rowErrors[next.index] = rowErrors[next.index] || [];
-
-          if (!rowErrors[current.index].includes(overlapMessageCurrent)) {
-            rowErrors[current.index].push(overlapMessageCurrent);
-          }
-
-          if (!rowErrors[next.index].includes(overlapMessageNext)) {
-            rowErrors[next.index].push(overlapMessageNext);
-          }
-        }
-      }
 
       Object.keys(rowErrors).forEach((indexKey) => {
         const rowNumber = Number(indexKey) + 1;

@@ -3,15 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=1152, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
-  <title>VAQ Current + Next Programs</title>
+  <title>VAQ Next Programs</title>
 
-<!--
-  Target container: 1152 x 810 px
-  Scale fix applied for Kuusoft environment rendering oversized.
-  Shared asset path note:
-  This page uses the repo-level ../assets/ folder for common fonts and imagery.
-  Update these paths if the hosted folder structure changes later.
--->
+  <!--
+    Target container: 1152 x 810 px
+    Scale fix applied for Kuusoft environment rendering oversized.
+    Reuses Supabase schedule logic from the full Program Schedule signage.
+    This focused module now displays only upcoming next programs.
+    Up to 3 upcoming programs may be shown at once.
+    If multiple programs share the same next start time, they are grouped first.
+    A next-program designation persists until 5 minutes after that program's start time.
+  -->
 
   <style>
     @font-face {
@@ -40,14 +42,11 @@
 
       --page-fallback: #113466;
       --section-label-color: #f3bc43;
-      --title-current: #f3bc43;
       --title-default: rgba(255,255,255,0.98);
       --meta-color: rgba(255,255,255,0.96);
 
-      --current-stroke: #0dff0d;
       --next-stroke: #ead79f;
       --divider-color: rgba(0,0,0,0.14);
-      --inner-stroke: rgba(255,255,255,0.10);
 
       --tile-fill-left: rgba(10, 58, 108, 0.92);
       --tile-fill-right: rgba(24, 73, 145, 0.92);
@@ -106,7 +105,13 @@
       position: absolute;
       inset: 0;
       z-index: 2;
-      padding: 50px 80px 52px 80px;
+
+      /* Even margin all around */
+      padding: 48px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: center;      
     }
 
     .status-panel {
@@ -134,18 +139,37 @@
     .module {
       width: 100%;
       height: 100%;
+
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      gap: 40px;
-      opacity: 1;
-      transition: opacity var(--anim-main) ease;
+      justify-content: center;   /* vertical centering */
+      align-items: center;       /* horizontal centering */
+
+      gap: 24px;                 /* clean, even spacing between tiles */
     }
 
-    .program-block {
+   .cards-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 24px;
+
+      width: 100%;
+      align-items: center;  /* ensures tiles are centred */
+    }
+
+    .program-card {
+      position: relative;
+      width: 960px;   /* cleaner math inside 1152 container */
+      min-height: 170px;
+      border-radius: 22px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 212px 1fr;
+      background:
+        linear-gradient(90deg, var(--tile-fill-left) 0%, var(--tile-fill-right) 100%);
+      box-shadow:
+        inset 0 0 0 13px var(--next-stroke),
+        var(--tile-shadow);
       opacity: 1;
       transform: translateY(0);
       transition:
@@ -153,38 +177,9 @@
         transform var(--anim-main) ease;
     }
 
-    .program-block[hidden] {
-      display: none !important;
-    }
-
-    .program-block.entering {
+    .program-card.entering {
       opacity: 0;
       transform: translateY(12px);
-    }
-
-    .section-label {
-      font-size: 54px;
-      line-height: 1;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--section-label-color);
-      margin: 0 0 2px 10px;
-      text-shadow: 0 2px 0 rgba(0,0,0,0.08);
-    }
-
-    .program-card {
-      position: relative;
-      width: 992px;
-      min-height: 220px;
-      border-radius: 22px;
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: 236px 1fr;
-      background:
-        linear-gradient(90deg, var(--tile-fill-left) 0%, var(--tile-fill-right) 100%);
-      box-shadow:
-        inset 0 0 0 13px var(--inner-stroke),
-        var(--tile-shadow);
     }
 
     .program-card::before {
@@ -202,18 +197,6 @@
       pointer-events: none;
     }
 
-    .program-card.is-current {
-      box-shadow:
-        inset 0 0 0 13px var(--current-stroke),
-        0 12px 28px rgba(0,0,0,0.22);
-    }
-
-    .program-card.is-next {
-      box-shadow:
-        inset 0 0 0 13px var(--next-stroke),
-        0 12px 28px rgba(0,0,0,0.22);
-    }
-
     .program-icon {
       position: relative;
       z-index: 2;
@@ -221,22 +204,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 28px 22px;
+      padding: 22px 18px;
       border-right: 2px solid var(--divider-color);
     }
 
     .program-icon img {
       display: block;
       width: auto;
-      max-width: 185px;
-      max-height: 185px;
-      filter: drop-shadow(0 0 12px rgba(0,0,0,0.14));
-    }
-
-    .program-card.is-current .program-icon img,
-    .program-card.is-next .program-icon img {
-      transform: scale(1.12);
+      max-width: 150px;
+      max-height: 150px;
+      transform: scale(1.06);
       transform-origin: center center;
+      filter: drop-shadow(0 0 12px rgba(0,0,0,0.14));
     }
 
     .program-content {
@@ -246,12 +225,12 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 30px 40px 34px 30px;
+      padding: 22px 34px 26px 26px;
     }
 
     .program-title {
-      margin: 0 0 14px 0;
-      font-size: 51px;
+      margin: 0 0 10px 0;
+      font-size: 44px;
       line-height: 1.14;
       font-weight: 700;
       letter-spacing: -0.02em;
@@ -259,15 +238,11 @@
       overflow: visible;
       text-overflow: clip;
       color: var(--title-default);
-      padding-bottom: 6px;
-    }
-
-    .program-card.is-current .program-title {
-      color: var(--title-current);
+      padding-bottom: 4px;
     }
 
     .program-meta {
-      font-size: 45px;
+      font-size: 36px;
       line-height: 1.14;
       font-style: italic;
       font-weight: 400;
@@ -275,7 +250,7 @@
       overflow: visible;
       text-overflow: clip;
       color: var(--meta-color);
-      padding-bottom: 6px;
+      padding-bottom: 4px;
     }
 
     @keyframes slowRotateCCW {
@@ -292,31 +267,7 @@
       <div id="status-panel" class="status-panel" hidden></div>
 
       <section id="module" class="module" hidden>
-        <div id="current-block" class="program-block" hidden>
-          <h2 class="section-label">Current Program</h2>
-          <article id="current-card" class="program-card is-current">
-            <div class="program-icon">
-              <img id="current-icon" alt="" />
-            </div>
-            <div class="program-content">
-              <div id="current-title" class="program-title"></div>
-              <div id="current-meta" class="program-meta"></div>
-            </div>
-          </article>
-        </div>
-
-        <div id="next-block" class="program-block" hidden>
-          <h2 class="section-label">Next Program</h2>
-          <article id="next-card" class="program-card is-next">
-            <div class="program-icon">
-              <img id="next-icon" alt="" />
-            </div>
-            <div class="program-content">
-              <div id="next-title" class="program-title"></div>
-              <div id="next-meta" class="program-meta"></div>
-            </div>
-          </article>
-        </div>
+        <div id="cards-list" class="cards-list"></div>
       </section>
     </div>
   </main>
@@ -329,18 +280,18 @@
 
     const TIMEZONE_NAME = 'America/Vancouver';
     const BOUNDARY_FUDGE_MS = 250;
+    const MAX_NEXT_PROGRAMS = 3;
+    const NEXT_PROGRAM_GRACE_MINUTES = 5;
 
     const state = {
       allEntries: [],
-      renderedCurrentId: null,
-      renderedNextId: null,
+      renderedSignature: '',
       refreshTimerId: null
     };
 
     const statusPanel = document.getElementById('status-panel');
     const moduleEl = document.getElementById('module');
-    const currentBlock = document.getElementById('current-block');
-    const nextBlock = document.getElementById('next-block');
+    const cardsList = document.getElementById('cards-list');
 
     function clearRefreshTimer() {
       if (state.refreshTimerId) {
@@ -419,85 +370,95 @@
       return `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}`;
     }
 
-    function resolveProgramStates(entries, nowMinutes) {
-      const currentIndex = entries.findIndex(entry => (
-        entry.start_minutes !== null &&
-        entry.end_minutes !== null &&
-        entry.start_minutes <= nowMinutes &&
-        nowMinutes < entry.end_minutes
-      ));
-
-      const currentProgram = currentIndex >= 0 ? entries[currentIndex] : null;
-      const nextProgram = currentProgram
-        ? (entries[currentIndex + 1] || null)
-        : (entries.find(entry => entry.start_minutes !== null && entry.start_minutes > nowMinutes) || null);
-
-      return {
-        currentProgram,
-        nextProgram
-      };
-    }
-
-    function getNextBoundaryMinutes(entries, nowMinutes) {
-      return entries
-        .flatMap(entry => [entry.start_minutes, entry.end_minutes])
-        .filter(minutes => Number.isInteger(minutes) && minutes > nowMinutes)
-        .sort((a, b) => a - b)[0] ?? null;
-    }
-
     function buildMetaLine(entry) {
       return `${formatTime12Hour(entry.start_time)} @ ${entry.location_name}`;
     }
 
-    function setCardContent(prefix, entry) {
-      document.getElementById(`${prefix}-icon`).src = entry.icon_path;
-      document.getElementById(`${prefix}-icon`).alt = `${entry.location_name} icon`;
-      document.getElementById(`${prefix}-title`).textContent = entry.title || '';
-      document.getElementById(`${prefix}-meta`).textContent = buildMetaLine(entry);
+    /*
+      Next-program logic for this focused signage mode:
+      1) A program remains eligible until 5 minutes after its start time.
+      2) Find the earliest eligible start time.
+      3) Include all programs at that start time first.
+      4) If fewer than MAX_NEXT_PROGRAMS are found, fill remaining slots
+         with later eligible programs in chronological order.
+    */
+    function resolveNextPrograms(entries, nowMinutes) {
+      const eligibleEntries = entries.filter(entry =>
+        Number.isInteger(entry.start_minutes) &&
+        nowMinutes <= (entry.start_minutes + NEXT_PROGRAM_GRACE_MINUTES)
+      );
+
+      if (!eligibleEntries.length) return [];
+
+      const firstStart = eligibleEntries[0].start_minutes;
+      const sameStartEntries = eligibleEntries.filter(entry => entry.start_minutes === firstStart);
+      const laterEntries = eligibleEntries.filter(entry => entry.start_minutes > firstStart);
+
+      return [...sameStartEntries, ...laterEntries].slice(0, MAX_NEXT_PROGRAMS);
     }
 
-    function animateBlockIn(block) {
-      block.classList.add('entering');
-      block.hidden = false;
-      requestAnimationFrame(() => {
+    function getNextBoundaryMinutes(entries, nowMinutes) {
+      return entries
+        .flatMap(entry => [
+          entry.start_minutes,
+          Number.isInteger(entry.start_minutes) ? entry.start_minutes + NEXT_PROGRAM_GRACE_MINUTES : null,
+          entry.end_minutes
+        ])
+        .filter(minutes => Number.isInteger(minutes) && minutes > nowMinutes)
+        .sort((a, b) => a - b)[0] ?? null;
+    }
+
+    function createCard(entry) {
+      const card = document.createElement('article');
+      card.className = 'program-card entering';
+
+      const icon = document.createElement('div');
+      icon.className = 'program-icon';
+
+      const img = document.createElement('img');
+      img.src = entry.icon_path;
+      img.alt = `${entry.location_name} icon`;
+
+      icon.appendChild(img);
+
+      const content = document.createElement('div');
+      content.className = 'program-content';
+
+      const title = document.createElement('div');
+      title.className = 'program-title';
+      title.textContent = entry.title || '';
+
+      const meta = document.createElement('div');
+      meta.className = 'program-meta';
+      meta.textContent = buildMetaLine(entry);
+
+      content.append(title, meta);
+      card.append(icon, content);
+
+      return card;
+    }
+
+    function renderNextPrograms(nextPrograms) {
+      const signature = nextPrograms.map(entry => entry.id).join('|');
+      if (signature === state.renderedSignature) {
+        showModule();
+        return;
+      }
+
+      cardsList.innerHTML = '';
+
+      nextPrograms.forEach(entry => {
+        const card = createCard(entry);
+        cardsList.appendChild(card);
+
         requestAnimationFrame(() => {
-          block.classList.remove('entering');
+          requestAnimationFrame(() => {
+            card.classList.remove('entering');
+          });
         });
       });
-    }
 
-    function renderPrograms(currentProgram, nextProgram) {
-      const currentId = currentProgram?.id || null;
-      const nextId = nextProgram?.id || null;
-
-      if (currentId !== state.renderedCurrentId) {
-        if (currentProgram) {
-          setCardContent('current', currentProgram);
-          animateBlockIn(currentBlock);
-        } else {
-          currentBlock.hidden = true;
-        }
-        state.renderedCurrentId = currentId;
-      } else if (currentProgram && currentBlock.hidden) {
-        currentBlock.hidden = false;
-      }
-
-      if (nextId !== state.renderedNextId) {
-        if (nextProgram) {
-          setCardContent('next', nextProgram);
-          animateBlockIn(nextBlock);
-        } else {
-          nextBlock.hidden = true;
-        }
-        state.renderedNextId = nextId;
-      } else if (nextProgram && nextBlock.hidden) {
-        nextBlock.hidden = false;
-      }
-
-      if (!currentProgram && !nextProgram) {
-        return showStatus('No upcoming programs scheduled today');
-      }
-
+      state.renderedSignature = signature;
       showModule();
     }
 
@@ -513,8 +474,13 @@
 
     function refreshProgramsFromCache() {
       const nowMinutes = getCurrentMinutesInVancouver();
-      const { currentProgram, nextProgram } = resolveProgramStates(state.allEntries, nowMinutes);
-      renderPrograms(currentProgram, nextProgram);
+      const nextPrograms = resolveNextPrograms(state.allEntries, nowMinutes);
+
+      if (!nextPrograms.length) {
+        return showStatus('No upcoming programs scheduled today');
+      }
+
+      renderNextPrograms(nextPrograms);
       scheduleBoundaryRefresh();
     }
 
@@ -553,7 +519,11 @@
           location_name: locationMap[entry.location_key]?.display_name || entry.location_key,
           icon_path: `../gs-1-2_daily-program-schedule/program-schedule-full/assets/icons/${entry.location_key}.svg`
         }))
-        .sort((a, b) => a.start_minutes - b.start_minutes);
+        .sort((a, b) => {
+          if (a.start_minutes !== b.start_minutes) return a.start_minutes - b.start_minutes;
+          if (a.end_minutes !== b.end_minutes) return a.end_minutes - b.end_minutes;
+          return (a.title || '').localeCompare(b.title || '');
+        });
 
       if (!state.allEntries.length) {
         return showStatus('No programs scheduled today');
