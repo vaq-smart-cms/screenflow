@@ -657,14 +657,6 @@
       transition: box-shadow 180ms ease, transform 180ms ease;
     }
 
-    .live-mini-card.is-current {
-      box-shadow: inset 0 0 0 1px #0dff0d, 0 3px 10px rgba(0,0,0,0.14);
-    }
-
-    .live-mini-card.is-next {
-      box-shadow: inset 0 0 0 1px #f3bc43, 0 3px 10px rgba(0,0,0,0.14);
-    }
-
     .live-mini-icon {
       width: 18px;
       height: 18px;
@@ -707,12 +699,8 @@
       text-overflow: ellipsis;
     }
 
-    .live-mini-title-text.is-happening-now {
-      color: #f3bc43;
-    }
-
-    .live-mini-card.is-current .live-mini-title-text {
-      color: #f3bc43;
+    .live-mini-card.is-next {
+      box-shadow: inset 0 0 0 1px #f3bc43, 0 3px 10px rgba(0,0,0,0.14);
     }
 
     .live-mini-card.is-next .live-mini-title-text {
@@ -2102,26 +2090,30 @@
         .sort((a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes);
 
       if (!activeEntries.length) {
-        return { currentId: null, nextId: null };
+        return { nextIds: new Set() };
       }
 
       const todayYmd = getTodayInVancouverYmd();
       const referenceMinutes = scheduleDate === todayYmd
         ? getCurrentVancouverMinutes()
-        : activeEntries[0].startMinutes - 1;
+        : (activeEntries[0].startMinutes - 1);
 
-      const currentIndex = activeEntries.findIndex((entry) => (
-        entry.startMinutes <= referenceMinutes && referenceMinutes < entry.endMinutes
+      const eligibleEntries = activeEntries.filter((entry) => (
+        referenceMinutes < (entry.startMinutes + 5)
       ));
 
-      const currentProgram = currentIndex >= 0 ? activeEntries[currentIndex] : null;
-      const nextProgram = currentProgram
-        ? (activeEntries[currentIndex + 1] || null)
-        : (activeEntries.find((entry) => entry.startMinutes > referenceMinutes) || null);
+      if (!eligibleEntries.length) {
+        return { nextIds: new Set() };
+      }
+
+      const nextStartMinutes = eligibleEntries[0].startMinutes;
 
       return {
-        currentId: currentProgram?.id || null,
-        nextId: nextProgram?.id || null
+        nextIds: new Set(
+          eligibleEntries
+            .filter((entry) => entry.startMinutes === nextStartMinutes)
+            .map((entry) => entry.id)
+        )
       };
     }
 
@@ -2177,11 +2169,9 @@
         const style = getLocationStyleByKey(entry.location_key || '');
         const bg = (style && style.hex_color) ? style.hex_color : '#3f5877';
         const iconEmoji = getLocationEmoji(entry.location_key || '');
-        const isCurrent = programStates.currentId === entry.id;
-        const isNext = programStates.nextId === entry.id;
+        const isNext = programStates.nextIds.has(entry.id);
         const cardClasses = [
           'live-mini-card',
-          isCurrent ? 'is-current' : '',
           isNext ? 'is-next' : ''
         ].filter(Boolean).join(' ');
         const meta = `${formatStoredTimeForDisplay(entry.start_time || '')} @ ${getLocationDisplayName(entry.location_key || '')}`;
@@ -3530,6 +3520,8 @@
       ui.scheduleTableContainer.innerHTML = '';
       ui.dayNoteInput.value = '';
       ui.validationPanel.style.display = 'none';
+      ui.emailInput.value = '';
+      ui.passwordInput.value = '';
       setSaveStatus('&nbsp;', 'neutral');
       await showCorrectPanel();
     }
