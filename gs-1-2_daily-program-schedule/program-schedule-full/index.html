@@ -14,398 +14,478 @@
 -->
 
   <style>
-  @font-face {
-    font-display: swap;
-    font-family: 'BlissPro';
-    font-style: normal;
-    font-weight: 700;
-    src:
-      url('../assets/BlissPro-Bold.woff2') format('woff2'),
-      url('../assets/BlissPro-Bold.woff') format('woff');
-  }
-
-  @font-face {
-    font-display: swap;
-    font-family: 'BlissPro';
-    font-style: italic;
-    font-weight: 400;
-    src:
-      url('../assets/BlissPro-Italic.woff2') format('woff2'),
-      url('../assets/BlissPro-Italic.woff') format('woff');
-  }
-
-  :root {
-    --page-width: 1920px;
-    --page-height: 810px;
-
-    --outer-padding-x: 20px;
-    --outer-padding-y: 20px;
-
-    --tile-width: 930px;
-    --tile-height: 138px;
-
-    --border-radius: 13px;
-    --inner-stroke: rgba(255, 255, 255, 0.10);
-    --divider-color: rgba(0, 0, 0, 0.10);
-
-    --icon-column-width: 154px;
-    --icon-max-width: 154px;
-    --icon-max-height: 95px;
-    --emphasis-icon-max-width: 172px;
-    --emphasis-icon-max-height: 106px;
-
-    --next-inner-stroke-base: rgba(243, 188, 67, 0.90);
-    --next-inner-stroke-glow: rgba(254, 223, 153, 0.95);
-    --current-inner-stroke: #0dff0d;
-
-    --tile-opacity: 0.80;
-
-    --title-color: rgba(255, 255, 255, 0.98);
-    --meta-color: rgba(255, 255, 255, 0.92);
-    --description-color: rgba(255, 255, 255, 0.94);
-
-    --active-title-color: #fff7b2;
-    --active-meta-color: #fff7b2;
-    --active-description-color: #fff8c9;
-
-    --page-fallback: #113466;
-    --status-bg: rgba(0, 0, 0, 0.22);
-    --status-text: #ffffff;
-
-    --page-fade-duration: 450ms;
-    --line-fade-duration: 380ms;
-    --meta-hold-ms: 3200;
-    --desc-hold-ms: 3200;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  html,
-  body {
-    width: var(--page-width);
-    height: var(--page-height);
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: var(--page-fallback);
-  }
-
-  body {
-    position: relative;
-    font-family: 'BlissPro', Arial, sans-serif;
-    color: #fff;
-  }
-
-  .page {
-    position: relative;
-    width: var(--page-width);
-    height: var(--page-height);
-    overflow: hidden;
-    background: var(--page-fallback);
-  }
-
-  .bg-rotator {
-    position: absolute;
-    width: 5000px;
-    height: 5000px;
-    top: -3500px;
-    left: -1732px;
-    background-image: url('../assets/RotCircAnim_5000x5000.jpg');
-    background-repeat: no-repeat;
-    background-size: 5000px 5000px;
-    transform-origin: center center;
-    animation: slowRotate 200s linear infinite;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .content-layer {
-    position: relative;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    padding: var(--outer-padding-y) var(--outer-padding-x);
-  }
-
-  .status-panel {
-    position: absolute;
-    inset: 20px;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px;
-    border-radius: 18px;
-    background: var(--status-bg);
-    color: var(--status-text);
-    font-size: 40px;
-    font-weight: 700;
-    line-height: 1.15;
-  }
-
-  .status-panel[hidden],
-  .grid[hidden] {
-    display: none !important;
-  }
-
-  .grid {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    opacity: 1;
-    transition: opacity var(--page-fade-duration) ease;
-  }
-
-  .grid.is-fading {
-    opacity: 0;
-  }
-
-  /* Tile shell:
-     Keep overflow hidden for rounded corners and clipping discipline,
-     while giving interior text rows enough vertical room to avoid cropping
-     descenders like g, j, p, q, and y. */
-  .program-tile {
-    position: absolute;
-    width: var(--tile-width);
-    height: var(--tile-height);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: var(--icon-column-width) 1fr;
-    box-shadow:
-      inset 0 0 0 8px var(--inner-stroke),
-      0 8px 18px rgba(0, 0, 0, 0.16);
-    opacity: 0;
-    transform: translateY(8px);
-    animation: tileEnter 380ms ease-out forwards;
-    transition:
-      left var(--page-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
-      top var(--page-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
-      opacity var(--page-fade-duration) ease,
-      transform var(--page-fade-duration) ease,
-      box-shadow 280ms ease;
-  }
-
-  .program-tile::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(
-        90deg,
-        rgba(0, 0, 0, 0.25) 0%,
-        rgba(0, 0, 0, 0.12) 18%,
-        rgba(0, 0, 0, 0.00) 42%
-      );
-    pointer-events: none;
-    z-index: 1;
-    mix-blend-mode: multiply;
-  }
-
-  .program-icon {
-    position: relative;
-    z-index: 2;
-    width: var(--icon-column-width);
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 18px 12px;
-    border-right: 2px solid var(--divider-color);
-  }
-
-  .program-icon img {
-    display: block;
-    max-width: var(--icon-max-width);
-    max-height: var(--icon-max-height);
-    width: auto;
-    height: auto;
-    transform-origin: center center;
-    transition:
-      max-width 280ms ease,
-      max-height 280ms ease,
-      filter 280ms ease,
-      transform 280ms ease;
-  }
-
-  .program-tile.is-current .program-icon img,
-  .program-tile.is-next .program-icon img {
-    max-width: var(--emphasis-icon-max-width);
-    max-height: var(--emphasis-icon-max-height);
-    transform: scale(1.3);
-    filter: drop-shadow(0 0 13px rgba(0, 0, 0, 0.20));
-  }
-
-  /* Content column:
-     Slightly adjusted padding helps the larger title/meta sizes breathe
-     without changing the overall visual proportions of the tile. */
-  .program-content {
-    position: relative;
-    z-index: 2;
-    min-width: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 12px 24px 12px 22px;
-  }
-
-  /* Title:
-     Font size is preserved, but line-height and spacing are relaxed to prevent
-     clipped descenders and preserve legibility at signage distance. */
-  .program-title {
-    font-size: 35px;
-    font-weight: 700;
-    line-height: 1.16;
-    color: var(--title-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 0;
-    margin-bottom: 4px;
-    padding-bottom: 6px;
-    transition: color 240ms ease, font-size 280ms ease;
-  }
-
-  .program-tile.is-current .program-title,
-  .program-tile.is-next .program-title {
-    font-size: 38px;
-  }
-
-  .program-tile.is-current .program-title {
-    color: #f3bc43;
-  }
-
-  /* Line slot:
-     Increased height prevents the enlarged 32px italic meta line from being
-     cropped. This is the main fix for the “cut-off letterforms” issue. */
-  .program-line-slot {
-    position: relative;
-    height: 42px;
-    min-height: 42px;
-    overflow: hidden;
-  }
-
-  /* Shared line styling:
-     Slightly looser line-height improves glyph rendering and accessibility,
-     especially for italic forms and narrow descenders. */
-  .program-meta,
-  .program-description {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    font-size: 28px;
-    font-style: italic;
-    font-weight: 400;
-    line-height: 1.18;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0;
-    transform: translateY(4px);
-    transition:
-      opacity var(--line-fade-duration) ease,
-      transform var(--line-fade-duration) ease,
-      color 240ms ease,
-      font-size 240ms ease;
-    pointer-events: none;
-  }
-
-  /* Meta line:
-     Font size remains at 32px, but gets its own line-height to avoid
-     baseline clipping in the slot above. */
-  .program-meta {
-    color: var(--meta-color);
-    font-size: 32px;
-    line-height: 1.2;
-  }
-
-  .program-description {
-    color: var(--description-color);
-    font-size: 23px;
-    line-height: 1.18;
-  }
-
-  .program-tile.is-current .program-meta {
-    color: var(--active-meta-color);
-  }
-
-  .program-tile.is-current .program-description {
-    color: var(--active-description-color);
-  }
-
-  .program-tile.is-current {
-    --inner-stroke: var(--current-inner-stroke);
-    box-shadow:
-      inset 0 0 0 8px var(--inner-stroke),
-      0 12px 28px rgba(0, 0, 0, 0.22);
-  }
-
-  .program-tile.is-next {
-    --inner-stroke: var(--next-inner-stroke-base);
-    box-shadow:
-      inset 0 0 0 8px var(--inner-stroke),
-      0 12px 28px rgba(0, 0, 0, 0.22);
-    animation: tileEnter 380ms ease-out forwards, nextBorderPulse 1s ease-in-out infinite;
-  }
-
-  .program-line-slot.show-meta .program-meta {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .program-line-slot.show-description .program-description {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .tile-debug {
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
-    font-size: 14px;
-    line-height: 1;
-    opacity: 0.22;
-    pointer-events: none;
-    z-index: 2;
-    display: none;
-  }
-
-  @keyframes slowRotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  @keyframes nextBorderPulse {
-    0%, 100% {
-      --inner-stroke: var(--next-inner-stroke-base);
-      box-shadow:
-        inset 0 0 0 8px var(--next-inner-stroke-base),
-        0 12px 28px rgba(0, 0, 0, 0.22);
+    @font-face {
+      font-display: swap;
+      font-family: 'BlissPro';
+      font-style: normal;
+      font-weight: 700;
+      src:
+        url('../assets/BlissPro-Bold.woff2') format('woff2'),
+        url('../assets/BlissPro-Bold.woff') format('woff');
     }
-    50% {
-      --inner-stroke: var(--next-inner-stroke-glow);
-      box-shadow:
-        inset 0 0 0 8px var(--next-inner-stroke-glow),
-        0 12px 28px rgba(0, 0, 0, 0.22);
-    }
-  }
 
-  @keyframes tileEnter {
-    from {
+    @font-face {
+      font-display: swap;
+      font-family: 'BlissPro';
+      font-style: italic;
+      font-weight: 400;
+      src:
+        url('../assets/BlissPro-Italic.woff2') format('woff2'),
+        url('../assets/BlissPro-Italic.woff') format('woff');
+    }
+
+    :root {
+      --page-width: 1920px;
+      --page-height: 810px;
+
+      --outer-padding-x: 20px;
+      --outer-padding-y: 20px;
+
+      --tile-width: 930px;
+      --tile-height: 138px;
+
+      --border-radius: 13px;
+      --inner-stroke: rgba(255, 255, 255, 0.10);
+      --divider-color: rgba(0, 0, 0, 0.10);
+
+      --icon-column-width: 154px;
+      --icon-max-width: 154px;
+      --icon-max-height: 95px;
+      --emphasis-icon-max-width: 172px;
+      --emphasis-icon-max-height: 106px;
+
+      --next-inner-stroke-base: rgba(243, 188, 67, 0.90);
+      --next-inner-stroke-glow: rgba(254, 223, 153, 0.95);
+
+      --tile-opacity: 0.80;
+
+      --title-color: rgba(255, 255, 255, 0.98);
+      --meta-color: rgba(255, 255, 255, 0.92);
+      --description-color: rgba(255, 255, 255, 0.94);
+
+      --page-fallback: #113466;
+      --status-bg: rgba(0, 0, 0, 0.22);
+      --status-text: #ffffff;
+
+      --page-fade-duration: 450ms;
+      --line-fade-duration: 380ms;
+      --meta-hold-ms: 3200;
+      --desc-hold-ms: 3200;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: var(--page-width);
+      height: var(--page-height);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--page-fallback);
+    }
+
+    body {
+      position: relative;
+      font-family: 'BlissPro', Arial, sans-serif;
+      color: #fff;
+    }
+
+    .page {
+      position: relative;
+      width: var(--page-width);
+      height: var(--page-height);
+      overflow: hidden;
+      background: var(--page-fallback);
+    }
+
+    .bg-rotator {
+      position: absolute;
+      width: 5000px;
+      height: 5000px;
+      top: -3500px;
+      left: -1732px;
+      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+      background-repeat: no-repeat;
+      background-size: 5000px 5000px;
+      transform-origin: center center;
+      animation: slowRotate 200s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .content-layer {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      padding: var(--outer-padding-y) var(--outer-padding-x);
+    }
+
+    .status-panel {
+      position: absolute;
+      inset: 20px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      border-radius: 18px;
+      background: var(--status-bg);
+      color: var(--status-text);
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .status-panel[hidden],
+    .grid[hidden] {
+      display: none !important;
+    }
+
+    .grid {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      opacity: 1;
+      transition: opacity var(--page-fade-duration) ease;
+    }
+
+    .grid.is-fading {
+      opacity: 0;
+    }
+
+    /* Tile shell:
+       Keep overflow hidden for rounded corners and clipping discipline,
+       while giving interior text rows enough vertical room to avoid cropping
+       descenders like g, j, p, q, and y. */
+    .program-tile {
+      position: absolute;
+      width: var(--tile-width);
+      height: var(--tile-height);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: var(--icon-column-width) 1fr;
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        0 8px 18px rgba(0, 0, 0, 0.16);
       opacity: 0;
       transform: translateY(8px);
+      animation: tileEnter 380ms ease-out forwards;
+      transition:
+        left var(--page-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
+        top var(--page-fade-duration) cubic-bezier(0.22, 1, 0.36, 1),
+        opacity var(--page-fade-duration) ease,
+        transform var(--page-fade-duration) ease,
+        box-shadow 280ms ease;
     }
-    to {
+
+    .program-tile::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 0.25) 0%,
+          rgba(0, 0, 0, 0.12) 18%,
+          rgba(0, 0, 0, 0.00) 42%
+        );
+      pointer-events: none;
+      z-index: 1;
+      mix-blend-mode: multiply;
+    }
+
+    .program-icon {
+      position: relative;
+      z-index: 2;
+      width: var(--icon-column-width);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 12px;
+      border-right: 2px solid var(--divider-color);
+    }
+
+    .program-icon img {
+      display: block;
+      max-width: var(--icon-max-width);
+      max-height: var(--icon-max-height);
+      width: auto;
+      height: auto;
+      transform-origin: center center;
+      transition:
+        max-width 280ms ease,
+        max-height 280ms ease,
+        filter 280ms ease,
+        transform 280ms ease;
+    }
+
+    .program-tile.is-next .program-icon img {
+      max-width: var(--emphasis-icon-max-width);
+      max-height: var(--emphasis-icon-max-height);
+      transform: scale(1.3);
+      filter: drop-shadow(0 0 13px rgba(0, 0, 0, 0.20));
+    }
+
+    /* Content column:
+       Slightly adjusted padding helps the larger title/meta sizes breathe
+       without changing the overall visual proportions of the tile. */
+    .program-content {
+      position: relative;
+      z-index: 2;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 12px 24px 12px 22px;
+    }
+
+    /* Title:
+       Font size is preserved, but line-height and spacing are relaxed to prevent
+       clipped descenders and preserve legibility at signage distance. */
+    .program-title {
+      font-size: 35px;
+      font-weight: 700;
+      line-height: 1.16;
+      color: var(--title-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0;
+      margin-bottom: 4px;
+      padding-bottom: 6px;
+      transition: color 240ms ease, font-size 280ms ease;
+    }
+
+    .program-tile.is-next .program-title {
+      font-size: 38px;
+    }
+
+    .program-tile.is-current .program-title {
+      color: #f3bc43;
+    }
+
+    /* Line slot:
+       Increased height prevents the enlarged 32px italic meta line from being
+       cropped. This is the main fix for the “cut-off letterforms” issue. */
+    .program-line-slot {
+      position: relative;
+      height: 42px;
+      min-height: 42px;
+      overflow: hidden;
+    }
+
+    /* Shared line styling:
+       Slightly looser line-height improves glyph rendering and accessibility,
+       especially for italic forms and narrow descenders. */
+    .program-meta,
+    .program-description {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      font-size: 28px;
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.18;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      opacity: 0;
+      transform: translateY(4px);
+      transition:
+        opacity var(--line-fade-duration) ease,
+        transform var(--line-fade-duration) ease,
+        color 240ms ease,
+        font-size 240ms ease;
+      pointer-events: none;
+    }
+
+    /* Meta line:
+       Font size remains at 32px, but gets its own line-height to avoid
+       baseline clipping in the slot above. */
+    .program-meta {
+      color: var(--meta-color);
+      font-size: 32px;
+      line-height: 1.2;
+    }
+
+    .program-description {
+      color: var(--description-color);
+      font-size: 23px;
+      line-height: 1.18;
+    }
+
+    .program-tile.is-current .program-meta {
+      color: var(--active-meta-color);
+    }
+
+    .program-tile.is-current .program-description {
+      color: var(--active-description-color);
+    }
+
+    .program-tile.is-current {
+      --inner-stroke: var(--current-inner-stroke);
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        0 12px 28px rgba(0, 0, 0, 0.22);
+    }
+
+    .program-tile.is-next {
+      --inner-stroke: var(--next-inner-stroke-base);
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        0 12px 28px rgba(0, 0, 0, 0.22);
+      animation: tileEnter 380ms ease-out forwards, nextBorderPulse 1s ease-in-out infinite;
+    }
+
+    .program-line-slot.show-meta .program-meta {
       opacity: 1;
       transform: translateY(0);
     }
+
+    .program-line-slot.show-description .program-description {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tile-debug {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.22;
+      pointer-events: none;
+      z-index: 2;
+      display: none;
+    }
+
+    @keyframes slowRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes nextBorderPulse {
+      0%, 100% {
+        --inner-stroke: var(--next-inner-stroke-base);
+        box-shadow:
+          inset 0 0 0 8px var(--next-inner-stroke-base),
+          0 12px 28px rgba(0, 0, 0, 0.22);
+      }
+      50% {
+        --inner-stroke: var(--next-inner-stroke-glow);
+        box-shadow:
+          inset 0 0 0 8px var(--next-inner-stroke-glow),
+          0 12px 28px rgba(0, 0, 0, 0.22);
+      }
+    }
+
+    @keyframes tileEnter {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @media (max-width: 900px) {
+    :root {
+      --page-width: 100vw;
+      --page-height: auto;
+      --outer-padding-x: 16px;
+      --outer-padding-y: 16px;
+      --tile-width: 100%;
+      --tile-height: auto;
+      --icon-column-width: 112px;
+      --icon-max-width: 96px;
+      --icon-max-height: 72px;
+      --emphasis-icon-max-width: 108px;
+      --emphasis-icon-max-height: 82px;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: auto;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: var(--page-fallback);
+    }
+
+    body {
+      background: var(--page-fallback);
+    }
+
+    .page {
+      width: 100%;
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+      background: var(--page-fallback);
+    }
+
+    .bg-rotator {
+      display: none;
+    }
+
+    .content-layer {
+      height: auto;
+      min-height: 100vh;
+      padding: var(--outer-padding-y) var(--outer-padding-x);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      width: 100%;
+      height: auto;
+    }
+
+    .program-tile {
+      position: relative;
+      left: auto !important;
+      top: auto !important;
+      width: 100%;
+      height: auto;
+      min-height: 120px;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+
+    .program-content {
+      padding: 14px 18px 14px 18px;
+    }
+
+    .program-title {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+    }
+
+    .program-line-slot {
+      height: 46px;
+      min-height: 46px;
+    }
+
+    .status-panel {
+      position: relative;
+      inset: auto;
+      margin: 0;
+    }
   }
-</style>
+  </style>
 </head>
 <body>
   <main class="page">
@@ -418,379 +498,411 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = 'https://csxuuwbtxgdpvskggcux.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_jPeweysUr7DZvFxG7F1-LQ_UR8MT1F9';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+    const SUPABASE_URL = 'https://csxuuwbtxgdpvskggcux.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_jPeweysUr7DZvFxG7F1-LQ_UR8MT1F9';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const PAGE_SIZE = 10;
-const LEFT_COLUMN_COUNT = 5;
-const TIMEZONE_NAME = 'America/Vancouver';
-const TILE_OPACITY = 0.80;
+    const PAGE_SIZE = 10;
+    const LEFT_COLUMN_COUNT = 5;
+    const TIMEZONE_NAME = 'America/Vancouver';
+    const TILE_OPACITY = 0.80;
 
-const META_HOLD_MS = 3200;
-const DESC_HOLD_MS = 3200;
+    const META_HOLD_MS = 3200;
+    const DESC_HOLD_MS = 3200;
 
-const TRANSITION_DURATION_MS = 520;
-const BOUNDARY_FUDGE_MS = 250;
+    const TRANSITION_DURATION_MS = 520;
+    const BOUNDARY_FUDGE_MS = 250;
 
-const LAYOUT = {
-  leftX: 0,
-  rightX: 950,
-  startY: 0,
-  rowStep: 156
-};
+    const LAYOUT = {
+      leftX: 0,
+      rightX: 950,
+      startY: 0,
+      rowStep: 156
+    };
 
-const state = {
-  locationStyles: [],
-  liveSchedule: null,
-  allEntries: [],
-  visibleEntries: [],
-  tileElementsById: new Map(),
-  transitionTimerId: null,
-  lineTimerIds: []
-};
+    const state = {
+      locationStyles: [],
+      liveSchedule: null,
+      allEntries: [],
+      visibleEntries: [],
+      tileElementsById: new Map(),
+      transitionTimerId: null,
+      lineTimerIds: []
+    };
 
-const statusPanel = document.getElementById('status-panel');
-const grid = document.getElementById('grid');
+    const statusPanel = document.getElementById('status-panel');
+    const grid = document.getElementById('grid');
 
-function clearLineTimers() {
-  state.lineTimerIds.forEach(clearTimeout);
-  state.lineTimerIds = [];
-}
-
-function clearTransitionTimer() {
-  if (state.transitionTimerId) {
-    clearTimeout(state.transitionTimerId);
-    state.transitionTimerId = null;
-  }
-}
-
-function showStatus(message) {
-  clearLineTimers();
-  clearTransitionTimer();
-  statusPanel.hidden = false;
-  statusPanel.textContent = message;
-  grid.hidden = true;
-  grid.innerHTML = '';
-  state.tileElementsById.clear();
-}
-
-function showGrid() {
-  statusPanel.hidden = true;
-  grid.hidden = false;
-}
-
-function getCurrentVancouverParts() {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIMEZONE_NAME,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-
-  const parts = formatter.formatToParts(new Date());
-  const get = t => parts.find(p => p.type === t)?.value ?? '00';
-
-  return {
-    year: +get('year'),
-    month: +get('month'),
-    day: +get('day'),
-    hour: +get('hour'),
-    minute: +get('minute'),
-    second: +get('second')
-  };
-}
-
-function getCurrentMinutesInVancouver() {
-  const p = getCurrentVancouverParts();
-  return p.hour * 60 + p.minute;
-}
-
-function getMillisecondsUntilVancouverMinute(targetMinutes) {
-  const now = getCurrentVancouverParts();
-  const currentMinutes = now.hour * 60 + now.minute;
-
-  let delta = targetMinutes - currentMinutes;
-  if (delta < 0) delta += 1440;
-
-  const msRemaining = (60 - now.second) * 1000;
-
-  return delta === 0
-    ? msRemaining
-    : msRemaining + (delta - 1) * 60000;
-}
-
-function parseTimeToMinutes(t) {
-  if (!/^\d{2}:\d{2}$/.test(t)) return null;
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function formatTime12Hour(t) {
-  if (!t) return '';
-  const [h, m] = t.split(':').map(Number);
-  const suffix = h >= 12 ? 'p.m.' : 'a.m.';
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2,'0')} ${suffix}`;
-}
-
-function normalizeHexColor(hex) {
-  return /^#[0-9a-fA-F]{6}$/.test(hex || '') ? hex : '#446688';
-}
-
-function hexToRgba(hex, a) {
-  const h = normalizeHexColor(hex);
-  const r = parseInt(h.slice(1,3),16);
-  const g = parseInt(h.slice(3,5),16);
-  const b = parseInt(h.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
-
-function getTilePosition(i) {
-  return i < LEFT_COLUMN_COUNT
-    ? { left: LAYOUT.leftX, top: LAYOUT.startY + i * LAYOUT.rowStep }
-    : { left: LAYOUT.rightX, top: LAYOUT.startY + (i - LEFT_COLUMN_COUNT) * LAYOUT.rowStep };
-}
-
-function getVisibleEntries(entries, now) {
-  return entries
-    .filter(e => e.end_minutes === null || e.end_minutes > now)
-    .slice(0, PAGE_SIZE);
-}
-
-function resolveProgramStates(entries, now) {
-  const sortedEntries = Array.isArray(entries) ? entries : [];
-  const currentIndex = sortedEntries.findIndex((entry) => (
-    entry.start_minutes !== null
-    && entry.end_minutes !== null
-    && entry.start_minutes <= now
-    && now < entry.end_minutes
-  ));
-
-  const currentProgram = currentIndex >= 0 ? sortedEntries[currentIndex] : null;
-  const nextProgram = currentProgram
-    ? (sortedEntries[currentIndex + 1] || null)
-    : (sortedEntries.find((entry) => entry.start_minutes !== null && entry.start_minutes > now) || null);
-
-  return {
-    currentId: currentProgram?.id || null,
-    nextId: nextProgram?.id || null
-  };
-}
-
-function getNextBoundaryMinutes(entries, now) {
-  return entries
-    .flatMap((entry) => [entry.start_minutes, entry.end_minutes])
-    .filter((minutes) => Number.isInteger(minutes) && minutes > now)
-    .sort((a, b) => a - b)[0] ?? null;
-}
-
-function buildMetaLine(e) {
-  return `${formatTime12Hour(e.start_time)} @ ${e.location_name}`;
-}
-
-function scheduleLineSwap(slot) {
-  const toDesc = () => {
-    slot.classList.remove('show-meta');
-    slot.classList.add('show-description');
-  };
-  const toMeta = () => {
-    slot.classList.remove('show-description');
-    slot.classList.add('show-meta');
-  };
-
-  const t1 = setTimeout(() => {
-    toDesc();
-    const t2 = setTimeout(() => {
-      toMeta();
-      scheduleLineSwap(slot);
-    }, DESC_HOLD_MS + 380);
-    state.lineTimerIds.push(t2);
-  }, META_HOLD_MS);
-
-  state.lineTimerIds.push(t1);
-}
-
-function applyTileStateClasses(tile, entryId, programStates) {
-  tile.classList.toggle('is-current', programStates.currentId === entryId);
-  tile.classList.toggle('is-next', programStates.nextId === entryId);
-}
-
-function createTile(entry, index, programStates) {
-  const tile = document.createElement('article');
-  tile.className = 'program-tile';
-  tile.dataset.entryId = entry.id;
-  applyTileStateClasses(tile, entry.id, programStates);
-
-  const pos = getTilePosition(index);
-
-  tile.style.left = pos.left + 'px';
-  tile.style.top = pos.top + 'px';
-  tile.style.background = hexToRgba(entry.hex_color, TILE_OPACITY);
-
-  tile.style.transition = `
-    left ${TRANSITION_DURATION_MS}ms cubic-bezier(0.22,1,0.36,1),
-    top ${TRANSITION_DURATION_MS}ms cubic-bezier(0.22,1,0.36,1),
-    opacity ${TRANSITION_DURATION_MS}ms ease,
-    transform ${TRANSITION_DURATION_MS}ms ease,
-    box-shadow 280ms ease
-  `;
-
-  const icon = document.createElement('div');
-  icon.className = 'program-icon';
-
-  const img = document.createElement('img');
-  img.src = entry.icon_path;
-  icon.appendChild(img);
-
-  const content = document.createElement('div');
-  content.className = 'program-content';
-
-  const title = document.createElement('div');
-  title.className = 'program-title';
-  title.textContent = entry.title;
-
-  const slot = document.createElement('div');
-  slot.className = 'program-line-slot show-meta';
-
-  const meta = document.createElement('div');
-  meta.className = 'program-meta';
-  meta.textContent = buildMetaLine(entry);
-
-  const desc = document.createElement('div');
-  desc.className = 'program-description';
-  desc.textContent = entry.description;
-
-  slot.append(meta, desc);
-  content.append(title, slot);
-  tile.append(icon, content);
-
-  if (entry.description) scheduleLineSwap(slot);
-
-  return tile;
-}
-
-function reconcile(newEntries, programStates) {
-  clearLineTimers();
-
-  const oldIds = new Set(state.visibleEntries.map(e => e.id));
-  const newIds = new Set(newEntries.map(e => e.id));
-
-  // EXIT
-  oldIds.forEach(id => {
-    if (!newIds.has(id)) {
-      const t = state.tileElementsById.get(id);
-      if (!t) return;
-      t.style.transform = 'translateX(-180px)';
-      t.style.opacity = '0';
-      setTimeout(()=> {
-        t.remove();
-        state.tileElementsById.delete(id);
-      }, TRANSITION_DURATION_MS);
+    function clearLineTimers() {
+      state.lineTimerIds.forEach(clearTimeout);
+      state.lineTimerIds = [];
     }
-  });
 
-  newEntries.forEach((e, i) => {
-    const pos = getTilePosition(i);
-    const existing = state.tileElementsById.get(e.id);
+    function clearTransitionTimer() {
+      if (state.transitionTimerId) {
+        clearTimeout(state.transitionTimerId);
+        state.transitionTimerId = null;
+      }
+    }
 
-    if (existing) {
-      existing.style.transitionDelay = `${i * 18}ms`;
-      existing.style.left = pos.left + 'px';
-      existing.style.top = pos.top + 'px';
-      existing.style.opacity = '1';
-      existing.style.transform = 'translate(0,0)';
-      applyTileStateClasses(existing, e.id, programStates);
-    } else {
-      const t = createTile(e, i, programStates);
-      t.style.opacity = '0';
-      t.style.transform = i >= 5 ? 'translateX(180px)' : 'translateY(12px)';
+    function showStatus(message) {
+      clearLineTimers();
+      clearTransitionTimer();
+      statusPanel.hidden = false;
+      statusPanel.textContent = message;
+      grid.hidden = true;
+      grid.innerHTML = '';
+      state.tileElementsById.clear();
+    }
 
-      grid.appendChild(t);
-      state.tileElementsById.set(e.id, t);
+    function showGrid() {
+      statusPanel.hidden = true;
+      grid.hidden = false;
+    }
 
-      requestAnimationFrame(() => {
-        t.style.left = pos.left + 'px';
-        t.style.top = pos.top + 'px';
-        t.style.opacity = '1';
-        t.style.transform = 'translate(0,0)';
+    function getCurrentVancouverParts() {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE_NAME,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
       });
+
+      const parts = formatter.formatToParts(new Date());
+      const get = t => parts.find(p => p.type === t)?.value ?? '00';
+
+      return {
+        year: +get('year'),
+        month: +get('month'),
+        day: +get('day'),
+        hour: +get('hour'),
+        minute: +get('minute'),
+        second: +get('second')
+      };
     }
-  });
 
-  state.visibleEntries = newEntries;
-  showGrid();
-}
+    function getCurrentMinutesInVancouver() {
+      const p = getCurrentVancouverParts();
+      return p.hour * 60 + p.minute;
+    }
 
-function refreshQueue() {
-  const now = getCurrentMinutesInVancouver();
-  const visible = getVisibleEntries(state.allEntries, now);
-  const programStates = resolveProgramStates(state.allEntries, now);
+    function getMillisecondsUntilVancouverMinute(targetMinutes) {
+      const now = getCurrentVancouverParts();
+      const currentMinutes = now.hour * 60 + now.minute;
 
-  if (!visible.length) return showStatus('No programs scheduled today');
+      let delta = targetMinutes - currentMinutes;
+      if (delta < 0) delta += 1440;
 
-  reconcile(visible, programStates);
+      const msRemaining = (60 - now.second) * 1000;
 
-  const next = getNextBoundaryMinutes(state.allEntries, now);
-  if (!next) return;
+      return delta === 0
+        ? msRemaining
+        : msRemaining + (delta - 1) * 60000;
+    }
 
-  const ms = getMillisecondsUntilVancouverMinute(next) + BOUNDARY_FUDGE_MS;
-  state.transitionTimerId = setTimeout(refreshQueue, ms);
-}
+    function parseTimeToMinutes(t) {
+      if (!/^\d{2}:\d{2}$/.test(t)) return null;
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
 
-async function initialize() {
-  showStatus('Loading program schedule...');
+    function formatTime12Hour(t) {
+      if (!t) return '';
+      const [h, m] = t.split(':').map(Number);
+      const suffix = h >= 12 ? 'p.m.' : 'a.m.';
+      const hour = h % 12 || 12;
+      return `${hour}:${String(m).padStart(2,'0')} ${suffix}`;
+    }
 
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE_NAME }).format(new Date());
+    function normalizeHexColor(hex) {
+      return /^#[0-9a-fA-F]{6}$/.test(hex || '') ? hex : '#446688';
+    }
 
-  const [locRes, schedRes] = await Promise.all([
-    supabaseClient.from('program_location_styles').select('*').eq('is_active', true),
-    supabaseClient.from('program_schedule_sets').select('*').eq('schedule_date', today).eq('mode', 'live').maybeSingle()
-  ]);
+    function hexToRgba(hex, a) {
+      const h = normalizeHexColor(hex);
+      const r = parseInt(h.slice(1,3),16);
+      const g = parseInt(h.slice(3,5),16);
+      const b = parseInt(h.slice(5,7),16);
+      return `rgba(${r},${g},${b},${a})`;
+    }
 
-  if (locRes.error || schedRes.error || !schedRes.data) {
-    return showStatus('Schedule unavailable');
-  }
+    function getTilePosition(i) {
+      return i < LEFT_COLUMN_COUNT
+        ? { left: LAYOUT.leftX, top: LAYOUT.startY + i * LAYOUT.rowStep }
+        : { left: LAYOUT.rightX, top: LAYOUT.startY + (i - LEFT_COLUMN_COUNT) * LAYOUT.rowStep };
+    }
 
-  const locMap = Object.fromEntries(locRes.data.map(l => [l.location_key, l]));
+    function getVisibleEntries(entries, now) {
+      return entries
+        .filter(e => e.end_minutes === null || e.end_minutes > now)
+        .slice(0, PAGE_SIZE);
+    }
 
-  state.allEntries = schedRes.data.entries_json
-    .filter(e => !e.is_cancelled)
-    .map(e => ({
-      ...e,
-      start_minutes: parseTimeToMinutes(e.start_time),
-      end_minutes: parseTimeToMinutes(e.end_time),
-      location_name: locMap[e.location_key]?.display_name || e.location_key,
-      icon_path: `./assets/icons/${e.location_key}.svg`,
-      hex_color: locMap[e.location_key]?.hex_color || '#446688'
-    }))
-    .sort((a,b)=>a.start_minutes - b.start_minutes);
+    function resolveProgramStates(entries, now) {
+      const sortedEntries = Array.isArray(entries) ? entries : [];
+      const currentIndex = sortedEntries.findIndex((entry) => (
+        entry.start_minutes !== null
+        && entry.end_minutes !== null
+        && entry.start_minutes <= now
+        && now < entry.end_minutes
+      ));
 
-  grid.innerHTML = '';
-  state.tileElementsById.clear();
+      const currentProgram = currentIndex >= 0 ? sortedEntries[currentIndex] : null;
+      const nextProgram = currentProgram
+        ? (sortedEntries[currentIndex + 1] || null)
+        : (sortedEntries.find((entry) => entry.start_minutes !== null && entry.start_minutes > now) || null);
 
-  const now = getCurrentMinutesInVancouver();
-  const visible = getVisibleEntries(state.allEntries, now);
-  const programStates = resolveProgramStates(state.allEntries, now);
+      return {
+        currentId: currentProgram?.id || null,
+        nextId: nextProgram?.id || null
+      };
+    }
 
-  visible.forEach((e,i)=> {
-    const t = createTile(e,i, programStates);
-    grid.appendChild(t);
-    state.tileElementsById.set(e.id, t);
-  });
+    function resolveNextProgramStates(entries, now) {
+      const sortedEntries = Array.isArray(entries) ? entries : [];
 
-  state.visibleEntries = visible;
-  showGrid();
-  refreshQueue();
-}
+      const eligibleEntries = sortedEntries.filter((entry) => (
+        Number.isInteger(entry.start_minutes) &&
+        now < (entry.start_minutes + 5)
+      ));
 
-document.addEventListener('DOMContentLoaded', initialize);
-</script>
+      if (!eligibleEntries.length) {
+        return {
+          nextIds: new Set()
+        };
+      }
+
+      const nextStartMinutes = eligibleEntries[0].start_minutes;
+
+      return {
+        nextIds: new Set(
+          eligibleEntries
+            .filter((entry) => entry.start_minutes === nextStartMinutes)
+            .map((entry) => entry.id)
+        )
+      };
+    }
+
+    function getNextBoundaryMinutes(entries, now) {
+      return entries
+        .flatMap((entry) => {
+          const boundaries = [];
+
+          if (Number.isInteger(entry.start_minutes)) {
+            boundaries.push(entry.start_minutes);
+            boundaries.push(entry.start_minutes + 5);
+          }
+
+          return boundaries;
+        })
+        .filter((minutes) => Number.isInteger(minutes) && minutes > now)
+        .sort((a, b) => a - b)[0] ?? null;
+    }
+
+    function buildMetaLine(e) {
+      return `${formatTime12Hour(e.start_time)} @ ${e.location_name}`;
+    }
+
+    function scheduleLineSwap(slot) {
+      const toDesc = () => {
+        slot.classList.remove('show-meta');
+        slot.classList.add('show-description');
+      };
+      const toMeta = () => {
+        slot.classList.remove('show-description');
+        slot.classList.add('show-meta');
+      };
+
+      const t1 = setTimeout(() => {
+        toDesc();
+        const t2 = setTimeout(() => {
+          toMeta();
+          scheduleLineSwap(slot);
+        }, DESC_HOLD_MS + 380);
+        state.lineTimerIds.push(t2);
+      }, META_HOLD_MS);
+
+      state.lineTimerIds.push(t1);
+    }
+
+    function applyTileStateClasses(tile, entryId, programStates) {
+      tile.classList.toggle('is-next', programStates.nextIds.has(entryId));
+    }
+
+    function createTile(entry, index, programStates) {
+      const tile = document.createElement('article');
+      tile.className = 'program-tile';
+      tile.dataset.entryId = entry.id;
+      applyTileStateClasses(tile, entry.id, programStates);
+
+      const pos = getTilePosition(index);
+
+      tile.style.left = pos.left + 'px';
+      tile.style.top = pos.top + 'px';
+      tile.style.background = hexToRgba(entry.hex_color, TILE_OPACITY);
+
+      tile.style.transition = `
+        left ${TRANSITION_DURATION_MS}ms cubic-bezier(0.22,1,0.36,1),
+        top ${TRANSITION_DURATION_MS}ms cubic-bezier(0.22,1,0.36,1),
+        opacity ${TRANSITION_DURATION_MS}ms ease,
+        transform ${TRANSITION_DURATION_MS}ms ease,
+        box-shadow 280ms ease
+      `;
+
+      const icon = document.createElement('div');
+      icon.className = 'program-icon';
+
+      const img = document.createElement('img');
+      img.src = entry.icon_path;
+      icon.appendChild(img);
+
+      const content = document.createElement('div');
+      content.className = 'program-content';
+
+      const title = document.createElement('div');
+      title.className = 'program-title';
+      title.textContent = entry.title;
+
+      const slot = document.createElement('div');
+      slot.className = 'program-line-slot show-meta';
+
+      const meta = document.createElement('div');
+      meta.className = 'program-meta';
+      meta.textContent = buildMetaLine(entry);
+
+      const desc = document.createElement('div');
+      desc.className = 'program-description';
+      desc.textContent = entry.description;
+
+      slot.append(meta, desc);
+      content.append(title, slot);
+      tile.append(icon, content);
+
+      if (entry.description) scheduleLineSwap(slot);
+
+      return tile;
+    }
+
+    function reconcile(newEntries, programStates) {
+      clearLineTimers();
+
+      const oldIds = new Set(state.visibleEntries.map(e => e.id));
+      const newIds = new Set(newEntries.map(e => e.id));
+
+      oldIds.forEach(id => {
+        if (!newIds.has(id)) {
+          const t = state.tileElementsById.get(id);
+          if (!t) return;
+          t.style.transform = 'translateX(-180px)';
+          t.style.opacity = '0';
+          setTimeout(() => {
+            t.remove();
+            state.tileElementsById.delete(id);
+          }, TRANSITION_DURATION_MS);
+        }
+      });
+
+      newEntries.forEach((e, i) => {
+        const pos = getTilePosition(i);
+        const existing = state.tileElementsById.get(e.id);
+
+        if (existing) {
+          existing.style.transitionDelay = `${i * 18}ms`;
+          existing.style.left = pos.left + 'px';
+          existing.style.top = pos.top + 'px';
+          existing.style.opacity = '1';
+          existing.style.transform = 'translate(0,0)';
+          applyTileStateClasses(existing, e.id, programStates);
+        } else {
+          const t = createTile(e, i, programStates);
+          t.style.opacity = '0';
+          t.style.transform = i >= 5 ? 'translateX(180px)' : 'translateY(12px)';
+
+          grid.appendChild(t);
+          state.tileElementsById.set(e.id, t);
+
+          requestAnimationFrame(() => {
+            t.style.left = pos.left + 'px';
+            t.style.top = pos.top + 'px';
+            t.style.opacity = '1';
+            t.style.transform = 'translate(0,0)';
+          });
+        }
+      });
+
+      state.visibleEntries = newEntries;
+      showGrid();
+    }
+
+    function refreshQueue() {
+      const now = getCurrentMinutesInVancouver();
+      const visible = getVisibleEntries(state.allEntries, now);
+      const programStates = resolveNextProgramStates(state.allEntries, now);
+
+      if (!visible.length) return showStatus('No programs scheduled today');
+
+      reconcile(visible, programStates);
+
+      const next = getNextBoundaryMinutes(state.allEntries, now);
+      if (!next) return;
+
+      const ms = getMillisecondsUntilVancouverMinute(next) + BOUNDARY_FUDGE_MS;
+      state.transitionTimerId = setTimeout(refreshQueue, ms);
+    }
+
+    async function initialize() {
+      showStatus('Loading program schedule...');
+
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE_NAME }).format(new Date());
+
+      const [locRes, schedRes] = await Promise.all([
+        supabaseClient.from('program_location_styles').select('*').eq('is_active', true),
+        supabaseClient.from('program_schedule_sets').select('*').eq('schedule_date', today).eq('mode', 'live').maybeSingle()
+      ]);
+
+      if (locRes.error || schedRes.error || !schedRes.data) {
+        return showStatus('Schedule unavailable');
+      }
+
+      const locMap = Object.fromEntries(locRes.data.map(l => [l.location_key, l]));
+
+      state.allEntries = schedRes.data.entries_json
+        .filter(e => !e.is_cancelled)
+        .map(e => ({
+          ...e,
+          start_minutes: parseTimeToMinutes(e.start_time),
+          end_minutes: parseTimeToMinutes(e.end_time),
+          location_name: locMap[e.location_key]?.display_name || e.location_key,
+          icon_path: `./assets/icons/${e.location_key}.svg`,
+          hex_color: locMap[e.location_key]?.hex_color || '#446688'
+        }))
+        .sort((a, b) => a.start_minutes - b.start_minutes);
+
+      grid.innerHTML = '';
+      state.tileElementsById.clear();
+
+      const now = getCurrentMinutesInVancouver();
+      const visible = getVisibleEntries(state.allEntries, now);
+      const programStates = resolveNextProgramStates(state.allEntries, now);
+
+      visible.forEach((e, i) => {
+        const t = createTile(e, i, programStates);
+        grid.appendChild(t);
+        state.tileElementsById.set(e.id, t);
+      });
+
+      state.visibleEntries = visible;
+      showGrid();
+      refreshQueue();
+    }
+
+    document.addEventListener('DOMContentLoaded', initialize);
+  </script>
   
 </body>
 </html>
