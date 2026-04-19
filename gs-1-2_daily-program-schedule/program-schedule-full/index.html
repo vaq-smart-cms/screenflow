@@ -508,8 +508,8 @@
     const TIMEZONE_NAME = 'America/Vancouver';
     const TILE_OPACITY = 0.80;
 
-    const META_HOLD_MS = 3200;
-    const DESC_HOLD_MS = 3200;
+    const META_HOLD_MS = 4000;
+    const DESC_HOLD_MS = 4000;
 
     const TRANSITION_DURATION_MS = 520;
     const BOUNDARY_FUDGE_MS = 250;
@@ -708,11 +708,21 @@
       return `${formatTime12Hour(e.start_time)} @ ${e.location_name}`;
     }
 
-    function scheduleLineSwap(slot) {
+    function scheduleLineSwap(slot, hasDescription) {
+      if (!slot) return;
+
+      slot.classList.remove('show-description');
+      slot.classList.add('show-meta');
+
+      if (!hasDescription) {
+        return;
+      }
+
       const toDesc = () => {
         slot.classList.remove('show-meta');
         slot.classList.add('show-description');
       };
+
       const toMeta = () => {
         slot.classList.remove('show-description');
         slot.classList.add('show-meta');
@@ -722,7 +732,7 @@
         toDesc();
         const t2 = setTimeout(() => {
           toMeta();
-          scheduleLineSwap(slot);
+          scheduleLineSwap(slot, hasDescription);
         }, DESC_HOLD_MS + 380);
         state.lineTimerIds.push(t2);
       }, META_HOLD_MS);
@@ -777,13 +787,13 @@
 
       const desc = document.createElement('div');
       desc.className = 'program-description';
-      desc.textContent = entry.description;
+      desc.textContent = String(entry.description || '').trim();
 
       slot.append(meta, desc);
       content.append(title, slot);
       tile.append(icon, content);
 
-      if (entry.description) scheduleLineSwap(slot);
+      scheduleLineSwap(slot, !!String(entry.description || '').trim());
 
       return tile;
     }
@@ -810,6 +820,7 @@
       newEntries.forEach((e, i) => {
         const pos = getTilePosition(i);
         const existing = state.tileElementsById.get(e.id);
+        const hasDescription = !!String(e.description || '').trim();
 
         if (existing) {
           existing.style.transitionDelay = `${i * 18}ms`;
@@ -818,6 +829,17 @@
           existing.style.opacity = '1';
           existing.style.transform = 'translate(0,0)';
           applyTileStateClasses(existing, e.id, programStates);
+
+          const titleEl = existing.querySelector('.program-title');
+          const metaEl = existing.querySelector('.program-meta');
+          const descEl = existing.querySelector('.program-description');
+          const slotEl = existing.querySelector('.program-line-slot');
+
+          if (titleEl) titleEl.textContent = e.title;
+          if (metaEl) metaEl.textContent = buildMetaLine(e);
+          if (descEl) descEl.textContent = String(e.description || '').trim();
+
+          scheduleLineSwap(slotEl, hasDescription);
         } else {
           const t = createTile(e, i, programStates);
           t.style.opacity = '0';
