@@ -93,21 +93,21 @@
     @keyframes clockGlowPulse {
       0%,
       100% {
+        font-size: 82px;
         text-shadow:
           0 0 6px color-mix(in srgb, var(--glow-color) 35%, transparent),
           0 0 14px color-mix(in srgb, var(--glow-color) 48%, transparent),
           0 0 24px color-mix(in srgb, var(--glow-color) 36%, transparent),
           0 0 34px color-mix(in srgb, var(--glow-color) 22%, transparent);
-        transform: translateY(-11px) scale(1);
       }
 
       50% {
+        font-size: 102px; /* +20px peak */
         text-shadow:
           0 0 10px color-mix(in srgb, var(--glow-color) 48%, transparent),
           0 0 22px color-mix(in srgb, var(--glow-color) 62%, transparent),
           0 0 36px color-mix(in srgb, var(--glow-color) 50%, transparent),
           0 0 52px color-mix(in srgb, var(--glow-color) 32%, transparent);
-        transform: translateY(-11px) scale(1.012);
       }
     }
   </style>
