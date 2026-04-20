@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=768, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
+  <title>VAQ (Mini) Crowdriff CTA</title>
+
+  <!--
+    Target container: 768 x 810 px
+    Scale fix applied for Kuusoft environment rendering oversized.
+    Shared asset path note:
+    This page uses the repo-level ../assets/ folder for common fonts and imagery.
+    Update these paths if the hosted folder structure changes later.
+  -->
+
+  <style>
+    @font-face {
+      font-family: 'BlissPro';
+      src:
+        url('../assets/BlissPro-Bold.woff2') format('woff2'),
+        url('../assets/BlissPro-Bold.woff') format('woff');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'BlissPro';
+      src:
+        url('../assets/BlissPro-Italic.woff2') format('woff2'),
+        url('../assets/BlissPro-Italic.woff') format('woff');
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 768px;
+      height: 810px;
+      overflow: hidden;
+      background: transparent;
+
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'BlissPro', Arial, sans-serif;
+    }
+
+    .frame {
+      position: relative;
+      width: 768px;
+      height: 810px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .bg-rotator {
+      position: absolute;
+      width: 5000px;
+      height: 5000px;
+      top: -3500px;
+      left: -2116px;
+      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+      background-repeat: no-repeat;
+      background-size: 5000px 5000px;
+      transform-origin: center center;
+      animation: slowRotate 200s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes slowRotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(-360deg); }
+    }
+
+    .content-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cta-region {
+      width: 620px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .qr-card {
+      width: 220px;
+      height: 220px;
+      background: #ffffff;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      margin-bottom: 42px;
+    }
+
+    .qr-card img {
+      display: block;
+      width: 160px;
+      height: 160px;
+    }
+
+    .cta-text {
+      width: 100%;
+      color: #ffffff;
+    }
+
+    .cta-headline {
+      margin: 0 0 22px 0;
+      font-family: 'BlissPro', Arial, sans-serif;
+      font-weight: 700;
+      font-style: normal;
+      font-size: 44px;
+      line-height: 1.08;
+      letter-spacing: 0;
+      color: #ffffff;
+    }
+
+    .cta-url {
+      margin: 0;
+      font-family: 'BlissPro', Arial, sans-serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 30px;
+      line-height: 1.1;
+      color: #f2b632;
+      word-break: break-word;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="frame">
+    <div class="bg-rotator"></div>
+
+    <div class="content-layer">
+      <div class="cta-region">
+        <div class="qr-card">
+          <img src="images/crowdriff_cta_qr_260401.png" alt="QR code linking to photo upload page" />
+        </div>
+
+        <div class="cta-text">
+          <p class="cta-headline">Share Your #VanAqua Memories With Us!</p>
+          <p class="cta-url">vanaqua.org/social/upload-photos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
