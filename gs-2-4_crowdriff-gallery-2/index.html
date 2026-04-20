@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=768, initial-scale=1.0" />
-  <!--
   <meta name="viewport" content="width=768, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
-  -->
   <title>VAQ (Mini) Crowdriff Gallery 2</title>
 
   <style>
@@ -52,6 +49,13 @@
       z-index: 2;
       overflow: hidden;
       background: transparent;
+      text-align: center;
+      padding-top: 90px;
+    }
+
+    .gallery-shell {
+      display: inline-block;
+      zoom: 1.5;
     }
   </style>
 </head>
@@ -61,7 +65,9 @@
     <div class="bg-rotator"></div>
 
     <div class="gallery-layer">
-      <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
+      <div class="gallery-shell">
+        <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
+      </div>
     </div>
   </div>
 </body>
