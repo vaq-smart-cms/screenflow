@@ -12,12 +12,63 @@
       width: 768px;
       height: 810px;
       overflow: hidden;
+      background: transparent;
+    }
+
+    .frame {
+      position: relative;
+      width: 768px;
+      height: 810px;
+      overflow: hidden;
       background: #000;
+    }
+
+    .bg-rotator {
+      position: absolute;
+      width: 5000px;
+      height: 5000px;
+      top: -3500px;
+      left: -2116px;
+      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+      background-repeat: no-repeat;
+      background-size: 5000px 5000px;
+      transform-origin: center center;
+      animation: slowRotate 200s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes slowRotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .gallery-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    .gallery-wrap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.5);
+      transform-origin: center center;
     }
   </style>
 </head>
 
 <body>
-  <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
+  <div class="frame">
+    <div class="bg-rotator"></div>
+
+    <div class="gallery-layer">
+      <div class="gallery-wrap">
+        <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
