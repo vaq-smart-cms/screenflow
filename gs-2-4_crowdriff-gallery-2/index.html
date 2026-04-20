@@ -5,14 +5,6 @@
   <meta name="viewport" content="width=768, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no" />
   <title>VAQ (Mini) Crowdriff Gallery 2</title>
 
-  <!--
-    Target container: 768 x 810 px
-    Scale fix applied for Kuusoft environment rendering oversized.
-    Shared asset path note:
-    This page uses the repo-level ../assets/ folder for common fonts and imagery.
-    Update these paths if the hosted folder structure changes later.
-  -->
-
   <style>
     html, body {
       margin: 0;
@@ -51,57 +43,12 @@
       to   { transform: rotate(360deg); }
     }
 
-    .content-layer {
+    .gallery-layer {
       position: absolute;
       inset: 0;
       z-index: 2;
-    }
-
-    .gallery-band {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
       background: transparent;
-    }
-
-    .gallery-stage {
-      position: relative;
-      width: 82%;
-      height: 84%;
       overflow: hidden;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* Force the injected CrowdRiff wrapper to occupy the stage */
-    .gallery-stage > * {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: 100% !important;
-      max-height: 100% !important;
-      /* transform: scale(1.08); */
-      transform-origin: center center;
-    }
-
-    /* Defensive rules for injected content */
-    .gallery-stage iframe,
-    .gallery-stage div,
-    .gallery-stage section,
-    .gallery-stage article,
-    .gallery-stage img {
-      box-sizing: border-box;
-      max-width: 100% !important;
-      max-height: 100% !important;
-    }
-
-    /* If CrowdRiff renders images directly, this helps keep them inside */
-    .gallery-stage img {
-      object-fit: contain;
     }
   </style>
 </head>
@@ -110,14 +57,8 @@
   <div class="frame">
     <div class="bg-rotator"></div>
 
-    <div class="content-layer">
-      <div class="gallery-band">
-        <div class="gallery-stage">
-          <!-- CrowdRiff gallery script start -->
-          <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
-          <!-- CrowdRiff gallery script end -->
-        </div>
-      </div>
+    <div class="gallery-layer">
+      <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
     </div>
   </div>
 </body>
