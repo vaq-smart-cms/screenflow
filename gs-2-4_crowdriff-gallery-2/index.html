@@ -48,14 +48,16 @@
       inset: 0;
       z-index: 2;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: transparent;
     }
 
-    .gallery-wrap {
-      transform: scale(1.5);
-      transform-origin: center center;
+    /* Style whatever CrowdRiff injects beside the script */
+    .gallery-layer > :not(script) {
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) scale(1.5);
+      transform-origin: center center !important;
     }
   </style>
 </head>
@@ -65,9 +67,7 @@
     <div class="bg-rotator"></div>
 
     <div class="gallery-layer">
-      <div class="gallery-wrap">
-        <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
-      </div>
+      <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
     </div>
   </div>
 </body>
