@@ -49,13 +49,6 @@
       z-index: 2;
       overflow: hidden;
       background: transparent;
-      text-align: center;
-      padding-top: 90px;
-    }
-
-    .gallery-shell {
-      display: inline-block;
-      zoom: 1.5;
     }
   </style>
 </head>
@@ -65,29 +58,8 @@
     <div class="bg-rotator"></div>
 
     <div class="gallery-layer">
-      <div class="gallery-shell" id="galleryShell">
-        <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
-      </div>
+      <script id="cr-init__7eddc79687979d41" src="https://starling.crowdriff.com/js/crowdriff.js" async></script>
     </div>
   </div>
-
-  <script>
-    (function () {
-      const shell = document.getElementById('galleryShell');
-      if (!shell) return;
-
-      function nudgeLayout() {
-        shell.style.display = 'none';
-        void shell.offsetHeight;
-        shell.style.display = 'inline-block';
-      }
-
-      window.addEventListener('load', function () {
-        setTimeout(nudgeLayout, 500);
-        setTimeout(nudgeLayout, 1500);
-        setTimeout(nudgeLayout, 3000);
-      });
-    })();
-  </script>
 </body>
 </html>
