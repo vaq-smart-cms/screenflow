@@ -67,33 +67,40 @@
 <div class="panel header">
   <div>
     <h1>4D Showtimes Admin</h1>
-    <p>Signed in as: Admin User</p>
+    <p id="session-text">Signed in as: Admin User</p>
   </div>
-  <div class="status-pill">Draft</div>
+  <div id="status-pill" class="status-pill">No date loaded</div>
   <button class="secondary">Sign Out</button>
 </div>
 
 <!-- B — Calendar / Date Picker -->
 <div class="panel">
   <h2>Calendar</h2>
-  <div class="calendar-grid">
-    <div class="day has-draft">1</div>
-    <div class="day has-live">2</div>
-    <div class="day has-edits">3</div>
-    <div class="day">4</div>
-    <div class="day">5</div>
-    <div class="day">6</div>
-    <div class="day">7</div>
+  <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
+  <div class="calendar-grid" id="calendar-grid">
+    <div class="day has-draft" data-date="2026-04-01">1</div>
+    <div class="day has-live" data-date="2026-04-02">2</div>
+    <div class="day has-edits" data-date="2026-04-03">3</div>
+    <div class="day" data-date="2026-04-04">4</div>
+    <div class="day" data-date="2026-04-05">5</div>
+    <div class="day" data-date="2026-04-06">6</div>
+    <div class="day" data-date="2026-04-07">7</div>
   </div>
+</div>
 </div>
 
 <!-- C — Day Summary Panel -->
 <div class="panel">
   <h2>Day Summary</h2>
-  <p>Film: Turtle Odyssey</p>
-  <p>Load: Green</p>
-  <p>Showtimes: 6</p>
-  <p>Last Published: —</p>
+  <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
+  <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
+  <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+  <p><strong>Film:</strong> <span id="summary-film">—</span></p>
+  <p><strong>Load:</strong> <span id="summary-load">—</span></p>
+  <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
+  <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
+  <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
+  <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
 </div>
 
 <!-- D — Film Assignment Panel -->
@@ -145,8 +152,9 @@
 <!-- G — Preview / Publish Section -->
 <div class="panel">
   <h2>Preview & Publish</h2>
-  <p>Mini preview goes here</p>
-  <button class="accent">Publish</button>
+  <p id="publish-summary">Select a date to review publish readiness.</p>
+  <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
+  <button id="publish-button" class="accent" disabled>Publish</button>
 </div>
 
 <!-- H — Secondary Tools -->
@@ -159,8 +167,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+  const SUPABASE_URL = 'https://csxuuwbtxgdpvskggcux.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_jPeweysUr7DZvFxG7F1-LQ_UR8MT1F9';
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -172,7 +180,29 @@
     filmSynopsis: document.getElementById('film-synopsis'),
     filmAdvisory: document.getElementById('film-advisory'),
     filmPosterImage: document.getElementById('film-poster-image'),
-    filmPosterFallback: document.getElementById('film-poster-fallback')
+    filmPosterFallback: document.getElementById('film-poster-fallback'),
+    statusPill: document.getElementById('status-pill'),
+    summaryDate: document.getElementById('summary-date'),
+    summaryDraftStatus: document.getElementById('summary-draft-status'),
+    summaryLiveStatus: document.getElementById('summary-live-status'),
+    summaryFilm: document.getElementById('summary-film'),
+    summaryLoad: document.getElementById('summary-load'),
+    summaryShowtimes: document.getElementById('summary-showtimes'),
+    summaryManualEdits: document.getElementById('summary-manual-edits'),
+    summaryUpdated: document.getElementById('summary-updated'),
+    summaryPublished: document.getElementById('summary-published'),
+    publishSummary: document.getElementById('publish-summary'),
+    publishStatusText: document.getElementById('publish-status-text'),
+    publishButton: document.getElementById('publish-button'),
+    calendarDays: Array.from(document.querySelectorAll('.day[data-date]'))
+  };
+
+  const appState = {
+    selectedDate: '2026-04-03',
+    draftSchedule: null,
+    liveSchedule: null,
+    draftShowtimes: [],
+    liveShowtimes: []
   };
 
   function populateFilmSelect() {
@@ -248,6 +278,138 @@
     }));
   }
 
+  function formatFriendlyDate(ymd) {
+    if (!ymd) return '—';
+    const [year, month, day] = ymd.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Vancouver',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(dateObj);
+  }
+
+  function formatTimestamp(isoString) {
+    if (!isoString) return '—';
+    const dateObj = new Date(isoString);
+    if (Number.isNaN(dateObj.getTime())) return '—';
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Vancouver',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(dateObj);
+  }
+
+  async function fetchScheduleStateForDate(scheduleDate) {
+    const [draftResult, liveResult] = await Promise.all([
+      supabaseClient
+        .from('daily_schedules')
+        .select('id, schedule_date, status, film_id, applied_load_template_id, has_manual_edits, updated_at, published_at, load_templates(name)')
+        .eq('schedule_date', scheduleDate)
+        .eq('status', 'draft')
+        .maybeSingle(),
+      supabaseClient
+        .from('daily_schedules')
+        .select('id, schedule_date, status, film_id, applied_load_template_id, has_manual_edits, updated_at, published_at, load_templates(name)')
+        .eq('schedule_date', scheduleDate)
+        .eq('status', 'live')
+        .maybeSingle()
+    ]);
+
+    if (draftResult.error) {
+      console.error('Failed to fetch draft schedule:', draftResult.error);
+    }
+    if (liveResult.error) {
+      console.error('Failed to fetch live schedule:', liveResult.error);
+    }
+
+    appState.draftSchedule = draftResult.data || null;
+    appState.liveSchedule = liveResult.data || null;
+
+    const [draftShowtimesResult, liveShowtimesResult] = await Promise.all([
+      appState.draftSchedule
+        ? supabaseClient
+            .from('daily_showtimes')
+            .select('id, show_at, is_cancelled')
+            .eq('daily_schedule_id', appState.draftSchedule.id)
+            .order('show_at', { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
+      appState.liveSchedule
+        ? supabaseClient
+            .from('daily_showtimes')
+            .select('id, show_at, is_cancelled')
+            .eq('daily_schedule_id', appState.liveSchedule.id)
+            .order('show_at', { ascending: true })
+        : Promise.resolve({ data: [], error: null })
+    ]);
+
+    if (draftShowtimesResult.error) {
+      console.error('Failed to fetch draft showtimes:', draftShowtimesResult.error);
+    }
+    if (liveShowtimesResult.error) {
+      console.error('Failed to fetch live showtimes:', liveShowtimesResult.error);
+    }
+
+    appState.draftShowtimes = draftShowtimesResult.data || [];
+    appState.liveShowtimes = liveShowtimesResult.data || [];
+  }
+
+  function getFilmById(filmId) {
+    return FILMS.find((film) => film.id === filmId) || null;
+  }
+
+  function updateCalendarIndicators() {
+    ui.calendarDays.forEach((dayEl) => {
+      const dayDate = dayEl.dataset.date;
+      dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
+      if (dayDate !== appState.selectedDate) return;
+      if (appState.draftSchedule) dayEl.classList.add('has-draft');
+      if (appState.liveSchedule) dayEl.classList.add('has-live');
+      if (appState.draftSchedule?.has_manual_edits) dayEl.classList.add('has-edits');
+    });
+  }
+
+  function updateHeaderAndSummary() {
+    const activeSchedule = appState.draftSchedule || appState.liveSchedule;
+    const activeFilm = getFilmById(appState.draftSchedule?.film_id || appState.liveSchedule?.film_id || '');
+    const loadName = appState.draftSchedule?.load_templates?.name || appState.liveSchedule?.load_templates?.name || '—';
+    const draftCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
+
+    ui.statusPill.textContent = activeSchedule
+      ? (appState.liveSchedule ? 'Live exists' : 'Draft only')
+      : 'No schedule loaded';
+
+    ui.summaryDate.textContent = formatFriendlyDate(appState.selectedDate);
+    ui.summaryDraftStatus.textContent = appState.draftSchedule ? 'Draft exists' : 'No draft schedule';
+    ui.summaryLiveStatus.textContent = appState.liveSchedule ? 'Live exists' : 'No live schedule';
+    ui.summaryFilm.textContent = activeFilm?.title || '—';
+    ui.summaryLoad.textContent = loadName;
+    ui.summaryShowtimes.textContent = String(draftCount);
+    ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits ? 'Yes' : 'No';
+    ui.summaryUpdated.textContent = formatTimestamp(appState.draftSchedule?.updated_at || activeSchedule?.updated_at || '');
+    ui.summaryPublished.textContent = formatTimestamp(appState.liveSchedule?.published_at || '');
+  }
+
+  function updatePublishState() {
+    const hasDate = !!appState.selectedDate;
+    const hasDraft = !!appState.draftSchedule;
+    const hasFilm = !!(appState.draftSchedule?.film_id);
+    const hasShowtimes = appState.draftShowtimes.some((row) => !row.is_cancelled);
+    const canPublish = hasDate && hasDraft && hasFilm && hasShowtimes;
+
+    ui.publishButton.disabled = !canPublish;
+    ui.publishStatusText.textContent = canPublish ? 'Ready to publish' : 'Not ready';
+    ui.publishSummary.textContent = canPublish
+      ? `Draft for ${formatFriendlyDate(appState.selectedDate)} meets the current publish readiness rules.`
+      : `Publish requires a selected date, a draft schedule, a film assignment, and at least one active showtime.`;
+  }
+
   async function initializeFilmPreview() {
     await fetchActiveFilms();
     populateFilmSelect();
@@ -258,6 +420,20 @@
     });
 
     ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
+
+    await fetchScheduleStateForDate(appState.selectedDate);
+
+    if (appState.draftSchedule?.film_id) {
+      ui.filmSelect.value = appState.draftSchedule.film_id;
+      renderFilmPreview(appState.draftSchedule.film_id);
+    } else if (appState.liveSchedule?.film_id) {
+      ui.filmSelect.value = appState.liveSchedule.film_id;
+      renderFilmPreview(appState.liveSchedule.film_id);
+    }
+
+    updateCalendarIndicators();
+    updateHeaderAndSummary();
+    updatePublishState();
   }
 
   document.addEventListener('DOMContentLoaded', initializeFilmPreview);
