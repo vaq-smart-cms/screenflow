@@ -65,6 +65,23 @@
 </head>
 <body>
 
+<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+  <h2>Sign In</h2>
+  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+    <input id="email-input" type="email" autocomplete="username">
+  </label>
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+    <input id="password-input" type="password" autocomplete="current-password">
+  </label>
+  <button id="sign-in-button" class="primary" style="width:100%; margin-bottom:10px;">Sign In</button>
+  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
+</div>
+
+<div id="app-shell" style="display:none;">
+
 <!-- A — Header / Status Bar -->
 <div class="panel header">
   <div>
@@ -179,6 +196,12 @@
   let LOAD_TEMPLATE_TIMES = [];
 
   const ui = {
+    authPanel: document.getElementById('auth-panel'),
+    appShell: document.getElementById('app-shell'),
+    emailInput: document.getElementById('email-input'),
+    passwordInput: document.getElementById('password-input'),
+    signInButton: document.getElementById('sign-in-button'),
+    authMessage: document.getElementById('auth-message'),
     filmSelect: document.getElementById('film-select'),
     filmTitle: document.getElementById('film-title'),
     filmSynopsis: document.getElementById('film-synopsis'),
@@ -186,6 +209,7 @@
     filmPosterImage: document.getElementById('film-poster-image'),
     filmPosterFallback: document.getElementById('film-poster-fallback'),
     statusPill: document.getElementById('status-pill'),
+    sessionText: document.getElementById('session-text'),
     summaryDate: document.getElementById('summary-date'),
     summaryDraftStatus: document.getElementById('summary-draft-status'),
     summaryLiveStatus: document.getElementById('summary-live-status'),
@@ -215,16 +239,31 @@
   function populateFilmSelect() {
     if (!ui.filmSelect) return;
 
+    const currentValue = ui.filmSelect.value;
+    ui.filmSelect.innerHTML = '';
+
     if (!FILMS.length) {
-      ui.filmSelect.innerHTML = '<option value="">No active films available</option>';
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'No active films available';
+      ui.filmSelect.appendChild(option);
       ui.filmSelect.disabled = true;
       return;
     }
 
     ui.filmSelect.disabled = false;
-    ui.filmSelect.innerHTML = FILMS
-      .map((film) => `<option value="${film.id}">${film.title}</option>`)
-      .join('');
+
+    FILMS.forEach((film) => {
+      const option = document.createElement('option');
+      option.value = film.id;
+      option.textContent = film.title;
+      ui.filmSelect.appendChild(option);
+    });
+
+    const hasMatchingValue = FILMS.some((film) => film.id === currentValue);
+    if (hasMatchingValue) {
+      ui.filmSelect.value = currentValue;
+    }
   }
 
   function renderFilmPreview(filmId) {
@@ -263,8 +302,14 @@
   function populateLoadSelect() {
     if (!ui.loadSelect) return;
 
+    const currentValue = ui.loadSelect.value;
+    ui.loadSelect.innerHTML = '';
+
     if (!LOAD_TEMPLATES.length) {
-      ui.loadSelect.innerHTML = '<option value="">No active loads available</option>';
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'No active loads available';
+      ui.loadSelect.appendChild(option);
       ui.loadSelect.disabled = true;
       ui.applyLoadButton.disabled = true;
       return;
@@ -272,9 +317,18 @@
 
     ui.loadSelect.disabled = false;
     ui.applyLoadButton.disabled = false;
-    ui.loadSelect.innerHTML = LOAD_TEMPLATES
-      .map((load) => `<option value="${load.id}">${load.name}</option>`)
-      .join('');
+
+    LOAD_TEMPLATES.forEach((load) => {
+      const option = document.createElement('option');
+      option.value = load.id;
+      option.textContent = load.name;
+      ui.loadSelect.appendChild(option);
+    });
+
+    const hasMatchingValue = LOAD_TEMPLATES.some((load) => load.id === currentValue);
+    if (hasMatchingValue) {
+      ui.loadSelect.value = currentValue;
+    }
   }
 
   function renderLoadPreview(loadId) {
@@ -397,7 +451,7 @@
     try {
       const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
 
-      const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
+      const { error } = await supabaseClient.rpc('generate_daily_schedule', {
         p_schedule_date: appState.selectedDate,
         p_film_id: selectedFilmId,
         p_load_template_id: selectedLoadId
@@ -607,7 +661,80 @@
     await loadSelectedDateState();
   }
 
-  async function initializeFilmPreview() {
+  function setAuthenticatedUi(session) {
+    const isAuthed = !!session;
+    ui.authPanel.style.display = isAuthed ? 'none' : 'block';
+    ui.appShell.style.display = isAuthed ? 'block' : 'none';
+    ui.sessionText.textContent = isAuthed
+      ? `Signed in as: ${session.user.email}`
+      : 'Signed in as: Admin User';
+  }
+
+  async function handleSignIn() {
+    const email = ui.emailInput.value.trim();
+    const password = ui.passwordInput.value;
+
+    if (!email || !password) {
+      ui.authMessage.textContent = 'Enter your email and password.';
+      return;
+    }
+
+    ui.signInButton.disabled = true;
+    ui.authMessage.textContent = 'Signing in...';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    ui.signInButton.disabled = false;
+
+    if (error) {
+      ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
+      return;
+    }
+
+    ui.authMessage.textContent = 'Sign-in successful.';
+    await initializeAdminApp();
+  }
+
+  async function handleSignOut() {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+      console.error('Sign-out failed:', error);
+      return;
+    }
+
+    FILMS = [];
+    LOAD_TEMPLATES = [];
+    LOAD_TEMPLATE_TIMES = [];
+    appState.draftSchedule = null;
+    appState.liveSchedule = null;
+    appState.draftShowtimes = [];
+    appState.liveShowtimes = [];
+    ui.passwordInput.value = '';
+    ui.authMessage.textContent = 'Signed out.';
+    setAuthenticatedUi(null);
+  }
+
+  async function initializeAdminApp() {
+    const { data, error } = await supabaseClient.auth.getSession();
+    const session = data?.session || null;
+
+    if (error) {
+      console.error('Session check failed:', error);
+      setAuthenticatedUi(null);
+      return;
+    }
+
+    if (!session) {
+      setAuthenticatedUi(null);
+      return;
+    }
+
+    setAuthenticatedUi(session);
+
     await fetchActiveFilms();
     await fetchActiveLoads();
     await fetchLoadTemplateTimes();
@@ -617,20 +744,40 @@
     renderFilmPreview(FILMS[0]?.id || '');
     renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
 
-    ui.filmSelect.addEventListener('change', (event) => {
-      renderFilmPreview(event.target.value);
-    });
+    if (!ui.filmSelect.dataset.bound) {
+      ui.filmSelect.addEventListener('change', (event) => {
+        renderFilmPreview(event.target.value);
+      });
+      ui.filmSelect.dataset.bound = 'true';
+    }
 
-    ui.loadSelect.addEventListener('change', (event) => {
-      renderLoadPreview(event.target.value);
-    });
+    if (!ui.loadSelect.dataset.bound) {
+      ui.loadSelect.addEventListener('change', (event) => {
+        renderLoadPreview(event.target.value);
+      });
+      ui.loadSelect.dataset.bound = 'true';
+    }
 
-    ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
-    ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
+    if (!ui.applyLoadButton.dataset.bound) {
+      ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
+      ui.applyLoadButton.dataset.bound = 'true';
+    }
+
+    if (!ui.filmPosterImage.dataset.bound) {
+      ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
+      ui.filmPosterImage.dataset.bound = 'true';
+    }
 
     const calendarGrid = document.getElementById('calendar-grid');
-    if (calendarGrid) {
+    if (calendarGrid && !calendarGrid.dataset.bound) {
       calendarGrid.addEventListener('click', handleCalendarDayClick);
+      calendarGrid.dataset.bound = 'true';
+    }
+
+    const signOutButton = document.querySelector('.header .secondary');
+    if (signOutButton && !signOutButton.dataset.bound) {
+      signOutButton.addEventListener('click', handleSignOut);
+      signOutButton.dataset.bound = 'true';
     }
 
     await loadSelectedDateState();
@@ -641,7 +788,33 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', initializeFilmPreview);
+  async function initializePage() {
+    ui.signInButton.addEventListener('click', handleSignIn);
+    ui.passwordInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+    ui.emailInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+      setAuthenticatedUi(session);
+      if (session) {
+        await initializeAdminApp();
+      }
+    });
+
+    await initializeAdminApp();
+  }
+
+  document.addEventListener('DOMContentLoaded', initializePage);
 </script>
+</div>
 </body>
 </html>
