@@ -135,12 +135,12 @@
 <!-- E — Load Assignment Panel -->
 <div class="panel">
   <h2>Load Assignment</h2>
-  <select>
-    <option>Green</option>
-    <option>Yellow</option>
-    <option>Red</option>
-  </select>
-  <button class="primary">Apply Load to Draft</button>
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
+    <select id="load-select"></select>
+  </label>
+  <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
+  <button id="apply-load-button" class="primary">Apply Load to Draft</button>
 </div>
 
 <!-- F — Draft Showtimes Editor -->
@@ -175,6 +175,8 @@
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let FILMS = [];
+  let LOAD_TEMPLATES = [];
+  let LOAD_TEMPLATE_TIMES = [];
 
   const ui = {
     filmSelect: document.getElementById('film-select'),
@@ -196,7 +198,10 @@
     publishSummary: document.getElementById('publish-summary'),
     publishStatusText: document.getElementById('publish-status-text'),
     publishButton: document.getElementById('publish-button'),
-    calendarDays: Array.from(document.querySelectorAll('.day[data-date]'))
+    calendarDays: Array.from(document.querySelectorAll('.day[data-date]')),
+    loadSelect: document.getElementById('load-select'),
+    loadPreview: document.getElementById('load-preview'),
+    applyLoadButton: document.getElementById('apply-load-button')
   };
 
   const appState = {
@@ -253,6 +258,160 @@
   function handleFilmPosterError() {
     ui.filmPosterImage.style.display = 'none';
     ui.filmPosterFallback.style.display = 'grid';
+  }
+
+  function populateLoadSelect() {
+    if (!ui.loadSelect) return;
+
+    if (!LOAD_TEMPLATES.length) {
+      ui.loadSelect.innerHTML = '<option value="">No active loads available</option>';
+      ui.loadSelect.disabled = true;
+      ui.applyLoadButton.disabled = true;
+      return;
+    }
+
+    ui.loadSelect.disabled = false;
+    ui.applyLoadButton.disabled = false;
+    ui.loadSelect.innerHTML = LOAD_TEMPLATES
+      .map((load) => `<option value="${load.id}">${load.name}</option>`)
+      .join('');
+  }
+
+  function renderLoadPreview(loadId) {
+    const selectedLoad = LOAD_TEMPLATES.find((load) => load.id === loadId) || null;
+    const times = LOAD_TEMPLATE_TIMES
+      .filter((row) => row.load_template_id === loadId)
+      .sort((a, b) => String(a.show_time).localeCompare(String(b.show_time)));
+
+    if (!selectedLoad) {
+      ui.loadPreview.textContent = 'Select a load to preview its template times.';
+      return;
+    }
+
+    if (!times.length) {
+      ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>No template times found.`;
+      return;
+    }
+
+    ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>${times.map((row) => row.show_time).join(' · ')}`;
+  }
+
+  async function fetchActiveLoads() {
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .select('id, name, load_kind, display_color, is_active, sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch loads:', error);
+      LOAD_TEMPLATES = [];
+      return;
+    }
+
+    LOAD_TEMPLATES = data || [];
+  }
+
+  async function fetchLoadTemplateTimes() {
+    const { data, error } = await supabaseClient
+      .from('load_template_times')
+      .select('id, load_template_id, show_time, sort_order')
+      .order('load_template_id', { ascending: true })
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('show_time', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch load template times:', error);
+      LOAD_TEMPLATE_TIMES = [];
+      return;
+    }
+
+    LOAD_TEMPLATE_TIMES = data || [];
+  }
+
+  async function ensureDraftScheduleExists(scheduleDate, filmId) {
+    const existingDraft = appState.draftSchedule;
+    if (existingDraft) {
+      if (!existingDraft.film_id && filmId) {
+        const { data, error } = await supabaseClient
+          .from('daily_schedules')
+          .update({ film_id: filmId, updated_at: new Date().toISOString() })
+          .eq('id', existingDraft.id)
+          .eq('status', 'draft')
+          .select('*')
+          .single();
+
+        if (error) throw error;
+        appState.draftSchedule = data;
+      }
+      return appState.draftSchedule;
+    }
+
+    const payload = {
+      schedule_date: scheduleDate,
+      status: 'draft',
+      film_id: filmId,
+      has_manual_edits: false,
+      is_generated_from_load: false
+    };
+
+    const { data, error } = await supabaseClient
+      .from('daily_schedules')
+      .insert(payload)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    appState.draftSchedule = data;
+    return data;
+  }
+
+  async function applySelectedLoadToDraft() {
+    const selectedLoadId = ui.loadSelect?.value || '';
+    const selectedFilmId = ui.filmSelect?.value || '';
+
+    if (!appState.selectedDate) {
+      alert('Select a date first.');
+      return;
+    }
+
+    if (!selectedFilmId) {
+      alert('Select a film before applying a load.');
+      return;
+    }
+
+    if (!selectedLoadId) {
+      alert('Select a load first.');
+      return;
+    }
+
+    const existingActiveShowtimes = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
+    if (existingActiveShowtimes > 0) {
+      const confirmed = window.confirm('Applying a load will replace the existing draft showtimes for this date. Continue?');
+      if (!confirmed) return;
+    }
+
+    ui.applyLoadButton.disabled = true;
+
+    try {
+      const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
+
+      const { error } = await supabaseClient.rpc('generate_daily_schedule', {
+        p_schedule_date: appState.selectedDate,
+        p_film_id: selectedFilmId,
+        p_load_template_id: selectedLoadId
+      });
+
+      if (error) throw error;
+
+      await loadSelectedDateState();
+    } catch (err) {
+      console.error('Failed to apply load to draft:', err);
+      alert(`Could not apply load to draft: ${err.message || err}`);
+    } finally {
+      ui.applyLoadButton.disabled = false;
+    }
   }
 
   async function fetchActiveFilms() {
@@ -426,6 +585,12 @@
       renderFilmPreview(FILMS[0].id);
     }
 
+    const activeLoadId = appState.draftSchedule?.applied_load_template_id || appState.liveSchedule?.applied_load_template_id || LOAD_TEMPLATES[0]?.id || '';
+    if (ui.loadSelect && activeLoadId) {
+      ui.loadSelect.value = activeLoadId;
+      renderLoadPreview(activeLoadId);
+    }
+
     updateCalendarIndicators();
     updateHeaderAndSummary();
     updatePublishState();
@@ -444,13 +609,23 @@
 
   async function initializeFilmPreview() {
     await fetchActiveFilms();
+    await fetchActiveLoads();
+    await fetchLoadTemplateTimes();
+
     populateFilmSelect();
+    populateLoadSelect();
     renderFilmPreview(FILMS[0]?.id || '');
+    renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
 
     ui.filmSelect.addEventListener('change', (event) => {
       renderFilmPreview(event.target.value);
     });
 
+    ui.loadSelect.addEventListener('change', (event) => {
+      renderLoadPreview(event.target.value);
+    });
+
+    ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
     ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
 
     const calendarGrid = document.getElementById('calendar-grid');
@@ -459,6 +634,11 @@
     }
 
     await loadSelectedDateState();
+
+    if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
+      ui.loadSelect.value = LOAD_TEMPLATES[0].id;
+      renderLoadPreview(LOAD_TEMPLATES[0].id);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', initializeFilmPreview);
