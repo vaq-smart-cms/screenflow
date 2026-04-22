@@ -30,791 +30,925 @@
       --shadow: 0 10px 28px rgba(44, 60, 73, 0.08);
     }
 
-    body { margin:0; font-family:Arial; background:var(--bg); color:var(--text); padding:16px; }
-    h1,h2,h3,p{margin:0 0 10px;}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
 
-    .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow);}    
+    h1, h2, h3, p {
+      margin: 0 0 10px;
+    }
 
-    /* A — Header */
-    .header{display:flex;justify-content:space-between;align-items:center;}
-    .status-pill{padding:6px 10px;border-radius:999px;background:#eef6fa;font-weight:bold;}
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
 
-    /* B — Calendar */
-    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;cursor:pointer;transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
-    .day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(44,60,73,0.08);}
-    .day.is-selected{border-color:var(--vaq-green);box-shadow:inset 0 0 0 2px var(--vaq-green);}
-    .day.has-draft{outline:2px solid #64a5c3;}
-    .day.has-live{background:#dff3e3;}
-    .day.has-edits{border-color:#f3bc43;}
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
 
-    /* D — Film */
-    .film-preview{display:flex;gap:12px;align-items:flex-start;}
-    .poster,.poster-image{width:80px;height:120px;border-radius:8px;flex:0 0 80px;object-fit:cover;background:#ccc;display:block;}
-    .poster-fallback{align-items:center;justify-content:center;text-align:center;line-height:1.25;font-size:0.82rem;color:#ffffff;background:#8a97a3;}
+    .status-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef6fa;
+      font-weight: bold;
+      white-space: nowrap;
+    }
 
-    /* F — Showtime */
-    .showtime{padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;}
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
 
-    button{padding:10px 12px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
-    .primary{background:var(--vaq-green);color:#fff;}
-    .secondary{background:var(--vaq-blue);color:#fff;}
-    .accent{background:var(--vaq-orange);color:#fff;}
+    .day {
+      padding: 10px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
 
+    .day:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(44, 60, 73, 0.08);
+    }
+
+    .day.is-selected {
+      border-color: var(--vaq-green);
+      box-shadow: inset 0 0 0 2px var(--vaq-green);
+    }
+
+    .day.has-draft {
+      outline: 2px solid #64a5c3;
+    }
+
+    .day.has-live {
+      background: #dff3e3;
+    }
+
+    .day.has-edits {
+      border-color: #f3bc43;
+    }
+
+    .day span {
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .film-preview {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .poster,
+    .poster-image {
+      width: 80px;
+      height: 120px;
+      border-radius: 8px;
+      flex: 0 0 80px;
+      object-fit: cover;
+      background: #ccc;
+      display: block;
+    }
+
+    .poster-fallback {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1.25;
+      font-size: 0.82rem;
+      color: #ffffff;
+      background: #8a97a3;
+    }
+
+    .showtime {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    button {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--vaq-green);
+      color: #fff;
+    }
+
+    .secondary {
+      background: var(--vaq-blue);
+      color: #fff;
+    }
+
+    .accent {
+      background: var(--vaq-orange);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
-<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
-  <h2>Sign In</h2>
-  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
-    <input id="email-input" type="email" autocomplete="username">
-  </label>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
-    <input id="password-input" type="password" autocomplete="current-password">
-  </label>
-  <button id="sign-in-button" class="primary" style="width:100%; margin-bottom:10px;">Sign In</button>
-  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
-</div>
+  <div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+    <h2>Sign In</h2>
+    <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
 
-<div id="app-shell" style="display:none;">
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+      <input id="email-input" type="email" autocomplete="username">
+    </label>
 
-<!-- A — Header / Status Bar -->
-<div class="panel header">
-  <div>
-    <h1>4D Showtimes Admin</h1>
-    <p id="session-text">Signed in as: Admin User</p>
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+      <input id="password-input" type="password" autocomplete="current-password">
+    </label>
+
+    <button id="sign-in-button" class="primary" style="width:100%; margin-bottom:10px;">Sign In</button>
+    <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
   </div>
-  <div id="status-pill" class="status-pill">No date loaded</div>
-  <button class="secondary">Sign Out</button>
-</div>
 
-<!-- B — Calendar / Date Picker -->
-<div class="panel">
-  <h2>Calendar</h2>
-  <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
-  <div class="calendar-grid" id="calendar-grid">
-    <div class="day has-draft" data-date="2026-04-01">1</div>
-    <div class="day has-live" data-date="2026-04-02">2</div>
-    <div class="day has-edits" data-date="2026-04-03">3</div>
-    <div class="day" data-date="2026-04-04">4</div>
-    <div class="day" data-date="2026-04-05">5</div>
-    <div class="day" data-date="2026-04-06">6</div>
-    <div class="day" data-date="2026-04-07">7</div>
-  </div>
-</div>
-</div>
+  <div id="app-shell" style="display:none;">
 
-<!-- C — Day Summary Panel -->
-<div class="panel">
-  <h2>Day Summary</h2>
-  <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
-  <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
-  <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
-  <p><strong>Film:</strong> <span id="summary-film">—</span></p>
-  <p><strong>Load:</strong> <span id="summary-load">—</span></p>
-  <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
-  <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
-  <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
-  <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
-</div>
-
-<!-- D — Film Assignment Panel -->
-<div class="panel">
-  <h2>Film Assignment</h2>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
-    <select id="film-select"></select>
-  </label>
-
-  <div class="film-preview">
-    <img
-      id="film-poster-image"
-      src="./film-posters/web/na4d_poster_md.jpg"
-      alt="Film poster preview"
-      class="poster-image"
-      loading="eager"
-      decoding="async"
-    >
-    <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
-    <div>
-      <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
-      <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
-      <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-      <button class="secondary">Manage Films</button>
+    <!-- A — Header / Status Bar -->
+    <div class="panel header">
+      <div>
+        <h1>4D Showtimes Admin</h1>
+        <p id="session-text">Signed in as: Admin User</p>
+      </div>
+      <div id="status-pill" class="status-pill">No date loaded</div>
+      <button id="sign-out-button" class="secondary">Sign Out</button>
     </div>
+
+    <!-- B — Calendar / Date Picker -->
+    <div class="panel">
+      <h2>Calendar</h2>
+      <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
+      <div class="calendar-grid" id="calendar-grid">
+        <div class="day" data-date="2026-04-01"><span>1</span></div>
+        <div class="day" data-date="2026-04-02"><span>2</span></div>
+        <div class="day" data-date="2026-04-03"><span>3</span></div>
+        <div class="day" data-date="2026-04-04"><span>4</span></div>
+        <div class="day" data-date="2026-04-05"><span>5</span></div>
+        <div class="day" data-date="2026-04-06"><span>6</span></div>
+        <div class="day" data-date="2026-04-07"><span>7</span></div>
+      </div>
+    </div>
+
+    <!-- C — Day Summary Panel -->
+    <div class="panel">
+      <h2>Day Summary</h2>
+      <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
+      <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
+      <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+      <p><strong>Film:</strong> <span id="summary-film">—</span></p>
+      <p><strong>Load:</strong> <span id="summary-load">—</span></p>
+      <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
+      <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
+      <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
+      <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
+    </div>
+
+    <!-- D — Film Assignment Panel -->
+    <div class="panel">
+      <h2>Film Assignment</h2>
+      <label style="display:block; margin-bottom:12px;">
+        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
+        <select id="film-select"></select>
+      </label>
+
+      <div class="film-preview">
+        <img
+          id="film-poster-image"
+          src="./film-posters/web/na4d_poster_md.jpg"
+          alt="Film poster preview"
+          class="poster-image"
+          loading="eager"
+          decoding="async"
+        >
+        <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+        <div>
+          <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
+          <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
+          <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+          <button class="secondary" type="button">Manage Films</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- E — Load Assignment Panel -->
+    <div class="panel">
+      <h2>Load Assignment</h2>
+      <label style="display:block; margin-bottom:12px;">
+        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
+        <select id="load-select"></select>
+      </label>
+      <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
+      <button id="apply-load-button" class="primary" type="button">Apply Load to Draft</button>
+    </div>
+
+    <!-- F — Draft Showtimes Editor -->
+    <div class="panel">
+      <h2>Draft Showtimes</h2>
+      <div class="showtime"><span>10:30 AM</span><button type="button">Delete</button></div>
+      <div class="showtime"><span>11:30 AM</span><button type="button">Delete</button></div>
+      <button class="secondary" type="button">Add Showtime</button>
+    </div>
+
+    <!-- G — Preview / Publish Section -->
+    <div class="panel">
+      <h2>Preview & Publish</h2>
+      <p id="publish-summary">Select a date to review publish readiness.</p>
+      <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
+      <button id="publish-button" class="accent" type="button" disabled>Publish</button>
+    </div>
+
+    <!-- H — Secondary Tools -->
+    <div class="panel">
+      <h2>Tools</h2>
+      <button type="button">Manage Loads</button>
+      <button type="button">Manage Films</button>
+      <button type="button">Help</button>
+    </div>
+
   </div>
-</div>
 
-<!-- E — Load Assignment Panel -->
-<div class="panel">
-  <h2>Load Assignment</h2>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
-    <select id="load-select"></select>
-  </label>
-  <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
-  <button id="apply-load-button" class="primary">Apply Load to Draft</button>
-</div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
 
-<!-- F — Draft Showtimes Editor -->
-<div class="panel">
-  <h2>Draft Showtimes</h2>
-  <div class="showtime"><span>10:30 AM</span><button>Delete</button></div>
-  <div class="showtime"><span>11:30 AM</span><button>Delete</button></div>
-  <button class="secondary">Add Showtime</button>
-</div>
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-<!-- G — Preview / Publish Section -->
-<div class="panel">
-  <h2>Preview & Publish</h2>
-  <p id="publish-summary">Select a date to review publish readiness.</p>
-  <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
-  <button id="publish-button" class="accent" disabled>Publish</button>
-</div>
+    let FILMS = [];
+    let LOAD_TEMPLATES = [];
+    let LOAD_TEMPLATE_TIMES = [];
 
-<!-- H — Secondary Tools -->
-<div class="panel">
-  <h2>Tools</h2>
-  <button>Manage Loads</button>
-  <button>Manage Films</button>
-  <button>Help</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
-
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  let FILMS = [];
-  let LOAD_TEMPLATES = [];
-  let LOAD_TEMPLATE_TIMES = [];
-
-  const ui = {
-    authPanel: document.getElementById('auth-panel'),
-    appShell: document.getElementById('app-shell'),
-    emailInput: document.getElementById('email-input'),
-    passwordInput: document.getElementById('password-input'),
-    signInButton: document.getElementById('sign-in-button'),
-    authMessage: document.getElementById('auth-message'),
-    filmSelect: document.getElementById('film-select'),
-    filmTitle: document.getElementById('film-title'),
-    filmSynopsis: document.getElementById('film-synopsis'),
-    filmAdvisory: document.getElementById('film-advisory'),
-    filmPosterImage: document.getElementById('film-poster-image'),
-    filmPosterFallback: document.getElementById('film-poster-fallback'),
-    statusPill: document.getElementById('status-pill'),
-    sessionText: document.getElementById('session-text'),
-    summaryDate: document.getElementById('summary-date'),
-    summaryDraftStatus: document.getElementById('summary-draft-status'),
-    summaryLiveStatus: document.getElementById('summary-live-status'),
-    summaryFilm: document.getElementById('summary-film'),
-    summaryLoad: document.getElementById('summary-load'),
-    summaryShowtimes: document.getElementById('summary-showtimes'),
-    summaryManualEdits: document.getElementById('summary-manual-edits'),
-    summaryUpdated: document.getElementById('summary-updated'),
-    summaryPublished: document.getElementById('summary-published'),
-    publishSummary: document.getElementById('publish-summary'),
-    publishStatusText: document.getElementById('publish-status-text'),
-    publishButton: document.getElementById('publish-button'),
-    calendarDays: Array.from(document.querySelectorAll('.day[data-date]')),
-    loadSelect: document.getElementById('load-select'),
-    loadPreview: document.getElementById('load-preview'),
-    applyLoadButton: document.getElementById('apply-load-button')
-  };
-
-  const appState = {
-    selectedDate: '2026-04-03',
-    draftSchedule: null,
-    liveSchedule: null,
-    draftShowtimes: [],
-    liveShowtimes: []
-  };
-
-  function populateFilmSelect() {
-    if (!ui.filmSelect) return;
-
-    const currentValue = ui.filmSelect.value;
-    ui.filmSelect.innerHTML = '';
-
-    if (!FILMS.length) {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'No active films available';
-      ui.filmSelect.appendChild(option);
-      ui.filmSelect.disabled = true;
-      return;
-    }
-
-    ui.filmSelect.disabled = false;
-
-    FILMS.forEach((film) => {
-      const option = document.createElement('option');
-      option.value = film.id;
-      option.textContent = film.title;
-      ui.filmSelect.appendChild(option);
-    });
-
-    const hasMatchingValue = FILMS.some((film) => film.id === currentValue);
-    if (hasMatchingValue) {
-      ui.filmSelect.value = currentValue;
-    }
-  }
-
-  function renderFilmPreview(filmId) {
-    const film = FILMS.find((item) => item.id === filmId) || FILMS[0];
-
-    if (!film) {
-      ui.filmTitle.textContent = 'No active film selected';
-      ui.filmSynopsis.textContent = 'Add or activate a film to see its preview here.';
-      ui.filmAdvisory.textContent = '';
-      ui.filmPosterImage.style.display = 'none';
-      ui.filmPosterFallback.style.display = 'grid';
-      return;
-    }
-
-    ui.filmTitle.textContent = film.title || 'Untitled film';
-    ui.filmSynopsis.textContent = film.synopsis || 'No synopsis available.';
-    ui.filmAdvisory.textContent = film.advisory_text || '';
-
-    ui.filmPosterFallback.style.display = 'none';
-    ui.filmPosterImage.style.display = 'block';
-    ui.filmPosterImage.alt = `${film.title} poster`;
-    ui.filmPosterImage.src = film.poster_url || '';
-    ui.filmPosterImage.srcset = film.poster_srcset || '';
-    ui.filmPosterImage.sizes = film.poster_sizes || '';
-
-    if (!film.poster_url) {
-      handleFilmPosterError();
-    }
-  }
-
-  function handleFilmPosterError() {
-    ui.filmPosterImage.style.display = 'none';
-    ui.filmPosterFallback.style.display = 'grid';
-  }
-
-  function populateLoadSelect() {
-    if (!ui.loadSelect) return;
-
-    const currentValue = ui.loadSelect.value;
-    ui.loadSelect.innerHTML = '';
-
-    if (!LOAD_TEMPLATES.length) {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'No active loads available';
-      ui.loadSelect.appendChild(option);
-      ui.loadSelect.disabled = true;
-      ui.applyLoadButton.disabled = true;
-      return;
-    }
-
-    ui.loadSelect.disabled = false;
-    ui.applyLoadButton.disabled = false;
-
-    LOAD_TEMPLATES.forEach((load) => {
-      const option = document.createElement('option');
-      option.value = load.id;
-      option.textContent = load.name;
-      ui.loadSelect.appendChild(option);
-    });
-
-    const hasMatchingValue = LOAD_TEMPLATES.some((load) => load.id === currentValue);
-    if (hasMatchingValue) {
-      ui.loadSelect.value = currentValue;
-    }
-  }
-
-  function renderLoadPreview(loadId) {
-    const selectedLoad = LOAD_TEMPLATES.find((load) => load.id === loadId) || null;
-    const times = LOAD_TEMPLATE_TIMES
-      .filter((row) => row.load_template_id === loadId)
-      .sort((a, b) => String(a.show_time).localeCompare(String(b.show_time)));
-
-    if (!selectedLoad) {
-      ui.loadPreview.textContent = 'Select a load to preview its template times.';
-      return;
-    }
-
-    if (!times.length) {
-      ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>No template times found.`;
-      return;
-    }
-
-    ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>${times.map((row) => row.show_time).join(' · ')}`;
-  }
-
-  async function fetchActiveLoads() {
-    const { data, error } = await supabaseClient
-      .from('load_templates')
-      .select('id, name, load_kind, display_color, is_active, is_system_default')
-      .eq('is_active', true)
-      .order('is_system_default', { ascending: false })
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('Failed to fetch loads:', error);
-      LOAD_TEMPLATES = [];
-      return;
-    }
-
-    LOAD_TEMPLATES = data || [];
-  }
-
-  async function fetchLoadTemplateTimes() {
-    const { data, error } = await supabaseClient
-      .from('load_template_times')
-      .select('id, load_template_id, show_time, sort_order')
-      .order('load_template_id', { ascending: true })
-      .order('sort_order', { ascending: true, nullsFirst: false })
-      .order('show_time', { ascending: true });
-
-    if (error) {
-      console.error('Failed to fetch load template times:', error);
-      LOAD_TEMPLATE_TIMES = [];
-      return;
-    }
-
-    LOAD_TEMPLATE_TIMES = data || [];
-  }
-
-  async function ensureDraftScheduleExists(scheduleDate, filmId) {
-    const existingDraft = appState.draftSchedule;
-    if (existingDraft) {
-      if (!existingDraft.film_id && filmId) {
-        const { data, error } = await supabaseClient
-          .from('daily_schedules')
-          .update({ film_id: filmId, updated_at: new Date().toISOString() })
-          .eq('id', existingDraft.id)
-          .eq('status', 'draft')
-          .select('*')
-          .single();
-
-        if (error) throw error;
-        appState.draftSchedule = data;
-      }
-      return appState.draftSchedule;
-    }
-
-    const payload = {
-      schedule_date: scheduleDate,
-      status: 'draft',
-      film_id: filmId,
-      has_manual_edits: false,
-      is_generated_from_load: false
+    const ui = {
+      authPanel: document.getElementById('auth-panel'),
+      appShell: document.getElementById('app-shell'),
+      emailInput: document.getElementById('email-input'),
+      passwordInput: document.getElementById('password-input'),
+      signInButton: document.getElementById('sign-in-button'),
+      authMessage: document.getElementById('auth-message'),
+      signOutButton: document.getElementById('sign-out-button'),
+      filmSelect: document.getElementById('film-select'),
+      filmTitle: document.getElementById('film-title'),
+      filmSynopsis: document.getElementById('film-synopsis'),
+      filmAdvisory: document.getElementById('film-advisory'),
+      filmPosterImage: document.getElementById('film-poster-image'),
+      filmPosterFallback: document.getElementById('film-poster-fallback'),
+      statusPill: document.getElementById('status-pill'),
+      sessionText: document.getElementById('session-text'),
+      summaryDate: document.getElementById('summary-date'),
+      summaryDraftStatus: document.getElementById('summary-draft-status'),
+      summaryLiveStatus: document.getElementById('summary-live-status'),
+      summaryFilm: document.getElementById('summary-film'),
+      summaryLoad: document.getElementById('summary-load'),
+      summaryShowtimes: document.getElementById('summary-showtimes'),
+      summaryManualEdits: document.getElementById('summary-manual-edits'),
+      summaryUpdated: document.getElementById('summary-updated'),
+      summaryPublished: document.getElementById('summary-published'),
+      publishSummary: document.getElementById('publish-summary'),
+      publishStatusText: document.getElementById('publish-status-text'),
+      publishButton: document.getElementById('publish-button'),
+      calendarDays: Array.from(document.querySelectorAll('.day[data-date]')),
+      loadSelect: document.getElementById('load-select'),
+      loadPreview: document.getElementById('load-preview'),
+      applyLoadButton: document.getElementById('apply-load-button')
     };
 
-    const { data, error } = await supabaseClient
-      .from('daily_schedules')
-      .insert(payload)
-      .select('*')
-      .single();
+    const appState = {
+      selectedDate: '2026-04-03',
+      draftSchedule: null,
+      liveSchedule: null,
+      draftShowtimes: [],
+      liveShowtimes: []
+    };
 
-    if (error) throw error;
-    appState.draftSchedule = data;
-    return data;
-  }
+    function populateFilmSelect() {
+      if (!ui.filmSelect) return;
 
-  async function applySelectedLoadToDraft() {
-    const selectedLoadId = ui.loadSelect?.value || '';
-    const selectedFilmId = ui.filmSelect?.value || '';
+      const currentValue = ui.filmSelect.value;
+      ui.filmSelect.innerHTML = '';
 
-    if (!appState.selectedDate) {
-      alert('Select a date first.');
-      return;
-    }
+      if (!FILMS.length) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No active films available';
+        ui.filmSelect.appendChild(option);
+        ui.filmSelect.disabled = true;
+        return;
+      }
 
-    if (!selectedFilmId) {
-      alert('Select a film before applying a load.');
-      return;
-    }
+      ui.filmSelect.disabled = false;
 
-    if (!selectedLoadId) {
-      alert('Select a load first.');
-      return;
-    }
-
-    const existingActiveShowtimes = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
-    if (existingActiveShowtimes > 0) {
-      const confirmed = window.confirm('Applying a load will replace the existing draft showtimes for this date. Continue?');
-      if (!confirmed) return;
-    }
-
-    ui.applyLoadButton.disabled = true;
-
-    try {
-      const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
-
-      const { error } = await supabaseClient.rpc('generate_daily_schedule', {
-        p_schedule_date: appState.selectedDate,
-        p_film_id: selectedFilmId,
-        p_load_template_id: selectedLoadId
+      FILMS.forEach((film) => {
+        const option = document.createElement('option');
+        option.value = film.id;
+        option.textContent = film.title;
+        ui.filmSelect.appendChild(option);
       });
+
+      const hasMatchingValue = FILMS.some((film) => film.id === currentValue);
+      if (hasMatchingValue) {
+        ui.filmSelect.value = currentValue;
+      }
+    }
+
+    function renderFilmPreview(filmId) {
+      const film = FILMS.find((item) => item.id === filmId) || FILMS[0];
+
+      if (!film) {
+        ui.filmTitle.textContent = 'No active film selected';
+        ui.filmSynopsis.textContent = 'Add or activate a film to see its preview here.';
+        ui.filmAdvisory.textContent = '';
+        ui.filmPosterImage.style.display = 'none';
+        ui.filmPosterFallback.style.display = 'grid';
+        return;
+      }
+
+      ui.filmTitle.textContent = film.title || 'Untitled film';
+      ui.filmSynopsis.textContent = film.synopsis || 'No synopsis available.';
+      ui.filmAdvisory.textContent = film.advisory_text || '';
+
+      ui.filmPosterFallback.style.display = 'none';
+      ui.filmPosterImage.style.display = 'block';
+      ui.filmPosterImage.alt = `${film.title} poster`;
+      ui.filmPosterImage.src = film.poster_url || '';
+      ui.filmPosterImage.srcset = film.poster_srcset || '';
+      ui.filmPosterImage.sizes = film.poster_sizes || '';
+
+      if (!film.poster_url) {
+        handleFilmPosterError();
+      }
+    }
+
+    function handleFilmPosterError() {
+      ui.filmPosterImage.style.display = 'none';
+      ui.filmPosterFallback.style.display = 'grid';
+    }
+
+    function populateLoadSelect() {
+      if (!ui.loadSelect) return;
+
+      const currentValue = ui.loadSelect.value;
+      ui.loadSelect.innerHTML = '';
+
+      if (!LOAD_TEMPLATES.length) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No active loads available';
+        ui.loadSelect.appendChild(option);
+        ui.loadSelect.disabled = true;
+        ui.applyLoadButton.disabled = true;
+        return;
+      }
+
+      ui.loadSelect.disabled = false;
+      ui.applyLoadButton.disabled = false;
+
+      LOAD_TEMPLATES.forEach((load) => {
+        const option = document.createElement('option');
+        option.value = load.id;
+        option.textContent = load.name;
+        ui.loadSelect.appendChild(option);
+      });
+
+      const hasMatchingValue = LOAD_TEMPLATES.some((load) => load.id === currentValue);
+      if (hasMatchingValue) {
+        ui.loadSelect.value = currentValue;
+      }
+    }
+
+    function renderLoadPreview(loadId) {
+      const selectedLoad = LOAD_TEMPLATES.find((load) => load.id === loadId) || null;
+      const times = LOAD_TEMPLATE_TIMES
+        .filter((row) => row.load_template_id === loadId)
+        .sort((a, b) => String(a.show_time).localeCompare(String(b.show_time)));
+
+      if (!selectedLoad) {
+        ui.loadPreview.textContent = 'Select a load to preview its template times.';
+        return;
+      }
+
+      if (!times.length) {
+        ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>No template times found.`;
+        return;
+      }
+
+      ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>${times.map((row) => row.show_time).join(' · ')}`;
+    }
+
+    async function fetchActiveFilms() {
+      const { data, error } = await supabaseClient
+        .from('films')
+        .select('id, title, poster_url, synopsis, advisory_text, is_active, sort_order')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('title', { ascending: true });
+
+      if (error) {
+        console.error('Failed to fetch films:', error);
+        FILMS = [];
+        return;
+      }
+
+      FILMS = (data || []).map((film) => ({
+        id: film.id,
+        title: film.title,
+        poster_url: film.poster_url || '',
+        poster_srcset: film.poster_url || '',
+        poster_sizes: '(max-width: 700px) 80px, 120px',
+        synopsis: film.synopsis || '',
+        advisory_text: film.advisory_text || ''
+      }));
+    }
+
+    async function fetchActiveLoads() {
+      const { data, error } = await supabaseClient
+        .from('load_templates')
+        .select('id, name, load_kind, display_color, is_active, is_system_default')
+        .eq('is_active', true)
+        .order('is_system_default', { ascending: false })
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('Failed to fetch loads:', error);
+        LOAD_TEMPLATES = [];
+        return;
+      }
+
+      console.log('Active loads:', data);
+      LOAD_TEMPLATES = data || [];
+    }
+
+    async function fetchLoadTemplateTimes() {
+      const { data, error } = await supabaseClient
+        .from('load_template_times')
+        .select('id, load_template_id, show_time, sort_order')
+        .order('load_template_id', { ascending: true })
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('show_time', { ascending: true });
+
+      if (error) {
+        console.error('Failed to fetch load template times:', error);
+        LOAD_TEMPLATE_TIMES = [];
+        return;
+      }
+
+      LOAD_TEMPLATE_TIMES = data || [];
+    }
+
+    async function ensureDraftScheduleExists(scheduleDate, filmId) {
+      const existingDraft = appState.draftSchedule;
+
+      if (existingDraft) {
+        if (!existingDraft.film_id && filmId) {
+          const { data, error } = await supabaseClient
+            .from('daily_schedules')
+            .update({ film_id: filmId, updated_at: new Date().toISOString() })
+            .eq('id', existingDraft.id)
+            .eq('status', 'draft')
+            .select('*')
+            .single();
+
+          if (error) throw error;
+          appState.draftSchedule = data;
+        }
+        return appState.draftSchedule;
+      }
+
+      const payload = {
+        schedule_date: scheduleDate,
+        status: 'draft',
+        film_id: filmId,
+        has_manual_edits: false,
+        is_generated_from_load: false
+      };
+
+      const { data, error } = await supabaseClient
+        .from('daily_schedules')
+        .insert(payload)
+        .select('*')
+        .single();
 
       if (error) throw error;
+      appState.draftSchedule = data;
+      return data;
+    }
+
+    async function applySelectedLoadToDraft() {
+      const selectedLoadId = ui.loadSelect?.value || '';
+      const selectedFilmId = ui.filmSelect?.value || '';
+
+      if (!appState.selectedDate) {
+        alert('Select a date first.');
+        return;
+      }
+
+      if (!selectedFilmId) {
+        alert('Select a film before applying a load.');
+        return;
+      }
+
+      if (!selectedLoadId) {
+        alert('Select a load first.');
+        return;
+      }
+
+      const existingActiveShowtimes = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
+      if (existingActiveShowtimes > 0) {
+        const confirmed = window.confirm('Applying a load will replace the existing draft showtimes for this date. Continue?');
+        if (!confirmed) return;
+      }
+
+      ui.applyLoadButton.disabled = true;
+
+      try {
+        await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
+
+        const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
+          p_schedule_date: appState.selectedDate,
+          p_film_id: selectedFilmId,
+          p_load_template_id: selectedLoadId
+        });
+
+        if (error) throw error;
+
+        await loadSelectedDateState();
+      } catch (err) {
+        console.error('Failed to apply load to draft:', err);
+        alert(`Could not apply load to draft: ${err.message || err}`);
+      } finally {
+        ui.applyLoadButton.disabled = false;
+      }
+    }
+
+    function formatFriendlyDate(ymd) {
+      if (!ymd) return '—';
+
+      const [year, month, day] = ymd.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day);
+
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Vancouver',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(dateObj);
+    }
+
+    function formatTimestamp(isoString) {
+      if (!isoString) return '—';
+
+      const dateObj = new Date(isoString);
+      if (Number.isNaN(dateObj.getTime())) return '—';
+
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Vancouver',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).format(dateObj);
+    }
+
+    async function fetchScheduleStateForDate(scheduleDate) {
+      const [draftResult, liveResult] = await Promise.all([
+        supabaseClient
+          .from('daily_schedules')
+          .select('id, schedule_date, status, film_id, applied_load_template_id, has_manual_edits, updated_at, published_at, load_templates(name)')
+          .eq('schedule_date', scheduleDate)
+          .eq('status', 'draft')
+          .maybeSingle(),
+        supabaseClient
+          .from('daily_schedules')
+          .select('id, schedule_date, status, film_id, applied_load_template_id, has_manual_edits, updated_at, published_at, load_templates(name)')
+          .eq('schedule_date', scheduleDate)
+          .eq('status', 'live')
+          .maybeSingle()
+      ]);
+
+      if (draftResult.error) {
+        console.error('Failed to fetch draft schedule:', draftResult.error);
+      }
+      if (liveResult.error) {
+        console.error('Failed to fetch live schedule:', liveResult.error);
+      }
+
+      appState.draftSchedule = draftResult.data || null;
+      appState.liveSchedule = liveResult.data || null;
+
+      const [draftShowtimesResult, liveShowtimesResult] = await Promise.all([
+        appState.draftSchedule
+          ? supabaseClient
+              .from('daily_showtimes')
+              .select('id, show_at, is_cancelled')
+              .eq('daily_schedule_id', appState.draftSchedule.id)
+              .order('show_at', { ascending: true })
+          : Promise.resolve({ data: [], error: null }),
+        appState.liveSchedule
+          ? supabaseClient
+              .from('daily_showtimes')
+              .select('id, show_at, is_cancelled')
+              .eq('daily_schedule_id', appState.liveSchedule.id)
+              .order('show_at', { ascending: true })
+          : Promise.resolve({ data: [], error: null })
+      ]);
+
+      if (draftShowtimesResult.error) {
+        console.error('Failed to fetch draft showtimes:', draftShowtimesResult.error);
+      }
+      if (liveShowtimesResult.error) {
+        console.error('Failed to fetch live showtimes:', liveShowtimesResult.error);
+      }
+
+      appState.draftShowtimes = draftShowtimesResult.data || [];
+      appState.liveShowtimes = liveShowtimesResult.data || [];
+    }
+
+    function getFilmById(filmId) {
+      return FILMS.find((film) => film.id === filmId) || null;
+    }
+
+    function updateCalendarIndicators() {
+      ui.calendarDays.forEach((dayEl) => {
+        const dayDate = dayEl.dataset.date;
+
+        dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
+        dayEl.classList.toggle('is-selected', dayDate === appState.selectedDate);
+
+        if (dayDate !== appState.selectedDate) return;
+
+        if (appState.draftSchedule) dayEl.classList.add('has-draft');
+        if (appState.liveSchedule) dayEl.classList.add('has-live');
+        if (appState.draftSchedule?.has_manual_edits) dayEl.classList.add('has-edits');
+      });
+    }
+
+    function updateHeaderAndSummary() {
+      const activeSchedule = appState.draftSchedule || appState.liveSchedule;
+      const activeFilm = getFilmById(appState.draftSchedule?.film_id || appState.liveSchedule?.film_id || '');
+      const loadName = appState.draftSchedule?.load_templates?.name || appState.liveSchedule?.load_templates?.name || '—';
+      const draftCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
+
+      ui.statusPill.textContent = activeSchedule
+        ? (appState.liveSchedule ? 'Live exists' : 'Draft only')
+        : 'No schedule loaded';
+
+      ui.summaryDate.textContent = formatFriendlyDate(appState.selectedDate);
+      ui.summaryDraftStatus.textContent = appState.draftSchedule ? 'Draft exists' : 'No draft schedule';
+      ui.summaryLiveStatus.textContent = appState.liveSchedule ? 'Live exists' : 'No live schedule';
+      ui.summaryFilm.textContent = activeFilm?.title || '—';
+      ui.summaryLoad.textContent = loadName;
+      ui.summaryShowtimes.textContent = String(draftCount);
+      ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits ? 'Yes' : 'No';
+      ui.summaryUpdated.textContent = formatTimestamp(appState.draftSchedule?.updated_at || activeSchedule?.updated_at || '');
+      ui.summaryPublished.textContent = formatTimestamp(appState.liveSchedule?.published_at || '');
+    }
+
+    function updatePublishState() {
+      const hasDate = !!appState.selectedDate;
+      const hasDraft = !!appState.draftSchedule;
+      const hasFilm = !!appState.draftSchedule?.film_id;
+      const hasShowtimes = appState.draftShowtimes.some((row) => !row.is_cancelled);
+      const canPublish = hasDate && hasDraft && hasFilm && hasShowtimes;
+
+      ui.publishButton.disabled = !canPublish;
+      ui.publishStatusText.textContent = canPublish ? 'Ready to publish' : 'Not ready';
+      ui.publishSummary.textContent = canPublish
+        ? `Draft for ${formatFriendlyDate(appState.selectedDate)} meets the current publish readiness rules.`
+        : 'Publish requires a selected date, a draft schedule, a film assignment, and at least one active showtime.';
+    }
+
+    async function loadSelectedDateState() {
+      await fetchScheduleStateForDate(appState.selectedDate);
+
+      if (appState.draftSchedule?.film_id) {
+        ui.filmSelect.value = appState.draftSchedule.film_id;
+        renderFilmPreview(appState.draftSchedule.film_id);
+      } else if (appState.liveSchedule?.film_id) {
+        ui.filmSelect.value = appState.liveSchedule.film_id;
+        renderFilmPreview(appState.liveSchedule.film_id);
+      } else if (FILMS.length) {
+        ui.filmSelect.value = FILMS[0].id;
+        renderFilmPreview(FILMS[0].id);
+      }
+
+      const activeLoadId =
+        appState.draftSchedule?.applied_load_template_id ||
+        appState.liveSchedule?.applied_load_template_id ||
+        LOAD_TEMPLATES[0]?.id ||
+        '';
+
+      if (ui.loadSelect && activeLoadId) {
+        ui.loadSelect.value = activeLoadId;
+        renderLoadPreview(activeLoadId);
+      } else {
+        renderLoadPreview('');
+      }
+
+      updateCalendarIndicators();
+      updateHeaderAndSummary();
+      updatePublishState();
+    }
+
+    async function handleCalendarDayClick(event) {
+      const dayEl = event.target.closest('.day[data-date]');
+      if (!dayEl) return;
+
+      const nextDate = dayEl.dataset.date;
+      if (!nextDate || nextDate === appState.selectedDate) return;
+
+      appState.selectedDate = nextDate;
+      await loadSelectedDateState();
+    }
+
+    function setAuthenticatedUi(session) {
+      const isAuthed = !!session;
+      ui.authPanel.style.display = isAuthed ? 'none' : 'block';
+      ui.appShell.style.display = isAuthed ? 'block' : 'none';
+      ui.sessionText.textContent = isAuthed
+        ? `Signed in as: ${session.user.email}`
+        : 'Signed in as: Admin User';
+    }
+
+    async function handleSignIn() {
+      const email = ui.emailInput.value.trim();
+      const password = ui.passwordInput.value;
+
+      if (!email || !password) {
+        ui.authMessage.textContent = 'Enter your email and password.';
+        return;
+      }
+
+      ui.signInButton.disabled = true;
+      ui.authMessage.textContent = 'Signing in...';
+
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      ui.signInButton.disabled = false;
+
+      if (error) {
+        ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
+        return;
+      }
+
+      ui.authMessage.textContent = 'Sign-in successful.';
+      await initializeAdminApp();
+    }
+
+    async function handleSignOut() {
+      const { error } = await supabaseClient.auth.signOut();
+
+      if (error) {
+        console.error('Sign-out failed:', error);
+        return;
+      }
+
+      FILMS = [];
+      LOAD_TEMPLATES = [];
+      LOAD_TEMPLATE_TIMES = [];
+      appState.draftSchedule = null;
+      appState.liveSchedule = null;
+      appState.draftShowtimes = [];
+      appState.liveShowtimes = [];
+      ui.passwordInput.value = '';
+      ui.authMessage.textContent = 'Signed out.';
+      setAuthenticatedUi(null);
+    }
+
+    async function initializeAdminApp() {
+      const { data, error } = await supabaseClient.auth.getSession();
+      const session = data?.session || null;
+
+      if (error) {
+        console.error('Session check failed:', error);
+        setAuthenticatedUi(null);
+        return;
+      }
+
+      if (!session) {
+        setAuthenticatedUi(null);
+        return;
+      }
+
+      setAuthenticatedUi(session);
+
+      await fetchActiveFilms();
+      await fetchActiveLoads();
+      await fetchLoadTemplateTimes();
+
+      populateFilmSelect();
+      populateLoadSelect();
+      renderFilmPreview(FILMS[0]?.id || '');
+      renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
+
+      if (!ui.filmSelect.dataset.bound) {
+        ui.filmSelect.addEventListener('change', (event) => {
+          renderFilmPreview(event.target.value);
+        });
+        ui.filmSelect.dataset.bound = 'true';
+      }
+
+      if (!ui.loadSelect.dataset.bound) {
+        ui.loadSelect.addEventListener('change', (event) => {
+          renderLoadPreview(event.target.value);
+        });
+        ui.loadSelect.dataset.bound = 'true';
+      }
+
+      if (!ui.applyLoadButton.dataset.bound) {
+        ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
+        ui.applyLoadButton.dataset.bound = 'true';
+      }
+
+      if (!ui.filmPosterImage.dataset.bound) {
+        ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
+        ui.filmPosterImage.dataset.bound = 'true';
+      }
+
+      const calendarGrid = document.getElementById('calendar-grid');
+      if (calendarGrid && !calendarGrid.dataset.bound) {
+        calendarGrid.addEventListener('click', handleCalendarDayClick);
+        calendarGrid.dataset.bound = 'true';
+      }
+
+      if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
+        ui.signOutButton.addEventListener('click', handleSignOut);
+        ui.signOutButton.dataset.bound = 'true';
+      }
 
       await loadSelectedDateState();
-    } catch (err) {
-      console.error('Failed to apply load to draft:', err);
-      alert(`Could not apply load to draft: ${err.message || err}`);
-    } finally {
-      ui.applyLoadButton.disabled = false;
-    }
-  }
 
-  async function fetchActiveFilms() {
-    const { data, error } = await supabaseClient
-      .from('films')
-      .select('id, title, poster_url, synopsis, advisory_text, is_active, sort_order')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true, nullsFirst: false })
-      .order('title', { ascending: true });
-
-    if (error) {
-      console.error('Failed to fetch films:', error);
-      FILMS = [];
-      return;
+      if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
+        ui.loadSelect.value = LOAD_TEMPLATES[0].id;
+        renderLoadPreview(LOAD_TEMPLATES[0].id);
+      }
     }
 
-    FILMS = (data || []).map((film) => ({
-      id: film.id,
-      title: film.title,
-      poster_url: film.poster_url || '',
-      poster_srcset: film.poster_url || '',
-      poster_sizes: '(max-width: 700px) 80px, 120px',
-      synopsis: film.synopsis || '',
-      advisory_text: film.advisory_text || ''
-    }));
-  }
+    async function initializePage() {
+      ui.signInButton.addEventListener('click', handleSignIn);
 
-  function formatFriendlyDate(ymd) {
-    if (!ymd) return '—';
-    const [year, month, day] = ymd.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day);
-    return new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Vancouver',
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(dateObj);
-  }
-
-  function formatTimestamp(isoString) {
-    if (!isoString) return '—';
-    const dateObj = new Date(isoString);
-    if (Number.isNaN(dateObj.getTime())) return '—';
-    return new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Vancouver',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }).format(dateObj);
-  }
-
-  async function fetchScheduleStateForDate(scheduleDate) {
-    const [draftResult, liveResult] = await Promise.all([
-      supabaseClient
-        .from('daily_schedules')
-        .select('id, schedule_date, status, film_id, applied_load_template_id, has_manual_edits, updated_at, published_at, load_templates(name)')
-        .eq('schedule_date', scheduleDate)
-        .eq('status', 'draft')
-        .maybeSingle(),
-      supabaseClient
-        .from('daily_schedules')
-        .select('id, schedule_date, status, film_id, applied_load_template_id, has_manual_edits, updated_at, published_at, load_templates(name)')
-        .eq('schedule_date', scheduleDate)
-        .eq('status', 'live')
-        .maybeSingle()
-    ]);
-
-    if (draftResult.error) {
-      console.error('Failed to fetch draft schedule:', draftResult.error);
-    }
-    if (liveResult.error) {
-      console.error('Failed to fetch live schedule:', liveResult.error);
-    }
-
-    appState.draftSchedule = draftResult.data || null;
-    appState.liveSchedule = liveResult.data || null;
-
-    const [draftShowtimesResult, liveShowtimesResult] = await Promise.all([
-      appState.draftSchedule
-        ? supabaseClient
-            .from('daily_showtimes')
-            .select('id, show_at, is_cancelled')
-            .eq('daily_schedule_id', appState.draftSchedule.id)
-            .order('show_at', { ascending: true })
-        : Promise.resolve({ data: [], error: null }),
-      appState.liveSchedule
-        ? supabaseClient
-            .from('daily_showtimes')
-            .select('id, show_at, is_cancelled')
-            .eq('daily_schedule_id', appState.liveSchedule.id)
-            .order('show_at', { ascending: true })
-        : Promise.resolve({ data: [], error: null })
-    ]);
-
-    if (draftShowtimesResult.error) {
-      console.error('Failed to fetch draft showtimes:', draftShowtimesResult.error);
-    }
-    if (liveShowtimesResult.error) {
-      console.error('Failed to fetch live showtimes:', liveShowtimesResult.error);
-    }
-
-    appState.draftShowtimes = draftShowtimesResult.data || [];
-    appState.liveShowtimes = liveShowtimesResult.data || [];
-  }
-
-  function getFilmById(filmId) {
-    return FILMS.find((film) => film.id === filmId) || null;
-  }
-
-  function updateCalendarIndicators() {
-    ui.calendarDays.forEach((dayEl) => {
-      const dayDate = dayEl.dataset.date;
-      dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
-      if (dayDate !== appState.selectedDate) return;
-      if (appState.draftSchedule) dayEl.classList.add('has-draft');
-      if (appState.liveSchedule) dayEl.classList.add('has-live');
-      if (appState.draftSchedule?.has_manual_edits) dayEl.classList.add('has-edits');
-    });
-  }
-
-  function updateHeaderAndSummary() {
-    const activeSchedule = appState.draftSchedule || appState.liveSchedule;
-    const activeFilm = getFilmById(appState.draftSchedule?.film_id || appState.liveSchedule?.film_id || '');
-    const loadName = appState.draftSchedule?.load_templates?.name || appState.liveSchedule?.load_templates?.name || '—';
-    const draftCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
-
-    ui.statusPill.textContent = activeSchedule
-      ? (appState.liveSchedule ? 'Live exists' : 'Draft only')
-      : 'No schedule loaded';
-
-    ui.summaryDate.textContent = formatFriendlyDate(appState.selectedDate);
-    ui.summaryDraftStatus.textContent = appState.draftSchedule ? 'Draft exists' : 'No draft schedule';
-    ui.summaryLiveStatus.textContent = appState.liveSchedule ? 'Live exists' : 'No live schedule';
-    ui.summaryFilm.textContent = activeFilm?.title || '—';
-    ui.summaryLoad.textContent = loadName;
-    ui.summaryShowtimes.textContent = String(draftCount);
-    ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits ? 'Yes' : 'No';
-    ui.summaryUpdated.textContent = formatTimestamp(appState.draftSchedule?.updated_at || activeSchedule?.updated_at || '');
-    ui.summaryPublished.textContent = formatTimestamp(appState.liveSchedule?.published_at || '');
-  }
-
-  function updatePublishState() {
-    const hasDate = !!appState.selectedDate;
-    const hasDraft = !!appState.draftSchedule;
-    const hasFilm = !!(appState.draftSchedule?.film_id);
-    const hasShowtimes = appState.draftShowtimes.some((row) => !row.is_cancelled);
-    const canPublish = hasDate && hasDraft && hasFilm && hasShowtimes;
-
-    ui.publishButton.disabled = !canPublish;
-    ui.publishStatusText.textContent = canPublish ? 'Ready to publish' : 'Not ready';
-    ui.publishSummary.textContent = canPublish
-      ? `Draft for ${formatFriendlyDate(appState.selectedDate)} meets the current publish readiness rules.`
-      : `Publish requires a selected date, a draft schedule, a film assignment, and at least one active showtime.`;
-  }
-
-  async function loadSelectedDateState() {
-    await fetchScheduleStateForDate(appState.selectedDate);
-
-    if (appState.draftSchedule?.film_id) {
-      ui.filmSelect.value = appState.draftSchedule.film_id;
-      renderFilmPreview(appState.draftSchedule.film_id);
-    } else if (appState.liveSchedule?.film_id) {
-      ui.filmSelect.value = appState.liveSchedule.film_id;
-      renderFilmPreview(appState.liveSchedule.film_id);
-    } else if (FILMS.length) {
-      ui.filmSelect.value = FILMS[0].id;
-      renderFilmPreview(FILMS[0].id);
-    }
-
-    const activeLoadId = appState.draftSchedule?.applied_load_template_id || appState.liveSchedule?.applied_load_template_id || LOAD_TEMPLATES[0]?.id || '';
-    if (ui.loadSelect && activeLoadId) {
-      ui.loadSelect.value = activeLoadId;
-      renderLoadPreview(activeLoadId);
-    }
-
-    updateCalendarIndicators();
-    updateHeaderAndSummary();
-    updatePublishState();
-  }
-
-  async function handleCalendarDayClick(event) {
-    const dayEl = event.target.closest('.day[data-date]');
-    if (!dayEl) return;
-
-    const nextDate = dayEl.dataset.date;
-    if (!nextDate || nextDate === appState.selectedDate) return;
-
-    appState.selectedDate = nextDate;
-    await loadSelectedDateState();
-  }
-
-  function setAuthenticatedUi(session) {
-    const isAuthed = !!session;
-    ui.authPanel.style.display = isAuthed ? 'none' : 'block';
-    ui.appShell.style.display = isAuthed ? 'block' : 'none';
-    ui.sessionText.textContent = isAuthed
-      ? `Signed in as: ${session.user.email}`
-      : 'Signed in as: Admin User';
-  }
-
-  async function handleSignIn() {
-    const email = ui.emailInput.value.trim();
-    const password = ui.passwordInput.value;
-
-    if (!email || !password) {
-      ui.authMessage.textContent = 'Enter your email and password.';
-      return;
-    }
-
-    ui.signInButton.disabled = true;
-    ui.authMessage.textContent = 'Signing in...';
-
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    ui.signInButton.disabled = false;
-
-    if (error) {
-      ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
-      return;
-    }
-
-    ui.authMessage.textContent = 'Sign-in successful.';
-    await initializeAdminApp();
-  }
-
-  async function handleSignOut() {
-    const { error } = await supabaseClient.auth.signOut();
-
-    if (error) {
-      console.error('Sign-out failed:', error);
-      return;
-    }
-
-    FILMS = [];
-    LOAD_TEMPLATES = [];
-    LOAD_TEMPLATE_TIMES = [];
-    appState.draftSchedule = null;
-    appState.liveSchedule = null;
-    appState.draftShowtimes = [];
-    appState.liveShowtimes = [];
-    ui.passwordInput.value = '';
-    ui.authMessage.textContent = 'Signed out.';
-    setAuthenticatedUi(null);
-  }
-
-  async function initializeAdminApp() {
-    const { data, error } = await supabaseClient.auth.getSession();
-    const session = data?.session || null;
-
-    if (error) {
-      console.error('Session check failed:', error);
-      setAuthenticatedUi(null);
-      return;
-    }
-
-    if (!session) {
-      setAuthenticatedUi(null);
-      return;
-    }
-
-    setAuthenticatedUi(session);
-
-    await fetchActiveFilms();
-    await fetchActiveLoads();
-    await fetchLoadTemplateTimes();
-
-    populateFilmSelect();
-    populateLoadSelect();
-    renderFilmPreview(FILMS[0]?.id || '');
-    renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
-
-    if (!ui.filmSelect.dataset.bound) {
-      ui.filmSelect.addEventListener('change', (event) => {
-        renderFilmPreview(event.target.value);
+      ui.passwordInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleSignIn();
+        }
       });
-      ui.filmSelect.dataset.bound = 'true';
-    }
 
-    if (!ui.loadSelect.dataset.bound) {
-      ui.loadSelect.addEventListener('change', (event) => {
-        renderLoadPreview(event.target.value);
+      ui.emailInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleSignIn();
+        }
       });
-      ui.loadSelect.dataset.bound = 'true';
+
+      supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+        setAuthenticatedUi(session);
+        if (session) {
+          await initializeAdminApp();
+        }
+      });
+
+      await initializeAdminApp();
     }
 
-    if (!ui.applyLoadButton.dataset.bound) {
-      ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
-      ui.applyLoadButton.dataset.bound = 'true';
-    }
-
-    if (!ui.filmPosterImage.dataset.bound) {
-      ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
-      ui.filmPosterImage.dataset.bound = 'true';
-    }
-
-    const calendarGrid = document.getElementById('calendar-grid');
-    if (calendarGrid && !calendarGrid.dataset.bound) {
-      calendarGrid.addEventListener('click', handleCalendarDayClick);
-      calendarGrid.dataset.bound = 'true';
-    }
-
-    const signOutButton = document.querySelector('.header .secondary');
-    if (signOutButton && !signOutButton.dataset.bound) {
-      signOutButton.addEventListener('click', handleSignOut);
-      signOutButton.dataset.bound = 'true';
-    }
-
-    await loadSelectedDateState();
-
-    if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
-      ui.loadSelect.value = LOAD_TEMPLATES[0].id;
-      renderLoadPreview(LOAD_TEMPLATES[0].id);
-    }
-  }
-
-  async function initializePage() {
-    ui.signInButton.addEventListener('click', handleSignIn);
-    ui.passwordInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        handleSignIn();
-      }
-    });
-    ui.emailInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        handleSignIn();
-      }
-    });
-
-    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-      setAuthenticatedUi(session);
-      if (session) {
-        await initializeAdminApp();
-      }
-    });
-
-    await initializeAdminApp();
-  }
-
-  document.addEventListener('DOMContentLoaded', initializePage);
-</script>
-</div>
+    document.addEventListener('DOMContentLoaded', initializePage);
+  </script>
 </body>
 </html>
