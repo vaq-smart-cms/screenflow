@@ -353,9 +353,9 @@
   async function fetchActiveLoads() {
     const { data, error } = await supabaseClient
       .from('load_templates')
-      .select('id, name, load_kind, display_color, is_active, sort_order')
+      .select('id, name, load_kind, display_color, is_active, is_system_default')
       .eq('is_active', true)
-      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('is_system_default', { ascending: false })
       .order('name', { ascending: true });
 
     if (error) {
