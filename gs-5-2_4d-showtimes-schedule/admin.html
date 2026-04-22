@@ -397,7 +397,7 @@
     try {
       const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
 
-      const { error } = await supabaseClient.rpc('generate_daily_schedule', {
+      const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
         p_schedule_date: appState.selectedDate,
         p_film_id: selectedFilmId,
         p_load_template_id: selectedLoadId
