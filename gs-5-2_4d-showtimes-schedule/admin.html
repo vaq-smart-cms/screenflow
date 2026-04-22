@@ -387,6 +387,8 @@
   }
 
   async function fetchActiveLoads() {
+    console.log('fetchActiveLoads() start');
+
     const { data, error } = await supabaseClient
       .from('load_templates')
       .select('id, name, load_kind, display_color, is_active, is_system_default')
@@ -760,6 +762,7 @@
   }
 
   async function initializeAdminApp() {
+    console.log('initializeAdminApp() start');
     const { data, error } = await supabaseClient.auth.getSession();
     const session = data?.session || null;
 
@@ -829,6 +832,7 @@
   }
 
   async function initializePage() {
+    console.log('initializePage() start');
     ui.signInButton.addEventListener('click', handleSignIn);
     ui.passwordInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
