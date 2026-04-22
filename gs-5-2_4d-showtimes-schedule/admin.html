@@ -41,7 +41,9 @@
 
     /* B — Calendar */
     .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;}
+    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;cursor:pointer;transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
+    .day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(44,60,73,0.08);}
+    .day.is-selected{border-color:var(--vaq-green);box-shadow:inset 0 0 0 2px var(--vaq-green);}
     .day.has-draft{outline:2px solid #64a5c3;}
     .day.has-live{background:#dff3e3;}
     .day.has-edits{border-color:#f3bc43;}
@@ -410,6 +412,36 @@
       : `Publish requires a selected date, a draft schedule, a film assignment, and at least one active showtime.`;
   }
 
+  async function loadSelectedDateState() {
+    await fetchScheduleStateForDate(appState.selectedDate);
+
+    if (appState.draftSchedule?.film_id) {
+      ui.filmSelect.value = appState.draftSchedule.film_id;
+      renderFilmPreview(appState.draftSchedule.film_id);
+    } else if (appState.liveSchedule?.film_id) {
+      ui.filmSelect.value = appState.liveSchedule.film_id;
+      renderFilmPreview(appState.liveSchedule.film_id);
+    } else if (FILMS.length) {
+      ui.filmSelect.value = FILMS[0].id;
+      renderFilmPreview(FILMS[0].id);
+    }
+
+    updateCalendarIndicators();
+    updateHeaderAndSummary();
+    updatePublishState();
+  }
+
+  async function handleCalendarDayClick(event) {
+    const dayEl = event.target.closest('.day[data-date]');
+    if (!dayEl) return;
+
+    const nextDate = dayEl.dataset.date;
+    if (!nextDate || nextDate === appState.selectedDate) return;
+
+    appState.selectedDate = nextDate;
+    await loadSelectedDateState();
+  }
+
   async function initializeFilmPreview() {
     await fetchActiveFilms();
     populateFilmSelect();
@@ -421,19 +453,12 @@
 
     ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
 
-    await fetchScheduleStateForDate(appState.selectedDate);
-
-    if (appState.draftSchedule?.film_id) {
-      ui.filmSelect.value = appState.draftSchedule.film_id;
-      renderFilmPreview(appState.draftSchedule.film_id);
-    } else if (appState.liveSchedule?.film_id) {
-      ui.filmSelect.value = appState.liveSchedule.film_id;
-      renderFilmPreview(appState.liveSchedule.film_id);
+    const calendarGrid = document.getElementById('calendar-grid');
+    if (calendarGrid) {
+      calendarGrid.addEventListener('click', handleCalendarDayClick);
     }
 
-    updateCalendarIndicators();
-    updateHeaderAndSummary();
-    updatePublishState();
+    await loadSelectedDateState();
   }
 
   document.addEventListener('DOMContentLoaded', initializeFilmPreview);
