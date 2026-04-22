@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VAQ 4D Showtimes Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    @font-face {
+      font-family: 'BlissPro';
+      src:
+        url('../assets/BlissPro-Bold.woff2') format('woff2'),
+        url('../assets/BlissPro-Bold.woff') format('woff');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --vaq-green: #7d9b2d;
+      --vaq-blue: #64a5c3;
+      --vaq-orange: #e6782d;
+      --vaq-grey: #646e78;
+
+      --bg: #eef3f6;
+      --panel: #ffffff;
+      --line: #d7e0e5;
+      --text: #243341;
+      --text-soft: #596876;
+      --shadow: 0 10px 28px rgba(44, 60, 73, 0.08);
+    }
+
+    body { margin:0; font-family:Arial; background:var(--bg); color:var(--text); padding:16px; }
+    h1,h2,h3,p{margin:0 0 10px;}
+
+    .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow);}    
+
+    /* A — Header */
+    .header{display:flex;justify-content:space-between;align-items:center;}
+    .status-pill{padding:6px 10px;border-radius:999px;background:#eef6fa;font-weight:bold;}
+
+    /* B — Calendar */
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;}
+    .day.has-draft{outline:2px solid #64a5c3;}
+    .day.has-live{background:#dff3e3;}
+    .day.has-edits{border-color:#f3bc43;}
+
+    /* D — Film */
+    .film-preview{display:flex;gap:12px;align-items:flex-start;}
+    .poster,.poster-image{width:80px;height:120px;border-radius:8px;flex:0 0 80px;object-fit:cover;background:#ccc;display:block;}
+    .poster-fallback{align-items:center;justify-content:center;text-align:center;line-height:1.25;font-size:0.82rem;color:#ffffff;background:#8a97a3;}
+
+    /* F — Showtime */
+    .showtime{padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;}
+
+    button{padding:10px 12px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
+    .primary{background:var(--vaq-green);color:#fff;}
+    .secondary{background:var(--vaq-blue);color:#fff;}
+    .accent{background:var(--vaq-orange);color:#fff;}
+
+  </style>
+</head>
+<body>
+
+<!-- A — Header / Status Bar -->
+<div class="panel header">
+  <div>
+    <h1>4D Showtimes Admin</h1>
+    <p>Signed in as: Admin User</p>
+  </div>
+  <div class="status-pill">Draft</div>
+  <button class="secondary">Sign Out</button>
+</div>
+
+<!-- B — Calendar / Date Picker -->
+<div class="panel">
+  <h2>Calendar</h2>
+  <div class="calendar-grid">
+    <div class="day has-draft">1</div>
+    <div class="day has-live">2</div>
+    <div class="day has-edits">3</div>
+    <div class="day">4</div>
+    <div class="day">5</div>
+    <div class="day">6</div>
+    <div class="day">7</div>
+  </div>
+</div>
+
+<!-- C — Day Summary Panel -->
+<div class="panel">
+  <h2>Day Summary</h2>
+  <p>Film: Turtle Odyssey</p>
+  <p>Load: Green</p>
+  <p>Showtimes: 6</p>
+  <p>Last Published: —</p>
+</div>
+
+<!-- D — Film Assignment Panel -->
+<div class="panel">
+  <h2>Film Assignment</h2>
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
+    <select id="film-select"></select>
+  </label>
+
+  <div class="film-preview">
+    <img
+      id="film-poster-image"
+      src="./film-posters/web/na4d_poster_md.jpg"
+      alt="Film poster preview"
+      class="poster-image"
+      loading="eager"
+      decoding="async"
+    >
+    <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+    <div>
+      <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
+      <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
+      <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+      <button class="secondary">Manage Films</button>
+    </div>
+  </div>
+</div>
+
+<!-- E — Load Assignment Panel -->
+<div class="panel">
+  <h2>Load Assignment</h2>
+  <select>
+    <option>Green</option>
+    <option>Yellow</option>
+    <option>Red</option>
+  </select>
+  <button class="primary">Apply Load to Draft</button>
+</div>
+
+<!-- F — Draft Showtimes Editor -->
+<div class="panel">
+  <h2>Draft Showtimes</h2>
+  <div class="showtime"><span>10:30 AM</span><button>Delete</button></div>
+  <div class="showtime"><span>11:30 AM</span><button>Delete</button></div>
+  <button class="secondary">Add Showtime</button>
+</div>
+
+<!-- G — Preview / Publish Section -->
+<div class="panel">
+  <h2>Preview & Publish</h2>
+  <p>Mini preview goes here</p>
+  <button class="accent">Publish</button>
+</div>
+
+<!-- H — Secondary Tools -->
+<div class="panel">
+  <h2>Tools</h2>
+  <button>Manage Loads</button>
+  <button>Manage Films</button>
+  <button>Help</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let FILMS = [];
+
+  const ui = {
+    filmSelect: document.getElementById('film-select'),
+    filmTitle: document.getElementById('film-title'),
+    filmSynopsis: document.getElementById('film-synopsis'),
+    filmAdvisory: document.getElementById('film-advisory'),
+    filmPosterImage: document.getElementById('film-poster-image'),
+    filmPosterFallback: document.getElementById('film-poster-fallback')
+  };
+
+  function populateFilmSelect() {
+    if (!ui.filmSelect) return;
+
+    if (!FILMS.length) {
+      ui.filmSelect.innerHTML = '<option value="">No active films available</option>';
+      ui.filmSelect.disabled = true;
+      return;
+    }
+
+    ui.filmSelect.disabled = false;
+    ui.filmSelect.innerHTML = FILMS
+      .map((film) => `<option value="${film.id}">${film.title}</option>`)
+      .join('');
+  }
+
+  function renderFilmPreview(filmId) {
+    const film = FILMS.find((item) => item.id === filmId) || FILMS[0];
+
+    if (!film) {
+      ui.filmTitle.textContent = 'No active film selected';
+      ui.filmSynopsis.textContent = 'Add or activate a film to see its preview here.';
+      ui.filmAdvisory.textContent = '';
+      ui.filmPosterImage.style.display = 'none';
+      ui.filmPosterFallback.style.display = 'grid';
+      return;
+    }
+
+    ui.filmTitle.textContent = film.title || 'Untitled film';
+    ui.filmSynopsis.textContent = film.synopsis || 'No synopsis available.';
+    ui.filmAdvisory.textContent = film.advisory_text || '';
+
+    ui.filmPosterFallback.style.display = 'none';
+    ui.filmPosterImage.style.display = 'block';
+    ui.filmPosterImage.alt = `${film.title} poster`;
+    ui.filmPosterImage.src = film.poster_url || '';
+    ui.filmPosterImage.srcset = film.poster_srcset || '';
+    ui.filmPosterImage.sizes = film.poster_sizes || '';
+
+    if (!film.poster_url) {
+      handleFilmPosterError();
+    }
+  }
+
+  function handleFilmPosterError() {
+    ui.filmPosterImage.style.display = 'none';
+    ui.filmPosterFallback.style.display = 'grid';
+  }
+
+  async function fetchActiveFilms() {
+    const { data, error } = await supabaseClient
+      .from('films')
+      .select('id, title, poster_url, synopsis, advisory_text, is_active, sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('title', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch films:', error);
+      FILMS = [];
+      return;
+    }
+
+    FILMS = (data || []).map((film) => ({
+      id: film.id,
+      title: film.title,
+      poster_url: film.poster_url || '',
+      poster_srcset: film.poster_url || '',
+      poster_sizes: '(max-width: 700px) 80px, 120px',
+      synopsis: film.synopsis || '',
+      advisory_text: film.advisory_text || ''
+    }));
+  }
+
+  async function initializeFilmPreview() {
+    await fetchActiveFilms();
+    populateFilmSelect();
+    renderFilmPreview(FILMS[0]?.id || '');
+
+    ui.filmSelect.addEventListener('change', (event) => {
+      renderFilmPreview(event.target.value);
+    });
+
+    ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
+  }
+
+  document.addEventListener('DOMContentLoaded', initializeFilmPreview);
+</script>
+</body>
+</html>
