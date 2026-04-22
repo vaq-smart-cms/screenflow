@@ -41,12 +41,48 @@
 
     /* B — Calendar */
     .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;cursor:pointer;transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
-    .day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(44,60,73,0.08);}
-    .day.is-selected{border-color:var(--vaq-green);box-shadow:inset 0 0 0 2px var(--vaq-green);}
-    .day.has-draft{outline:2px solid #64a5c3;}
-    .day.has-live{background:#dff3e3;}
-    .day.has-edits{border-color:#f3bc43;}
+    .day {
+      padding: 10px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .day:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(44,60,73,0.08);
+    }
+
+    .day.is-selected {
+      border-color: var(--vaq-green);
+      box-shadow: inset 0 0 0 2px var(--vaq-green);
+    }
+
+    .day.has-draft {
+      outline: 2px solid #64a5c3;
+    }
+
+    .day.has-live {
+      background: #dff3e3;
+    }
+
+    .day.has-edits {
+      border-color: #f3bc43;
+    }
+
+    .day span {
+      -webkit-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
 
     /* D — Film */
     .film-preview{display:flex;gap:12px;align-items:flex-start;}
@@ -105,7 +141,6 @@
     <div class="day" data-date="2026-04-06">6</div>
     <div class="day" data-date="2026-04-07">7</div>
   </div>
-</div>
 </div>
 
 <!-- C — Day Summary Panel -->
@@ -201,6 +236,7 @@
     emailInput: document.getElementById('email-input'),
     passwordInput: document.getElementById('password-input'),
     signInButton: document.getElementById('sign-in-button'),
+    signOutButton: document.getElementById('sign-out-button'),
     authMessage: document.getElementById('auth-message'),
     filmSelect: document.getElementById('film-select'),
     filmTitle: document.getElementById('film-title'),
@@ -364,6 +400,7 @@
       return;
     }
 
+    console.log('Active loads:', data);
     LOAD_TEMPLATES = data || [];
   }
 
@@ -451,7 +488,7 @@
     try {
       const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
 
-      const { error } = await supabaseClient.rpc('generate_daily_schedule', {
+      const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
         p_schedule_date: appState.selectedDate,
         p_film_id: selectedFilmId,
         p_load_template_id: selectedLoadId
@@ -582,8 +619,12 @@
   function updateCalendarIndicators() {
     ui.calendarDays.forEach((dayEl) => {
       const dayDate = dayEl.dataset.date;
+
       dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
+      dayEl.classList.toggle('is-selected', dayDate === appState.selectedDate);
+
       if (dayDate !== appState.selectedDate) return;
+
       if (appState.draftSchedule) dayEl.classList.add('has-draft');
       if (appState.liveSchedule) dayEl.classList.add('has-live');
       if (appState.draftSchedule?.has_manual_edits) dayEl.classList.add('has-edits');
@@ -774,10 +815,9 @@
       calendarGrid.dataset.bound = 'true';
     }
 
-    const signOutButton = document.querySelector('.header .secondary');
-    if (signOutButton && !signOutButton.dataset.bound) {
-      signOutButton.addEventListener('click', handleSignOut);
-      signOutButton.dataset.bound = 'true';
+    if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
+      ui.signOutButton.addEventListener('click', handleSignOut);
+      ui.signOutButton.dataset.bound = 'true';
     }
 
     await loadSelectedDateState();
