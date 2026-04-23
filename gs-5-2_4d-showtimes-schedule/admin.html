@@ -106,7 +106,6 @@
       <div class="day" data-date="2026-04-07">7</div>
     </div>
   </div>
-  
   <!-- C — Day Summary Panel -->
   <div class="panel">
     <h2>Day Summary</h2>
@@ -162,9 +161,8 @@
   <!-- F — Draft Showtimes Editor -->
   <div class="panel">
     <h2>Draft Showtimes</h2>
-    <div class="showtime"><span>10:30 AM</span><button>Delete</button></div>
-    <div class="showtime"><span>11:30 AM</span><button>Delete</button></div>
-    <button class="secondary">Add Showtime</button>
+    <div id="draft-showtimes-container"></div>
+    <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
   </div>
 
   <!-- G — Preview / Publish Section -->
@@ -227,7 +225,9 @@
     calendarDays: Array.from(document.querySelectorAll('.day[data-date]')),
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
-    applyLoadButton: document.getElementById('apply-load-button')
+    applyLoadButton: document.getElementById('apply-load-button'),
+    draftShowtimesContainer: document.getElementById('draft-showtimes-container'),
+    addShowtimeButton: document.getElementById('add-showtime-button')
   };
 
   const appState = {
@@ -628,6 +628,164 @@
       : `Publish requires a selected date, a draft schedule, a film assignment, and at least one active showtime.`;
   }
 
+  function formatShowAtTime(isoString) {
+    if (!isoString) return '—';
+
+    const dateObj = new Date(isoString);
+    if (Number.isNaN(dateObj.getTime())) return '—';
+
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Vancouver',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(dateObj);
+  }
+
+  async function deleteDraftShowtime(showtimeId) {
+    if (!showtimeId) return;
+
+    const confirmed = window.confirm('Delete this draft showtime?');
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+      .from('daily_showtimes')
+      .delete()
+      .eq('id', showtimeId);
+
+    if (error) {
+      console.error('Failed to delete draft showtime:', error);
+      alert(`Could not delete showtime: ${error.message}`);
+      return;
+    }
+
+    if (appState.draftSchedule) {
+      await supabaseClient
+        .from('daily_schedules')
+        .update({ has_manual_edits: true, updated_at: new Date().toISOString() })
+        .eq('id', appState.draftSchedule.id)
+        .eq('status', 'draft');
+    }
+
+    await loadSelectedDateState();
+  }
+
+  async function addDraftShowtime() {
+    if (!appState.selectedDate) {
+      alert('Select a date first.');
+      return;
+    }
+
+    const selectedFilmId =
+      ui.filmSelect?.value ||
+      appState.draftSchedule?.film_id ||
+      appState.liveSchedule?.film_id ||
+      '';
+
+    if (!selectedFilmId) {
+      alert('Select a film before adding a showtime.');
+      return;
+    }
+
+    const timeInput = window.prompt('Enter new showtime in 24-hour format (HH:MM)', '10:30');
+    if (!timeInput) return;
+
+    const trimmedTime = String(timeInput).trim();
+    if (!/^\d{2}:\d{2}$/.test(trimmedTime)) {
+      alert('Please enter time as HH:MM, for example 10:30');
+      return;
+    }
+
+    const [hours, minutes] = trimmedTime.split(':').map(Number);
+    if (
+      Number.isNaN(hours) || Number.isNaN(minutes) ||
+      hours < 0 || hours > 23 ||
+      minutes < 0 || minutes > 59
+    ) {
+      alert('Please enter a valid 24-hour time.');
+      return;
+    }
+
+    const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
+    const showAtIso = `${appState.selectedDate}T${trimmedTime}:00`;
+
+    const nextSortOrder = (
+      appState.draftShowtimes.reduce((max, row) => {
+        const value = Number(row.sort_order);
+        return Number.isFinite(value) ? Math.max(max, value) : max;
+      }, 0) || 0
+    ) + 1;
+
+    const { error } = await supabaseClient
+      .from('daily_showtimes')
+      .insert({
+        daily_schedule_id: draft.id,
+        show_at: showAtIso,
+        sort_order: nextSortOrder,
+        is_cancelled: false
+      });
+
+    if (error) {
+      console.error('Failed to add draft showtime:', error);
+      alert(`Could not add showtime: ${error.message}`);
+      return;
+    }
+
+    await supabaseClient
+      .from('daily_schedules')
+      .update({ has_manual_edits: true, updated_at: new Date().toISOString() })
+      .eq('id', draft.id)
+      .eq('status', 'draft');
+
+    await loadSelectedDateState();
+  }
+
+  function renderDraftShowtimes() {
+    if (!ui.draftShowtimesContainer) return;
+
+    ui.draftShowtimesContainer.innerHTML = '';
+
+    if (!appState.draftSchedule) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'No draft schedule exists for this date yet.';
+      ui.draftShowtimesContainer.appendChild(empty);
+      return;
+    }
+
+    const activeRows = appState.draftShowtimes
+      .filter((row) => !row.is_cancelled)
+      .slice()
+      .sort((a, b) => String(a.show_at).localeCompare(String(b.show_at)));
+
+    if (!activeRows.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'This draft has no showtimes yet.';
+      ui.draftShowtimesContainer.appendChild(empty);
+      return;
+    }
+
+    activeRows.forEach((row) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'showtime';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = formatShowAtTime(row.show_at);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', () => {
+        deleteDraftShowtime(row.id);
+      });
+
+      rowEl.appendChild(timeSpan);
+      rowEl.appendChild(deleteButton);
+      ui.draftShowtimesContainer.appendChild(rowEl);
+    });
+  }
+
   async function loadSelectedDateState() {
     await fetchScheduleStateForDate(appState.selectedDate);
 
@@ -642,12 +800,20 @@
       renderFilmPreview(FILMS[0].id);
     }
 
-    const activeLoadId = appState.draftSchedule?.applied_load_template_id || appState.liveSchedule?.applied_load_template_id || LOAD_TEMPLATES[0]?.id || '';
+    const activeLoadId =
+      appState.draftSchedule?.applied_load_template_id ||
+      appState.liveSchedule?.applied_load_template_id ||
+      LOAD_TEMPLATES[0]?.id ||
+      '';
+
     if (ui.loadSelect && activeLoadId) {
       ui.loadSelect.value = activeLoadId;
       renderLoadPreview(activeLoadId);
+    } else {
+      renderLoadPreview('');
     }
 
+    renderDraftShowtimes();
     updateCalendarIndicators();
     updateHeaderAndSummary();
     updatePublishState();
@@ -764,6 +930,11 @@
     if (!ui.applyLoadButton.dataset.bound) {
       ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
       ui.applyLoadButton.dataset.bound = 'true';
+    }
+
+    if (ui.addShowtimeButton && !ui.addShowtimeButton.dataset.bound) {
+      ui.addShowtimeButton.addEventListener('click', addDraftShowtime);
+      ui.addShowtimeButton.dataset.bound = 'true';
     }
 
     if (!ui.filmPosterImage.dataset.bound) {
