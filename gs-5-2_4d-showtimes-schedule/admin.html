@@ -41,48 +41,12 @@
 
     /* B — Calendar */
     .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-    .day {
-      padding: 10px;
-      border-radius: 10px;
-      background: #fff;
-      border: 1px solid var(--line);
-      text-align: center;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-
-    .day:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(44,60,73,0.08);
-    }
-
-    .day.is-selected {
-      border-color: var(--vaq-green);
-      box-shadow: inset 0 0 0 2px var(--vaq-green);
-    }
-
-    .day.has-draft {
-      outline: 2px solid #64a5c3;
-    }
-
-    .day.has-live {
-      background: #dff3e3;
-    }
-
-    .day.has-edits {
-      border-color: #f3bc43;
-    }
-
-    .day span {
-      -webkit-user-select: none;
-      user-select: none;
-      pointer-events: none;
-    }
+    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;cursor:pointer;transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
+    .day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(44,60,73,0.08);}
+    .day.is-selected{border-color:var(--vaq-green);box-shadow:inset 0 0 0 2px var(--vaq-green);}
+    .day.has-draft{outline:2px solid #64a5c3;}
+    .day.has-live{background:#dff3e3;}
+    .day.has-edits{border-color:#f3bc43;}
 
     /* D — Film */
     .film-preview{display:flex;gap:12px;align-items:flex-start;}
@@ -118,113 +82,111 @@
 
 <div id="app-shell" style="display:none;">
 
-  <!-- A — Header / Status Bar -->
-  <div class="panel header">
+<!-- A — Header / Status Bar -->
+<div class="panel header">
+  <div>
+    <h1>4D Showtimes Admin</h1>
+    <p id="session-text">Signed in as: Admin User</p>
+  </div>
+  <div id="status-pill" class="status-pill">No date loaded</div>
+  <button class="secondary">Sign Out</button>
+</div>
+
+<!-- B — Calendar / Date Picker -->
+<div class="panel">
+  <h2>Calendar</h2>
+  <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
+  <div class="calendar-grid" id="calendar-grid">
+    <div class="day has-draft" data-date="2026-04-01">1</div>
+    <div class="day has-live" data-date="2026-04-02">2</div>
+    <div class="day has-edits" data-date="2026-04-03">3</div>
+    <div class="day" data-date="2026-04-04">4</div>
+    <div class="day" data-date="2026-04-05">5</div>
+    <div class="day" data-date="2026-04-06">6</div>
+    <div class="day" data-date="2026-04-07">7</div>
+  </div>
+</div>
+</div>
+
+<!-- C — Day Summary Panel -->
+<div class="panel">
+  <h2>Day Summary</h2>
+  <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
+  <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
+  <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+  <p><strong>Film:</strong> <span id="summary-film">—</span></p>
+  <p><strong>Load:</strong> <span id="summary-load">—</span></p>
+  <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
+  <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
+  <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
+  <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
+</div>
+
+<!-- D — Film Assignment Panel -->
+<div class="panel">
+  <h2>Film Assignment</h2>
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
+    <select id="film-select"></select>
+  </label>
+
+  <div class="film-preview">
+    <img
+      id="film-poster-image"
+      src="./film-posters/web/na4d_poster_md.jpg"
+      alt="Film poster preview"
+      class="poster-image"
+      loading="eager"
+      decoding="async"
+    >
+    <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
     <div>
-      <h1>4D Showtimes Admin</h1>
-      <p id="session-text">Signed in as: Admin User</p>
-    </div>
-    <div id="status-pill" class="status-pill">No date loaded</div>
-    <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
-  </div>
-
-  <!-- B — Calendar / Date Picker -->
-  <div class="panel">
-    <h2>Calendar</h2>
-    <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
-    <div class="calendar-grid" id="calendar-grid">
-      <div class="day has-draft" data-date="2026-04-01">1</div>
-      <div class="day has-live" data-date="2026-04-02">2</div>
-      <div class="day has-edits" data-date="2026-04-03">3</div>
-      <div class="day" data-date="2026-04-04">4</div>
-      <div class="day" data-date="2026-04-05">5</div>
-      <div class="day" data-date="2026-04-06">6</div>
-      <div class="day" data-date="2026-04-07">7</div>
+      <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
+      <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
+      <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+      <button class="secondary">Manage Films</button>
     </div>
   </div>
+</div>
 
-  <!-- C — Day Summary Panel -->
-  <div class="panel">
-    <h2>Day Summary</h2>
-    <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
-    <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
-    <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
-    <p><strong>Film:</strong> <span id="summary-film">—</span></p>
-    <p><strong>Load:</strong> <span id="summary-load">—</span></p>
-    <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
-    <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
-    <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
-    <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
-  </div>
+<!-- E — Load Assignment Panel -->
+<div class="panel">
+  <h2>Load Assignment</h2>
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
+    <select id="load-select"></select>
+  </label>
+  <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
+  <button id="apply-load-button" class="primary">Apply Load to Draft</button>
+</div>
 
-  <!-- D — Film Assignment Panel -->
-  <div class="panel">
-    <h2>Film Assignment</h2>
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
-      <select id="film-select"></select>
-    </label>
+<!-- F — Draft Showtimes Editor -->
+<div class="panel">
+  <h2>Draft Showtimes</h2>
+  <div id="draft-showtimes-container"></div>
+  <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
+</div>
 
-    <div class="film-preview">
-      <img
-        id="film-poster-image"
-        src="./film-posters/web/na4d_poster_md.jpg"
-        alt="Film poster preview"
-        class="poster-image"
-        loading="eager"
-        decoding="async"
-      >
-      <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
-      <div>
-        <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
-        <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
-        <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-        <button class="secondary">Manage Films</button>
-      </div>
-    </div>
-  </div>
+<!-- G — Preview / Publish Section -->
+<div class="panel">
+  <h2>Preview & Publish</h2>
+  <p id="publish-summary">Select a date to review publish readiness.</p>
+  <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
+  <button id="publish-button" class="accent" disabled>Publish</button>
+</div>
 
-  <!-- E — Load Assignment Panel -->
-  <div class="panel">
-    <h2>Load Assignment</h2>
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
-      <select id="load-select"></select>
-    </label>
-    <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
-    <button id="apply-load-button" class="primary">Apply Load to Draft</button>
-  </div>
-
-  <!-- F — Draft Showtimes Editor -->
-  <div class="panel">
-    <h2>Draft Showtimes</h2>
-    <div class="showtime"><span>10:30 AM</span><button>Delete</button></div>
-    <div class="showtime"><span>11:30 AM</span><button>Delete</button></div>
-    <button class="secondary">Add Showtime</button>
-  </div>
-
-  <!-- G — Preview / Publish Section -->
-  <div class="panel">
-    <h2>Preview & Publish</h2>
-    <p id="publish-summary">Select a date to review publish readiness.</p>
-    <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
-    <button id="publish-button" class="accent" disabled>Publish</button>
-  </div>
-
-  <!-- H — Secondary Tools -->
-  <div class="panel">
-    <h2>Tools</h2>
-    <button>Manage Loads</button>
-    <button>Manage Films</button>
-    <button>Help</button>
-  </div>
-  
+<!-- H — Secondary Tools -->
+<div class="panel">
+  <h2>Tools</h2>
+  <button>Manage Loads</button>
+  <button>Manage Films</button>
+  <button>Help</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+  const SUPABASE_URL = 'https://csxuuwbtxgdpvskggcux.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_jPeweysUr7DZvFxG7F1-LQ_UR8MT1F9';
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -238,7 +200,6 @@
     emailInput: document.getElementById('email-input'),
     passwordInput: document.getElementById('password-input'),
     signInButton: document.getElementById('sign-in-button'),
-    signOutButton: document.getElementById('sign-out-button'),
     authMessage: document.getElementById('auth-message'),
     filmSelect: document.getElementById('film-select'),
     filmTitle: document.getElementById('film-title'),
@@ -263,7 +224,9 @@
     calendarDays: Array.from(document.querySelectorAll('.day[data-date]')),
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
-    applyLoadButton: document.getElementById('apply-load-button')
+    applyLoadButton: document.getElementById('apply-load-button'),
+    draftShowtimesContainer: document.getElementById('draft-showtimes-container'),
+    addShowtimeButton: document.getElementById('add-showtime-button')
   };
 
   const appState = {
@@ -277,31 +240,18 @@
   function populateFilmSelect() {
     if (!ui.filmSelect) return;
 
-    const currentValue = ui.filmSelect.value;
-    ui.filmSelect.innerHTML = '';
-
     if (!FILMS.length) {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'No active films available';
-      ui.filmSelect.appendChild(option);
+      ui.filmSelect.innerHTML = '<option value="">No active films available</option>';
       ui.filmSelect.disabled = true;
       return;
     }
 
     ui.filmSelect.disabled = false;
-
-    FILMS.forEach((film) => {
-      const option = document.createElement('option');
-      option.value = film.id;
-      option.textContent = film.title;
-      ui.filmSelect.appendChild(option);
-    });
-
-    const hasMatchingValue = FILMS.some((film) => film.id === currentValue);
-    if (hasMatchingValue) {
-      ui.filmSelect.value = currentValue;
-    }
+    ui.filmSelect.innerHTML = FILMS
+      .map((film) => `<option value="${film.id}">${film.title}</option>`)
+      .join('');
+  }">${film.title}</option>`)
+      .join('');
   }
 
   function renderFilmPreview(filmId) {
@@ -340,14 +290,8 @@
   function populateLoadSelect() {
     if (!ui.loadSelect) return;
 
-    const currentValue = ui.loadSelect.value;
-    ui.loadSelect.innerHTML = '';
-
     if (!LOAD_TEMPLATES.length) {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'No active loads available';
-      ui.loadSelect.appendChild(option);
+      ui.loadSelect.innerHTML = '<option value="">No active loads available</option>';
       ui.loadSelect.disabled = true;
       ui.applyLoadButton.disabled = true;
       return;
@@ -355,18 +299,9 @@
 
     ui.loadSelect.disabled = false;
     ui.applyLoadButton.disabled = false;
-
-    LOAD_TEMPLATES.forEach((load) => {
-      const option = document.createElement('option');
-      option.value = load.id;
-      option.textContent = load.name;
-      ui.loadSelect.appendChild(option);
-    });
-
-    const hasMatchingValue = LOAD_TEMPLATES.some((load) => load.id === currentValue);
-    if (hasMatchingValue) {
-      ui.loadSelect.value = currentValue;
-    }
+    ui.loadSelect.innerHTML = LOAD_TEMPLATES
+      .map((load) => `<option value="${load.id}">${load.name}</option>`)
+      .join('');
   }
 
   function renderLoadPreview(loadId) {
@@ -389,16 +324,12 @@
   }
 
   async function fetchActiveLoads() {
-    console.log('fetchActiveLoads() start');
-
     const { data, error } = await supabaseClient
       .from('load_templates')
-      .select('id, name, load_kind, display_color, is_active, is_system_default')
+      .select('id, name, load_kind, display_color, is_active, sort_order')
       .eq('is_active', true)
-      .order('is_system_default', { ascending: false })
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('name', { ascending: true });
-
-    console.log('fetchActiveLoads() raw result:', { data, error });
 
     if (error) {
       console.error('Failed to fetch loads:', error);
@@ -493,7 +424,7 @@
     try {
       const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
 
-      const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
+      const { error } = await supabaseClient.rpc('generate_daily_schedule', {
         p_schedule_date: appState.selectedDate,
         p_film_id: selectedFilmId,
         p_load_template_id: selectedLoadId
@@ -624,12 +555,8 @@
   function updateCalendarIndicators() {
     ui.calendarDays.forEach((dayEl) => {
       const dayDate = dayEl.dataset.date;
-
       dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
-      dayEl.classList.toggle('is-selected', dayDate === appState.selectedDate);
-
       if (dayDate !== appState.selectedDate) return;
-
       if (appState.draftSchedule) dayEl.classList.add('has-draft');
       if (appState.liveSchedule) dayEl.classList.add('has-live');
       if (appState.draftSchedule?.has_manual_edits) dayEl.classList.add('has-edits');
@@ -671,6 +598,164 @@
       : `Publish requires a selected date, a draft schedule, a film assignment, and at least one active showtime.`;
   }
 
+  function formatShowAtTime(isoString) {
+    if (!isoString) return '—';
+
+    const dateObj = new Date(isoString);
+    if (Number.isNaN(dateObj.getTime())) return '—';
+
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Vancouver',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(dateObj);
+  }
+
+  async function deleteDraftShowtime(showtimeId) {
+    if (!showtimeId) return;
+
+    const confirmed = window.confirm('Delete this draft showtime?');
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+      .from('daily_showtimes')
+      .delete()
+      .eq('id', showtimeId);
+
+    if (error) {
+      console.error('Failed to delete draft showtime:', error);
+      alert(`Could not delete showtime: ${error.message}`);
+      return;
+    }
+
+    if (appState.draftSchedule) {
+      await supabaseClient
+        .from('daily_schedules')
+        .update({ has_manual_edits: true, updated_at: new Date().toISOString() })
+        .eq('id', appState.draftSchedule.id)
+        .eq('status', 'draft');
+    }
+
+    await loadSelectedDateState();
+  }
+
+  async function addDraftShowtime() {
+    if (!appState.selectedDate) {
+      alert('Select a date first.');
+      return;
+    }
+
+    const selectedFilmId =
+      ui.filmSelect?.value ||
+      appState.draftSchedule?.film_id ||
+      appState.liveSchedule?.film_id ||
+      '';
+
+    if (!selectedFilmId) {
+      alert('Select a film before adding a showtime.');
+      return;
+    }
+
+    const timeInput = window.prompt('Enter new showtime in 24-hour format (HH:MM)', '10:30');
+    if (!timeInput) return;
+
+    const trimmedTime = String(timeInput).trim();
+    if (!/^\d{2}:\d{2}$/.test(trimmedTime)) {
+      alert('Please enter time as HH:MM, for example 10:30');
+      return;
+    }
+
+    const [hours, minutes] = trimmedTime.split(':').map(Number);
+    if (
+      Number.isNaN(hours) || Number.isNaN(minutes) ||
+      hours < 0 || hours > 23 ||
+      minutes < 0 || minutes > 59
+    ) {
+      alert('Please enter a valid 24-hour time.');
+      return;
+    }
+
+    const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
+    const showAtIso = `${appState.selectedDate}T${trimmedTime}:00`;
+
+    const nextSortOrder = (
+      appState.draftShowtimes.reduce((max, row) => {
+        const value = Number(row.sort_order);
+        return Number.isFinite(value) ? Math.max(max, value) : max;
+      }, 0) || 0
+    ) + 1;
+
+    const { error } = await supabaseClient
+      .from('daily_showtimes')
+      .insert({
+        daily_schedule_id: draft.id,
+        show_at: showAtIso,
+        sort_order: nextSortOrder,
+        is_cancelled: false
+      });
+
+    if (error) {
+      console.error('Failed to add draft showtime:', error);
+      alert(`Could not add showtime: ${error.message}`);
+      return;
+    }
+
+    await supabaseClient
+      .from('daily_schedules')
+      .update({ has_manual_edits: true, updated_at: new Date().toISOString() })
+      .eq('id', draft.id)
+      .eq('status', 'draft');
+
+    await loadSelectedDateState();
+  }
+
+  function renderDraftShowtimes() {
+    if (!ui.draftShowtimesContainer) return;
+
+    ui.draftShowtimesContainer.innerHTML = '';
+
+    if (!appState.draftSchedule) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'No draft schedule exists for this date yet.';
+      ui.draftShowtimesContainer.appendChild(empty);
+      return;
+    }
+
+    const activeRows = appState.draftShowtimes
+      .filter((row) => !row.is_cancelled)
+      .slice()
+      .sort((a, b) => String(a.show_at).localeCompare(String(b.show_at)));
+
+    if (!activeRows.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'This draft has no showtimes yet.';
+      ui.draftShowtimesContainer.appendChild(empty);
+      return;
+    }
+
+    activeRows.forEach((row) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'showtime';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = formatShowAtTime(row.show_at);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', () => {
+        deleteDraftShowtime(row.id);
+      });
+
+      rowEl.appendChild(timeSpan);
+      rowEl.appendChild(deleteButton);
+      ui.draftShowtimesContainer.appendChild(rowEl);
+    });
+  }
+
   async function loadSelectedDateState() {
     await fetchScheduleStateForDate(appState.selectedDate);
 
@@ -685,12 +770,20 @@
       renderFilmPreview(FILMS[0].id);
     }
 
-    const activeLoadId = appState.draftSchedule?.applied_load_template_id || appState.liveSchedule?.applied_load_template_id || LOAD_TEMPLATES[0]?.id || '';
+    const activeLoadId =
+      appState.draftSchedule?.applied_load_template_id ||
+      appState.liveSchedule?.applied_load_template_id ||
+      LOAD_TEMPLATES[0]?.id ||
+      '';
+
     if (ui.loadSelect && activeLoadId) {
       ui.loadSelect.value = activeLoadId;
       renderLoadPreview(activeLoadId);
+    } else {
+      renderLoadPreview('');
     }
 
+    renderDraftShowtimes();
     updateCalendarIndicators();
     updateHeaderAndSummary();
     updatePublishState();
@@ -765,13 +858,8 @@
   }
 
   async function initializeAdminApp() {
-    console.log('initializeAdminApp() start');
-
     const { data, error } = await supabaseClient.auth.getSession();
     const session = data?.session || null;
-
-    console.log('session check error:', error);
-    console.log('session object:', session);
 
     if (error) {
       console.error('Session check failed:', error);
@@ -780,25 +868,15 @@
     }
 
     if (!session) {
-      console.log('no session, returning early');
       setAuthenticatedUi(null);
       return;
     }
 
     setAuthenticatedUi(session);
 
-    console.log('about to fetch films');
     await fetchActiveFilms();
-
-    console.log('about to fetch loads');
     await fetchActiveLoads();
-
-    console.log('about to fetch load template times');
     await fetchLoadTemplateTimes();
-
-    console.log('films after fetch:', FILMS);
-    console.log('loads after fetch:', LOAD_TEMPLATES);
-    console.log('load times after fetch:', LOAD_TEMPLATE_TIMES);
 
     populateFilmSelect();
     populateLoadSelect();
@@ -824,6 +902,11 @@
       ui.applyLoadButton.dataset.bound = 'true';
     }
 
+    if (ui.addShowtimeButton && !ui.addShowtimeButton.dataset.bound) {
+      ui.addShowtimeButton.addEventListener('click', addDraftShowtime);
+      ui.addShowtimeButton.dataset.bound = 'true';
+    }
+
     if (!ui.filmPosterImage.dataset.bound) {
       ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
       ui.filmPosterImage.dataset.bound = 'true';
@@ -835,6 +918,12 @@
       calendarGrid.dataset.bound = 'true';
     }
 
+    const signOutButton = document.querySelector('.header .secondary');
+    if (signOutButton && !signOutButton.dataset.bound) {
+      signOutButton.addEventListener('click', handleSignOut);
+      signOutButton.dataset.bound = 'true';
+    }
+
     await loadSelectedDateState();
 
     if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
@@ -844,28 +933,19 @@
   }
 
   async function initializePage() {
-    console.log('initializePage() start');
-
     ui.signInButton.addEventListener('click', handleSignIn);
-
     ui.passwordInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         handleSignIn();
       }
     });
-
     ui.emailInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         handleSignIn();
       }
     });
-
-    if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
-      ui.signOutButton.addEventListener('click', handleSignOut);
-      ui.signOutButton.dataset.bound = 'true';
-    }
 
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       setAuthenticatedUi(session);
