@@ -270,7 +270,8 @@
     draftShowtimes: [],
     liveShowtimes: [],
     calendarDayStates: {},
-    pendingNewShowtimeId: null
+    pendingNewShowtimeId: null,
+    pendingNewShowtimeIsUnsaved: false
   };
 
   function populateFilmSelect() {
@@ -901,6 +902,39 @@
     await loadSelectedDateState();
   }
 
+  async function cancelPendingNewShowtime(showtimeId) {
+    if (!showtimeId) return;
+
+    const confirmed = window.confirm('Discard this new unsaved showtime?');
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+      .from('daily_showtimes')
+      .delete()
+      .eq('id', showtimeId);
+
+    if (error) {
+      console.error('Failed to cancel new draft showtime:', error);
+      alert(`Could not discard showtime: ${error.message}`);
+      return;
+    }
+
+    appState.pendingNewShowtimeId = null;
+    appState.pendingNewShowtimeIsUnsaved = false;
+
+    if (appState.draftSchedule) {
+      await supabaseClient
+        .from('daily_schedules')
+        .update({
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', appState.draftSchedule.id)
+        .eq('status', 'draft');
+    }
+
+    await loadSelectedDateState();
+  }
+
   async function addDraftShowtime() {
     if (!appState.selectedDate) {
       alert('Select a date first.');
@@ -964,6 +998,7 @@
     }
 
     appState.pendingNewShowtimeId = data?.id || null;
+    appState.pendingNewShowtimeIsUnsaved = true;
 
     await supabaseClient
       .from('daily_schedules')
@@ -1007,7 +1042,9 @@
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
 
-      const isPendingNewRow = appState.pendingNewShowtimeId === row.id;
+      const isPendingNewRow =
+        appState.pendingNewShowtimeId === row.id &&
+        appState.pendingNewShowtimeIsUnsaved === true;
       if (isPendingNewRow) {
         rowEl.classList.add('showtime-new');
       }
@@ -1044,7 +1081,15 @@
         if (isPendingNewRow) {
           requestAnimationFrame(() => {
             rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            hourSelect.focus();
+
+            const currentHourLooksReasonable = hourSelect.value && hourSelect.value !== '';
+            if (currentHourLooksReasonable) {
+              minuteSelect.focus();
+              minuteSelect.click();
+            } else {
+              hourSelect.focus();
+              hourSelect.click();
+            }
           });
         }
 
@@ -1096,20 +1141,32 @@
         }
 
         await editDraftShowtime(row.id, updatedShowAt);
+
         if (appState.pendingNewShowtimeId === row.id) {
           appState.pendingNewShowtimeId = null;
+          appState.pendingNewShowtimeIsUnsaved = false;
         }
       });
 
-      const deleteButton = document.createElement('button');
-      deleteButton.type = 'button';
-      deleteButton.textContent = 'Delete';
-      deleteButton.addEventListener('click', async () => {
-        await deleteDraftShowtime(row.id);
-      });
-
       actionsWrap.appendChild(saveButton);
-      actionsWrap.appendChild(deleteButton);
+
+      if (isPendingNewRow) {
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.textContent = 'Cancel';
+        cancelButton.addEventListener('click', async () => {
+          await cancelPendingNewShowtime(row.id);
+        });
+        actionsWrap.appendChild(cancelButton);
+      } else {
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', async () => {
+          await deleteDraftShowtime(row.id);
+        });
+        actionsWrap.appendChild(deleteButton);
+      }
 
       rowEl.appendChild(leftWrap);
       rowEl.appendChild(actionsWrap);
@@ -1190,6 +1247,7 @@
 
     appState.selectedDate = nextDate;
     appState.pendingNewShowtimeId = null;
+    appState.pendingNewShowtimeIsUnsaved = false;
     await loadSelectedDateState();
   }
 
