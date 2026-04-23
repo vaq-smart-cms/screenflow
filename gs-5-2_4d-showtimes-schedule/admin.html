@@ -244,7 +244,8 @@
     draftSchedule: null,
     liveSchedule: null,
     draftShowtimes: [],
-    liveShowtimes: []
+    liveShowtimes: [],
+    calendarDayStates: {}
   };
 
   function populateFilmSelect() {
@@ -642,6 +643,61 @@
     appState.liveShowtimes = liveShowtimesResult.data || [];
   }
 
+  async function fetchCalendarDayStates() {
+    const visibleDates = ui.calendarDays.map((dayEl) => dayEl.dataset.date).filter(Boolean);
+
+    if (!visibleDates.length) {
+      appState.calendarDayStates = {};
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('daily_schedules')
+      .select('schedule_date, status, has_manual_edits')
+      .in('schedule_date', visibleDates);
+
+    if (error) {
+      console.error('Failed to fetch calendar day states:', error);
+      appState.calendarDayStates = {};
+      return;
+    }
+
+    const dayStateMap = {};
+
+    visibleDates.forEach((dateStr) => {
+      dayStateMap[dateStr] = {
+        hasDraft: false,
+        hasLive: false,
+        hasEdits: false
+      };
+    });
+
+    (data || []).forEach((row) => {
+      if (!dayStateMap[row.schedule_date]) {
+        dayStateMap[row.schedule_date] = {
+          hasDraft: false,
+          hasLive: false,
+          hasEdits: false
+        };
+      }
+
+      if (row.status === 'draft') {
+        dayStateMap[row.schedule_date].hasDraft = true;
+        if (row.has_manual_edits) {
+          dayStateMap[row.schedule_date].hasEdits = true;
+        }
+      }
+
+      if (row.status === 'live') {
+        dayStateMap[row.schedule_date].hasLive = true;
+      }
+    });
+
+    appState.calendarDayStates = dayStateMap;
+    
+    console.log('calendarDayStates:', appState.calendarDayStates);
+  }
+
   function getFilmById(filmId) {
     return FILMS.find((film) => film.id === filmId) || null;
   }
@@ -649,12 +705,18 @@
   function updateCalendarIndicators() {
     ui.calendarDays.forEach((dayEl) => {
       const dayDate = dayEl.dataset.date;
+      const state = appState.calendarDayStates[dayDate] || {
+        hasDraft: false,
+        hasLive: false,
+        hasEdits: false
+      };
+
       dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
       dayEl.classList.toggle('is-selected', dayDate === appState.selectedDate);
-      if (dayDate !== appState.selectedDate) return;
-      if (appState.draftSchedule) dayEl.classList.add('has-draft');
-      if (appState.liveSchedule) dayEl.classList.add('has-live');
-      if (appState.draftSchedule?.has_manual_edits) dayEl.classList.add('has-edits');
+
+      if (state.hasDraft) dayEl.classList.add('has-draft');
+      if (state.hasLive) dayEl.classList.add('has-live');
+      if (state.hasEdits) dayEl.classList.add('has-edits');
     });
   }
 
@@ -929,7 +991,10 @@
   }
 
   async function loadSelectedDateState() {
-    await fetchScheduleStateForDate(appState.selectedDate);
+    await Promise.all([
+      fetchScheduleStateForDate(appState.selectedDate),
+      fetchCalendarDayStates()
+    ]);
 
     if (appState.draftSchedule?.film_id) {
       ui.filmSelect.value = appState.draftSchedule.film_id;
@@ -1088,12 +1153,6 @@
       ui.filmPosterImage.dataset.bound = 'true';
     }
 
-    const calendarGrid = document.getElementById('calendar-grid');
-    if (calendarGrid && !calendarGrid.dataset.bound) {
-      calendarGrid.addEventListener('click', handleCalendarDayClick);
-      calendarGrid.dataset.bound = 'true';
-    }
-
     if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
       ui.signOutButton.addEventListener('click', handleSignOut);
       ui.signOutButton.dataset.bound = 'true';
@@ -1122,11 +1181,14 @@
       }
     });
 
-    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    const calendarGrid = document.getElementById('calendar-grid');
+    if (calendarGrid && !calendarGrid.dataset.bound) {
+      calendarGrid.addEventListener('click', handleCalendarDayClick);
+      calendarGrid.dataset.bound = 'true';
+    }
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
-      if (session) {
-        await initializeAdminApp();
-      }
     });
 
     await initializeAdminApp();
@@ -1134,6 +1196,5 @@
 
   document.addEventListener('DOMContentLoaded', initializePage);
 </script>
-</div>
 </body>
 </html>
