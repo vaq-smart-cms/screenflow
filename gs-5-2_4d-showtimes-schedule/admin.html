@@ -7,93 +7,226 @@
 
   <style>
     @font-face {
+      font-display: swap;
       font-family: 'BlissPro';
+      font-style: normal;
+      font-weight: 700;
       src:
         url('../assets/BlissPro-Bold.woff2') format('woff2'),
         url('../assets/BlissPro-Bold.woff') format('woff');
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
     }
 
     :root {
-      --vaq-green: #7d9b2d;
-      --vaq-blue: #64a5c3;
-      --vaq-orange: #e6782d;
-      --vaq-grey: #646e78;
-
       --bg: #eef3f6;
-      --panel: #ffffff;
       --line: #d7e0e5;
+      --panel: #ffffff;
+      --shadow: 0 10px 28px rgba(44, 60, 73, 0.08);
       --text: #243341;
       --text-soft: #596876;
-      --shadow: 0 10px 28px rgba(44, 60, 73, 0.08);
+
+      --vaq-blue: #64a5c3;
+      --vaq-green: #7d9b2d;
+      --vaq-grey: #646e78;
+      --vaq-orange: #e6782d;
     }
 
-    body { margin:0; font-family:Arial; background:var(--bg); color:var(--text); padding:16px; }
-    h1,h2,h3,p{margin:0 0 10px;}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+    }
 
-    .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow);}    
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0 0 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 10px 12px;
+    }
+
+    .accent {
+      background: var(--vaq-orange);
+      color: #ffffff;
+    }
+
+    .primary {
+      background: var(--vaq-green);
+      color: #ffffff;
+    }
+
+    .secondary {
+      background: var(--vaq-blue);
+      color: #ffffff;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      padding: 16px;
+    }
 
     /* A — Header */
-    .header{display:flex;justify-content:space-between;align-items:center;}
-    .status-pill{padding:6px 10px;border-radius:999px;background:#eef6fa;font-weight:bold;}
+
+    .header {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-pill {
+      background: #eef6fa;
+      border-radius: 999px;
+      font-weight: 700;
+      padding: 6px 10px;
+    }
 
     /* B — Calendar */
-    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-    .day{padding:10px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center;font-weight:bold;cursor:pointer;transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
-    .day:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(44,60,73,0.08);}
-    .day.is-selected{border-color:var(--vaq-green);box-shadow:inset 0 0 0 2px var(--vaq-green);}
-    .day.has-draft{outline:2px solid #64a5c3;}
-    .day.has-live{background:#dff3e3;}
-    .day.has-edits{border-color:#f3bc43;}
+
+    .calendar-toolbar {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .calendar-weekdays {
+      color: var(--text-soft);
+      display: grid;
+      font-size: 0.85rem;
+      font-weight: 700;
+      gap: 6px;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .day {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 10px;
+      text-align: center;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+    }
+
+    .day:hover {
+      box-shadow: 0 4px 10px rgba(44, 60, 73, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .day span {
+      user-select: none;
+      -webkit-user-select: none;
+      pointer-events: none;
+    }
+
+    .day.has-draft {
+      outline: 2px solid var(--vaq-blue);
+    }
+
+    .day.has-edits {
+      border-color: #f3bc43;
+    }
+
+    .day.has-live {
+      background: #dff3e3;
+    }
+
+    .day.is-muted {
+      opacity: 0.35;
+    }
+
+    .day.is-selected {
+      border-color: var(--vaq-green);
+      box-shadow: inset 0 0 0 2px var(--vaq-green);
+    }
 
     /* D — Film */
-    .film-preview{display:flex;gap:12px;align-items:flex-start;}
-    .poster,.poster-image{width:80px;height:120px;border-radius:8px;flex:0 0 80px;object-fit:cover;background:#ccc;display:block;}
-    .poster-fallback{align-items:center;justify-content:center;text-align:center;line-height:1.25;font-size:0.82rem;color:#ffffff;background:#8a97a3;}
+
+    .film-preview {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+    }
+
+    .poster,
+    .poster-image {
+      background: #cccccc;
+      border-radius: 8px;
+      display: block;
+      flex: 0 0 80px;
+      height: 120px;
+      object-fit: cover;
+      width: 80px;
+    }
+
+    .poster-fallback {
+      align-items: center;
+      background: #8a97a3;
+      color: #ffffff;
+      font-size: 0.82rem;
+      justify-content: center;
+      line-height: 1.25;
+      text-align: center;
+    }
 
     /* F — Showtime */
-    .showtime{
-      padding:10px;
-      border:1px solid var(--line);
-      border-radius:10px;
-      margin-bottom:8px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
+
+    .showtime {
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 10px;
     }
 
     .showtime select {
-      padding: 6px 8px;
-      border-radius: 6px;
       border: 1px solid var(--line);
-    }
-
-    .showtime-new {
-      border-color: var(--vaq-orange);
-      box-shadow: inset 0 0 0 2px rgba(230, 120, 45, 0.18);
-      background: rgba(230, 120, 45, 0.06);
+      border-radius: 6px;
+      padding: 6px 8px;
     }
 
     .showtime-badge {
-      display: inline-flex;
       align-items: center;
-      padding: 4px 8px;
-      border-radius: 999px;
       background: rgba(230, 120, 45, 0.14);
+      border-radius: 999px;
       color: #a14f17;
+      display: inline-flex;
       font-size: 0.8rem;
       font-weight: 700;
+      padding: 4px 8px;
     }
 
-    button{padding:10px 12px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
-    .primary{background:var(--vaq-green);color:#fff;}
-    .secondary{background:var(--vaq-blue);color:#fff;}
-    .accent{background:var(--vaq-orange);color:#fff;}
-
+    .showtime-new {
+      background: rgba(230, 120, 45, 0.06);
+      border-color: var(--vaq-orange);
+      box-shadow: inset 0 0 0 2px rgba(230, 120, 45, 0.18);
+    }
   </style>
 </head>
 <body>
@@ -128,16 +261,19 @@
   <!-- B — Calendar / Date Picker -->
   <div class="panel">
     <h2>Calendar</h2>
-    <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
-    <div class="calendar-grid" id="calendar-grid">
-      <div class="day has-draft" data-date="2026-04-01">1</div>
-      <div class="day has-live" data-date="2026-04-02">2</div>
-      <div class="day has-edits" data-date="2026-04-03">3</div>
-      <div class="day" data-date="2026-04-04">4</div>
-      <div class="day" data-date="2026-04-05">5</div>
-      <div class="day" data-date="2026-04-06">6</div>
-      <div class="day" data-date="2026-04-07">7</div>
+    <p style="color:var(--text-soft);">Tap a date to load it as your working day.</p>
+
+    <div class="calendar-toolbar">
+      <button id="prev-month-button" class="secondary" type="button">‹ Previous</button>
+      <strong id="calendar-month-label">Month</strong>
+      <button id="next-month-button" class="secondary" type="button">Next ›</button>
     </div>
+
+    <div class="calendar-weekdays">
+      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+
+    <div class="calendar-grid" id="calendar-grid"></div>
   </div>
   <!-- C — Day Summary Panel -->
   <div class="panel">
@@ -255,7 +391,11 @@
     publishSummary: document.getElementById('publish-summary'),
     publishStatusText: document.getElementById('publish-status-text'),
     publishButton: document.getElementById('publish-button'),
-    calendarDays: Array.from(document.querySelectorAll('.day[data-date]')),
+    calendarGrid: document.getElementById('calendar-grid'),
+    calendarMonthLabel: document.getElementById('calendar-month-label'),
+    prevMonthButton: document.getElementById('prev-month-button'),
+    nextMonthButton: document.getElementById('next-month-button'),
+    calendarDays: [],
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
     applyLoadButton: document.getElementById('apply-load-button'),
@@ -265,6 +405,7 @@
 
   const appState = {
     selectedDate: '2026-04-03',
+    visibleCalendarDate: new Date(2026, 3, 1),
     draftSchedule: null,
     liveSchedule: null,
     draftShowtimes: [],
@@ -748,6 +889,52 @@
     appState.liveShowtimes = liveShowtimesResult.data || [];
   }
 
+  function toYmd(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function renderCalendarMonth() {
+    if (!ui.calendarGrid) return;
+
+    ui.calendarGrid.innerHTML = '';
+
+    const year = appState.visibleCalendarDate.getFullYear();
+    const month = appState.visibleCalendarDate.getMonth();
+
+    const firstOfMonth = new Date(year, month, 1);
+    const startDate = new Date(firstOfMonth);
+    startDate.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
+
+    ui.calendarMonthLabel.textContent = new Intl.DateTimeFormat('en-CA', {
+      month: 'long',
+      year: 'numeric'
+    }).format(firstOfMonth);
+
+    for (let i = 0; i < 42; i += 1) {
+      const dateObj = new Date(startDate);
+      dateObj.setDate(startDate.getDate() + i);
+
+      const dayEl = document.createElement('div');
+      dayEl.className = 'day';
+      dayEl.dataset.date = toYmd(dateObj);
+
+      if (dateObj.getMonth() !== month) {
+        dayEl.classList.add('is-muted');
+      }
+
+      const span = document.createElement('span');
+      span.textContent = String(dateObj.getDate());
+      dayEl.appendChild(span);
+
+      ui.calendarGrid.appendChild(dayEl);
+    }
+
+    ui.calendarDays = Array.from(document.querySelectorAll('.day[data-date]'));
+  }
+
   async function fetchCalendarDayStates() {
     const visibleDates = ui.calendarDays.map((dayEl) => dayEl.dataset.date).filter(Boolean);
 
@@ -1203,6 +1390,8 @@
   }
 
   async function loadSelectedDateState() {
+    renderCalendarMonth();
+
     await Promise.all([
       fetchScheduleStateForDate(appState.selectedDate),
       fetchCalendarDayStates()
@@ -1404,6 +1593,26 @@
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
     });
+
+    if (ui.prevMonthButton && !ui.prevMonthButton.dataset.bound) {
+      ui.prevMonthButton.addEventListener('click', async () => {
+        appState.visibleCalendarDate.setMonth(appState.visibleCalendarDate.getMonth() - 1);
+        renderCalendarMonth();
+        await fetchCalendarDayStates();
+        updateCalendarIndicators();
+      });
+      ui.prevMonthButton.dataset.bound = 'true';
+    }
+
+    if (ui.nextMonthButton && !ui.nextMonthButton.dataset.bound) {
+      ui.nextMonthButton.addEventListener('click', async () => {
+        appState.visibleCalendarDate.setMonth(appState.visibleCalendarDate.getMonth() + 1);
+        renderCalendarMonth();
+        await fetchCalendarDayStates();
+        updateCalendarIndicators();
+      });
+      ui.nextMonthButton.dataset.bound = 'true';
+    }
 
     await initializeAdminApp();
   }
