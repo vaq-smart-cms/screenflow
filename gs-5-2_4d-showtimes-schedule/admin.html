@@ -54,7 +54,16 @@
     .poster-fallback{align-items:center;justify-content:center;text-align:center;line-height:1.25;font-size:0.82rem;color:#ffffff;background:#8a97a3;}
 
     /* F — Showtime */
-    .showtime{padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;}
+    .showtime{
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      margin-bottom:8px;
+      display:flex;
+      justify-content:space-between;
+      align-items: center;
+      gap: 10px;
+    }
 
     button{padding:10px 12px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
     .primary{background:var(--vaq-green);color:#fff;}
@@ -565,6 +574,20 @@
     }).format(dateObj);
   }
 
+  function formatShowAtTime(isoString) {
+    if (!isoString) return '—';
+
+    const dateObj = new Date(isoString);
+    if (Number.isNaN(dateObj.getTime())) return '—';
+
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Vancouver',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(dateObj);
+  }
+
   async function fetchScheduleStateForDate(scheduleDate) {
     const [draftResult, liveResult] = await Promise.all([
       supabaseClient
@@ -815,6 +838,17 @@
       const timeSpan = document.createElement('span');
       timeSpan.textContent = formatShowAtTime(row.show_at);
 
+      const actionsWrap = document.createElement('div');
+      actionsWrap.style.display = 'flex';
+      actionsWrap.style.gap = '8px';
+
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.textContent = 'Edit';
+      editButton.addEventListener('click', () => {
+        editDraftShowtime(row.id, row.show_at);
+      });
+
       const deleteButton = document.createElement('button');
       deleteButton.type = 'button';
       deleteButton.textContent = 'Delete';
@@ -822,10 +856,76 @@
         deleteDraftShowtime(row.id);
       });
 
+      actionsWrap.appendChild(editButton);
+      actionsWrap.appendChild(deleteButton);
+
       rowEl.appendChild(timeSpan);
-      rowEl.appendChild(deleteButton);
+      rowEl.appendChild(actionsWrap);
       ui.draftShowtimesContainer.appendChild(rowEl);
     });
+  }
+
+  async function editDraftShowtime(showtimeId, currentShowAt) {
+    if (!showtimeId || !currentShowAt) return;
+
+    const currentDate = new Date(currentShowAt);
+    if (Number.isNaN(currentDate.getTime())) {
+      alert('Could not read the current showtime.');
+      return;
+    }
+
+    const currentHours = String(currentDate.getHours()).padStart(2, '0');
+    const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
+    const currentTimeValue = `${currentHours}:${currentMinutes}`;
+
+    const timeInput = window.prompt(
+      'Edit showtime in 24-hour format (HH:MM)',
+      currentTimeValue
+    );
+
+    if (!timeInput) return;
+
+    const trimmedTime = String(timeInput).trim();
+    if (!/^\d{2}:\d{2}$/.test(trimmedTime)) {
+      alert('Please enter time as HH:MM, for example 10:30');
+      return;
+    }
+
+    const [hours, minutes] = trimmedTime.split(':').map(Number);
+    if (
+      Number.isNaN(hours) || Number.isNaN(minutes) ||
+      hours < 0 || hours > 23 ||
+      minutes < 0 || minutes > 59
+    ) {
+      alert('Please enter a valid 24-hour time.');
+      return;
+    }
+
+    const updatedShowAt = `${appState.selectedDate}T${trimmedTime}:00`;
+
+    const { error } = await supabaseClient
+      .from('daily_showtimes')
+      .update({ show_at: updatedShowAt })
+      .eq('id', showtimeId);
+
+    if (error) {
+      console.error('Failed to edit draft showtime:', error);
+      alert(`Could not update showtime: ${error.message}`);
+      return;
+    }
+
+    if (appState.draftSchedule) {
+      await supabaseClient
+        .from('daily_schedules')
+        .update({
+          has_manual_edits: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', appState.draftSchedule.id)
+        .eq('status', 'draft');
+    }
+
+    await loadSelectedDateState();
   }
 
   async function loadSelectedDateState() {
@@ -906,7 +1006,6 @@
     }
 
     ui.authMessage.textContent = 'Sign-in successful.';
-    await initializeAdminApp();
   }
 
   async function handleSignOut() {
