@@ -398,13 +398,14 @@
       .order('is_system_default', { ascending: false })
       .order('name', { ascending: true });
 
+    console.log('fetchActiveLoads() raw result:', { data, error });
+
     if (error) {
       console.error('Failed to fetch loads:', error);
       LOAD_TEMPLATES = [];
       return;
     }
 
-    console.log('Active loads:', data);
     LOAD_TEMPLATES = data || [];
   }
 
@@ -765,6 +766,7 @@
 
   async function initializeAdminApp() {
     console.log('initializeAdminApp() start');
+
     const { data, error } = await supabaseClient.auth.getSession();
     const session = data?.session || null;
 
@@ -778,17 +780,25 @@
     }
 
     if (!session) {
+      console.log('no session, returning early');
       setAuthenticatedUi(null);
       return;
     }
 
     setAuthenticatedUi(session);
 
-    console.log('about to fetch films, loads, and load times');
-
+    console.log('about to fetch films');
     await fetchActiveFilms();
+
+    console.log('about to fetch loads');
     await fetchActiveLoads();
+
+    console.log('about to fetch load template times');
     await fetchLoadTemplateTimes();
+
+    console.log('films after fetch:', FILMS);
+    console.log('loads after fetch:', LOAD_TEMPLATES);
+    console.log('load times after fetch:', LOAD_TEMPLATE_TIMES);
 
     populateFilmSelect();
     populateLoadSelect();
