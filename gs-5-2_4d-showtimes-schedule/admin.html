@@ -61,8 +61,15 @@
       margin-bottom:8px;
       display:flex;
       justify-content:space-between;
-      align-items: center;
-      gap: 10px;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .showtime select {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
     }
 
     button{padding:10px 12px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
@@ -589,6 +596,85 @@
     }).format(dateObj);
   }
 
+  function getTimePartsFromIso(isoString) {
+    if (!isoString) {
+      return { hour12: '10', minute: '30', ampm: 'AM' };
+    }
+
+    const dateObj = new Date(isoString);
+    if (Number.isNaN(dateObj.getTime())) {
+      return { hour12: '10', minute: '30', ampm: 'AM' };
+    }
+
+    let hours = dateObj.getHours();
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+
+    return {
+      hour12: String(hours),
+      minute: minutes,
+      ampm
+    };
+  }
+
+  function buildIsoFrom12HourParts(dateYmd, hour12, minute, ampm) {
+    let hours = Number(hour12);
+    const mins = Number(minute);
+
+    if (
+      Number.isNaN(hours) || Number.isNaN(mins) ||
+      hours < 1 || hours > 12 ||
+      mins < 0 || mins > 59
+    ) {
+      return null;
+    }
+
+    if (ampm === 'AM') {
+      if (hours === 12) hours = 0;
+    } else if (ampm === 'PM') {
+      if (hours !== 12) hours += 12;
+    } else {
+      return null;
+    }
+
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(mins).padStart(2, '0');
+
+    return `${dateYmd}T${hh}:${mm}:00`;
+  }
+
+  function createHourOptions(selectedValue) {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 1; i <= 12; i += 1) {
+      const option = document.createElement('option');
+      option.value = String(i);
+      option.textContent = String(i);
+      if (String(i) === String(selectedValue)) option.selected = true;
+      fragment.appendChild(option);
+    }
+
+    return fragment;
+  }
+
+  function createMinuteOptions(selectedValue) {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < 60; i += 5) {
+      const padded = String(i).padStart(2, '0');
+      const option = document.createElement('option');
+      option.value = padded;
+      option.textContent = padded;
+      if (padded === String(selectedValue)) option.selected = true;
+      fragment.appendChild(option);
+    }
+
+    return fragment;
+  }
+
   async function fetchScheduleStateForDate(scheduleDate) {
     const [draftResult, liveResult] = await Promise.all([
       supabaseClient
@@ -814,27 +900,26 @@
       return;
     }
 
-    const timeInput = window.prompt('Enter new showtime in 24-hour format (HH:MM)', '10:30');
-    if (!timeInput) return;
-
-    const trimmedTime = String(timeInput).trim();
-    if (!/^\d{2}:\d{2}$/.test(trimmedTime)) {
-      alert('Please enter time as HH:MM, for example 10:30');
-      return;
-    }
-
-    const [hours, minutes] = trimmedTime.split(':').map(Number);
-    if (
-      Number.isNaN(hours) || Number.isNaN(minutes) ||
-      hours < 0 || hours > 23 ||
-      minutes < 0 || minutes > 59
-    ) {
-      alert('Please enter a valid 24-hour time.');
-      return;
-    }
-
     const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
-    const showAtIso = `${appState.selectedDate}T${trimmedTime}:00`;
+
+    const existingRows = appState.draftShowtimes
+      .filter((row) => !row.is_cancelled)
+      .slice()
+      .sort((a, b) => String(a.show_at).localeCompare(String(b.show_at)));
+
+    let defaultIso = `${appState.selectedDate}T10:30:00`;
+
+    if (existingRows.length) {
+      const lastRow = existingRows[existingRows.length - 1];
+      const lastDate = new Date(lastRow.show_at);
+
+      if (!Number.isNaN(lastDate.getTime())) {
+        lastDate.setMinutes(lastDate.getMinutes() + 30);
+        const hh = String(lastDate.getHours()).padStart(2, '0');
+        const mm = String(lastDate.getMinutes()).padStart(2, '0');
+        defaultIso = `${appState.selectedDate}T${hh}:${mm}:00`;
+      }
+    }
 
     const nextSortOrder = (
       appState.draftShowtimes.reduce((max, row) => {
@@ -847,7 +932,7 @@
       .from('daily_showtimes')
       .insert({
         daily_schedule_id: draft.id,
-        show_at: showAtIso,
+        show_at: defaultIso,
         sort_order: nextSortOrder,
         is_cancelled: false
       });
@@ -860,7 +945,10 @@
 
     await supabaseClient
       .from('daily_schedules')
-      .update({ has_manual_edits: true, updated_at: new Date().toISOString() })
+      .update({
+        has_manual_edits: true,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', draft.id)
       .eq('status', 'draft');
 
@@ -897,73 +985,95 @@
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
 
-      const timeSpan = document.createElement('span');
-      timeSpan.textContent = formatShowAtTime(row.show_at);
+      const leftWrap = document.createElement('div');
+      leftWrap.style.display = 'flex';
+      leftWrap.style.alignItems = 'center';
+      leftWrap.style.gap = '8px';
+      leftWrap.style.flexWrap = 'wrap';
+
+      const timeParts = getTimePartsFromIso(row.show_at);
+
+      const hourSelect = document.createElement('select');
+      hourSelect.appendChild(createHourOptions(timeParts.hour12));
+
+      const minuteSelect = document.createElement('select');
+      minuteSelect.appendChild(createMinuteOptions(timeParts.minute));
+
+      const ampmSelect = document.createElement('select');
+      ['AM', 'PM'].forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        if (value === timeParts.ampm) option.selected = true;
+        ampmSelect.appendChild(option);
+      });
+
+      const previewText = document.createElement('span');
+      previewText.style.color = 'var(--text-soft)';
+      previewText.textContent = formatShowAtTime(row.show_at);
+
+      [hourSelect, minuteSelect, ampmSelect].forEach((control) => {
+        control.addEventListener('change', () => {
+          const previewIso = buildIsoFrom12HourParts(
+            appState.selectedDate,
+            hourSelect.value,
+            minuteSelect.value,
+            ampmSelect.value
+          );
+
+          previewText.textContent = previewIso
+            ? formatShowAtTime(previewIso)
+            : 'Invalid time';
+        });
+      });
+
+      leftWrap.appendChild(hourSelect);
+      leftWrap.appendChild(minuteSelect);
+      leftWrap.appendChild(ampmSelect);
+      leftWrap.appendChild(previewText);
 
       const actionsWrap = document.createElement('div');
       actionsWrap.style.display = 'flex';
       actionsWrap.style.gap = '8px';
+      actionsWrap.style.flexWrap = 'wrap';
 
-      const editButton = document.createElement('button');
-      editButton.type = 'button';
-      editButton.textContent = 'Edit';
-      editButton.addEventListener('click', () => {
-        editDraftShowtime(row.id, row.show_at);
+      const saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.textContent = 'Save';
+      saveButton.addEventListener('click', async () => {
+        const updatedShowAt = buildIsoFrom12HourParts(
+          appState.selectedDate,
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
+
+        if (!updatedShowAt) {
+          alert('Please choose a valid time.');
+          return;
+        }
+
+        await editDraftShowtime(row.id, updatedShowAt);
       });
 
       const deleteButton = document.createElement('button');
       deleteButton.type = 'button';
       deleteButton.textContent = 'Delete';
-      deleteButton.addEventListener('click', () => {
-        deleteDraftShowtime(row.id);
+      deleteButton.addEventListener('click', async () => {
+        await deleteDraftShowtime(row.id);
       });
 
-      actionsWrap.appendChild(editButton);
+      actionsWrap.appendChild(saveButton);
       actionsWrap.appendChild(deleteButton);
 
-      rowEl.appendChild(timeSpan);
+      rowEl.appendChild(leftWrap);
       rowEl.appendChild(actionsWrap);
       ui.draftShowtimesContainer.appendChild(rowEl);
     });
   }
 
-  async function editDraftShowtime(showtimeId, currentShowAt) {
-    if (!showtimeId || !currentShowAt) return;
-
-    const currentDate = new Date(currentShowAt);
-    if (Number.isNaN(currentDate.getTime())) {
-      alert('Could not read the current showtime.');
-      return;
-    }
-
-    const currentHours = String(currentDate.getHours()).padStart(2, '0');
-    const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
-    const currentTimeValue = `${currentHours}:${currentMinutes}`;
-
-    const timeInput = window.prompt(
-      'Edit showtime in 24-hour format (HH:MM)',
-      currentTimeValue
-    );
-
-    if (!timeInput) return;
-
-    const trimmedTime = String(timeInput).trim();
-    if (!/^\d{2}:\d{2}$/.test(trimmedTime)) {
-      alert('Please enter time as HH:MM, for example 10:30');
-      return;
-    }
-
-    const [hours, minutes] = trimmedTime.split(':').map(Number);
-    if (
-      Number.isNaN(hours) || Number.isNaN(minutes) ||
-      hours < 0 || hours > 23 ||
-      minutes < 0 || minutes > 59
-    ) {
-      alert('Please enter a valid 24-hour time.');
-      return;
-    }
-
-    const updatedShowAt = `${appState.selectedDate}T${trimmedTime}:00`;
+  async function editDraftShowtime(showtimeId, updatedShowAt) {
+    if (!showtimeId || !updatedShowAt) return;
 
     const { error } = await supabaseClient
       .from('daily_showtimes')
