@@ -766,6 +766,9 @@
     const { data, error } = await supabaseClient.auth.getSession();
     const session = data?.session || null;
 
+    console.log('session check error:', error);
+    console.log('session object:', session);
+
     if (error) {
       console.error('Session check failed:', error);
       setAuthenticatedUi(null);
@@ -778,6 +781,8 @@
     }
 
     setAuthenticatedUi(session);
+
+    console.log('about to fetch films, loads, and load times');
 
     await fetchActiveFilms();
     await fetchActiveLoads();
