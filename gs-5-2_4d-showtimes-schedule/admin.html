@@ -118,105 +118,107 @@
 
 <div id="app-shell" style="display:none;">
 
-<!-- A — Header / Status Bar -->
-<div class="panel header">
-  <div>
-    <h1>4D Showtimes Admin</h1>
-    <p id="session-text">Signed in as: Admin User</p>
-  </div>
-  <div id="status-pill" class="status-pill">No date loaded</div>
-  <button class="secondary">Sign Out</button>
-</div>
-
-<!-- B — Calendar / Date Picker -->
-<div class="panel">
-  <h2>Calendar</h2>
-  <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
-  <div class="calendar-grid" id="calendar-grid">
-    <div class="day has-draft" data-date="2026-04-01">1</div>
-    <div class="day has-live" data-date="2026-04-02">2</div>
-    <div class="day has-edits" data-date="2026-04-03">3</div>
-    <div class="day" data-date="2026-04-04">4</div>
-    <div class="day" data-date="2026-04-05">5</div>
-    <div class="day" data-date="2026-04-06">6</div>
-    <div class="day" data-date="2026-04-07">7</div>
-  </div>
-</div>
-
-<!-- C — Day Summary Panel -->
-<div class="panel">
-  <h2>Day Summary</h2>
-  <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
-  <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
-  <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
-  <p><strong>Film:</strong> <span id="summary-film">—</span></p>
-  <p><strong>Load:</strong> <span id="summary-load">—</span></p>
-  <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
-  <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
-  <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
-  <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
-</div>
-
-<!-- D — Film Assignment Panel -->
-<div class="panel">
-  <h2>Film Assignment</h2>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
-    <select id="film-select"></select>
-  </label>
-
-  <div class="film-preview">
-    <img
-      id="film-poster-image"
-      src="./film-posters/web/na4d_poster_md.jpg"
-      alt="Film poster preview"
-      class="poster-image"
-      loading="eager"
-      decoding="async"
-    >
-    <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+  <!-- A — Header / Status Bar -->
+  <div class="panel header">
     <div>
-      <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
-      <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
-      <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-      <button class="secondary">Manage Films</button>
+      <h1>4D Showtimes Admin</h1>
+      <p id="session-text">Signed in as: Admin User</p>
+    </div>
+    <div id="status-pill" class="status-pill">No date loaded</div>
+    <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+  </div>
+
+  <!-- B — Calendar / Date Picker -->
+  <div class="panel">
+    <h2>Calendar</h2>
+    <p style="color:var(--text-soft);">Static placeholder grid for now. Indicators are being driven from schedule data.</p>
+    <div class="calendar-grid" id="calendar-grid">
+      <div class="day has-draft" data-date="2026-04-01">1</div>
+      <div class="day has-live" data-date="2026-04-02">2</div>
+      <div class="day has-edits" data-date="2026-04-03">3</div>
+      <div class="day" data-date="2026-04-04">4</div>
+      <div class="day" data-date="2026-04-05">5</div>
+      <div class="day" data-date="2026-04-06">6</div>
+      <div class="day" data-date="2026-04-07">7</div>
     </div>
   </div>
-</div>
 
-<!-- E — Load Assignment Panel -->
-<div class="panel">
-  <h2>Load Assignment</h2>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
-    <select id="load-select"></select>
-  </label>
-  <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
-  <button id="apply-load-button" class="primary">Apply Load to Draft</button>
-</div>
+  <!-- C — Day Summary Panel -->
+  <div class="panel">
+    <h2>Day Summary</h2>
+    <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
+    <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
+    <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+    <p><strong>Film:</strong> <span id="summary-film">—</span></p>
+    <p><strong>Load:</strong> <span id="summary-load">—</span></p>
+    <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
+    <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
+    <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
+    <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
+  </div>
 
-<!-- F — Draft Showtimes Editor -->
-<div class="panel">
-  <h2>Draft Showtimes</h2>
-  <div class="showtime"><span>10:30 AM</span><button>Delete</button></div>
-  <div class="showtime"><span>11:30 AM</span><button>Delete</button></div>
-  <button class="secondary">Add Showtime</button>
-</div>
+  <!-- D — Film Assignment Panel -->
+  <div class="panel">
+    <h2>Film Assignment</h2>
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
+      <select id="film-select"></select>
+    </label>
 
-<!-- G — Preview / Publish Section -->
-<div class="panel">
-  <h2>Preview & Publish</h2>
-  <p id="publish-summary">Select a date to review publish readiness.</p>
-  <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
-  <button id="publish-button" class="accent" disabled>Publish</button>
-</div>
+    <div class="film-preview">
+      <img
+        id="film-poster-image"
+        src="./film-posters/web/na4d_poster_md.jpg"
+        alt="Film poster preview"
+        class="poster-image"
+        loading="eager"
+        decoding="async"
+      >
+      <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+      <div>
+        <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
+        <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
+        <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+        <button class="secondary">Manage Films</button>
+      </div>
+    </div>
+  </div>
 
-<!-- H — Secondary Tools -->
-<div class="panel">
-  <h2>Tools</h2>
-  <button>Manage Loads</button>
-  <button>Manage Films</button>
-  <button>Help</button>
+  <!-- E — Load Assignment Panel -->
+  <div class="panel">
+    <h2>Load Assignment</h2>
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
+      <select id="load-select"></select>
+    </label>
+    <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
+    <button id="apply-load-button" class="primary">Apply Load to Draft</button>
+  </div>
+
+  <!-- F — Draft Showtimes Editor -->
+  <div class="panel">
+    <h2>Draft Showtimes</h2>
+    <div class="showtime"><span>10:30 AM</span><button>Delete</button></div>
+    <div class="showtime"><span>11:30 AM</span><button>Delete</button></div>
+    <button class="secondary">Add Showtime</button>
+  </div>
+
+  <!-- G — Preview / Publish Section -->
+  <div class="panel">
+    <h2>Preview & Publish</h2>
+    <p id="publish-summary">Select a date to review publish readiness.</p>
+    <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
+    <button id="publish-button" class="accent" disabled>Publish</button>
+  </div>
+
+  <!-- H — Secondary Tools -->
+  <div class="panel">
+    <h2>Tools</h2>
+    <button>Manage Loads</button>
+    <button>Manage Films</button>
+    <button>Help</button>
+  </div>
+  
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -823,11 +825,6 @@
       calendarGrid.dataset.bound = 'true';
     }
 
-    if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
-      ui.signOutButton.addEventListener('click', handleSignOut);
-      ui.signOutButton.dataset.bound = 'true';
-    }
-
     await loadSelectedDateState();
 
     if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
@@ -838,19 +835,27 @@
 
   async function initializePage() {
     console.log('initializePage() start');
+
     ui.signInButton.addEventListener('click', handleSignIn);
+
     ui.passwordInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         handleSignIn();
       }
     });
+
     ui.emailInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         handleSignIn();
       }
     });
+
+    if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
+      ui.signOutButton.addEventListener('click', handleSignOut);
+      ui.signOutButton.dataset.bound = 'true';
+    }
 
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       setAuthenticatedUi(session);
