@@ -470,6 +470,48 @@
     }
   }
 
+  async function publishSelectedDate() {
+    if (!appState.selectedDate) {
+      alert('Select a date first.');
+      return;
+    }
+
+    if (!appState.draftSchedule) {
+      alert('No draft schedule exists for this date.');
+      return;
+    }
+
+    const hasFilm = !!appState.draftSchedule.film_id;
+    const hasShowtimes = appState.draftShowtimes.some((row) => !row.is_cancelled);
+
+    if (!hasFilm || !hasShowtimes) {
+      alert('Publishing requires a draft schedule with a film assignment and at least one active showtime.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Publish the draft schedule for ${formatFriendlyDate(appState.selectedDate)} live?`
+    );
+    if (!confirmed) return;
+
+    ui.publishButton.disabled = true;
+
+    try {
+      const { error } = await supabaseClient.rpc('publish_daily_schedule', {
+        p_schedule_date: appState.selectedDate
+      });
+
+      if (error) throw error;
+
+      await loadSelectedDateState();
+    } catch (err) {
+      console.error('Failed to publish daily schedule:', err);
+      alert(`Could not publish schedule: ${err.message || err}`);
+    } finally {
+      ui.publishButton.disabled = false;
+    }
+  }
+
   async function fetchActiveFilms() {
     const { data, error } = await supabaseClient
       .from('films')
@@ -930,6 +972,11 @@
     if (!ui.applyLoadButton.dataset.bound) {
       ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
       ui.applyLoadButton.dataset.bound = 'true';
+    }
+
+    if (ui.publishButton && !ui.publishButton.dataset.bound) {
+      ui.publishButton.addEventListener('click', publishSelectedDate);
+      ui.publishButton.dataset.bound = 'true';
     }
 
     if (ui.addShowtimeButton && !ui.addShowtimeButton.dataset.bound) {
