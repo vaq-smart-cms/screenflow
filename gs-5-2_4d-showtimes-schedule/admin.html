@@ -72,6 +72,23 @@
       border: 1px solid var(--line);
     }
 
+    .showtime-new {
+      border-color: var(--vaq-orange);
+      box-shadow: inset 0 0 0 2px rgba(230, 120, 45, 0.18);
+      background: rgba(230, 120, 45, 0.06);
+    }
+
+    .showtime-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(230, 120, 45, 0.14);
+      color: #a14f17;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
     button{padding:10px 12px;border-radius:8px;border:none;font-weight:bold;cursor:pointer;}
     .primary{background:var(--vaq-green);color:#fff;}
     .secondary{background:var(--vaq-blue);color:#fff;}
@@ -252,7 +269,8 @@
     liveSchedule: null,
     draftShowtimes: [],
     liveShowtimes: [],
-    calendarDayStates: {}
+    calendarDayStates: {},
+    pendingNewShowtimeId: null
   };
 
   function populateFilmSelect() {
@@ -928,20 +946,24 @@
       }, 0) || 0
     ) + 1;
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('daily_showtimes')
       .insert({
         daily_schedule_id: draft.id,
         show_at: defaultIso,
         sort_order: nextSortOrder,
         is_cancelled: false
-      });
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Failed to add draft showtime:', error);
       alert(`Could not add showtime: ${error.message}`);
       return;
     }
+
+    appState.pendingNewShowtimeId = data?.id || null;
 
     await supabaseClient
       .from('daily_schedules')
@@ -985,11 +1007,23 @@
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
 
+      const isPendingNewRow = appState.pendingNewShowtimeId === row.id;
+      if (isPendingNewRow) {
+        rowEl.classList.add('showtime-new');
+      }
+
       const leftWrap = document.createElement('div');
       leftWrap.style.display = 'flex';
       leftWrap.style.alignItems = 'center';
       leftWrap.style.gap = '8px';
       leftWrap.style.flexWrap = 'wrap';
+
+      if (isPendingNewRow) {
+        const badge = document.createElement('span');
+        badge.className = 'showtime-badge';
+        badge.textContent = 'Unsaved';
+        leftWrap.appendChild(badge);
+      }
 
       const timeParts = getTimePartsFromIso(row.show_at);
 
@@ -1006,6 +1040,14 @@
         option.textContent = value;
         if (value === timeParts.ampm) option.selected = true;
         ampmSelect.appendChild(option);
+
+        if (isPendingNewRow) {
+          requestAnimationFrame(() => {
+            rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            hourSelect.focus();
+          });
+        }
+
       });
 
       const previewText = document.createElement('span');
@@ -1054,6 +1096,9 @@
         }
 
         await editDraftShowtime(row.id, updatedShowAt);
+        if (appState.pendingNewShowtimeId === row.id) {
+          appState.pendingNewShowtimeId = null;
+        }
       });
 
       const deleteButton = document.createElement('button');
@@ -1144,6 +1189,7 @@
     if (!nextDate || nextDate === appState.selectedDate) return;
 
     appState.selectedDate = nextDate;
+    appState.pendingNewShowtimeId = null;
     await loadSelectedDateState();
   }
 
