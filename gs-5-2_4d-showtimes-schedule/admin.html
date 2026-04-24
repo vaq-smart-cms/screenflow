@@ -162,6 +162,31 @@
       box-shadow: inset 0 0 0 2px var(--vaq-green);
     }
 
+    .batch-panel {
+      border-color: var(--vaq-orange);
+      box-shadow: inset 0 0 0 2px rgba(230, 120, 45, 0.12), var(--shadow);
+    }
+
+    .day.is-batch-selected {
+      animation: batchWiggle 1300ms ease-in-out infinite;
+      background: rgba(243, 188, 67, 0.16);
+      border-color: #f3bc43;
+    }
+
+    @keyframes batchWiggle {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+
+      25% {
+        transform: rotate(-1.25deg);
+      }
+
+      75% {
+        transform: rotate(1.25deg);
+      }
+    }
+
     /* D — Film */
 
     .film-preview {
@@ -276,7 +301,7 @@
     <div class="calendar-grid" id="calendar-grid"></div>
   </div>
   <!-- C — Day Summary Panel -->
-  <div class="panel">
+  <div id="day-summary-panel" class="panel">
     <h2>Day Summary</h2>
     <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
     <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
@@ -287,6 +312,24 @@
     <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
     <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
     <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
+  </div>
+
+  <!-- C2 — Batch Editor Panel -->
+  <div id="batch-editor-panel" class="panel batch-panel" hidden>
+    <h2>Batch Editor</h2>
+    <p id="batch-summary-text">No dates selected.</p>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Apply Load to Selected Dates</span>
+      <select id="batch-load-select">
+        <option value="">Choose a load...</option>
+      </select>
+    </label>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
+      <button id="batch-cancel-button" class="secondary" type="button">Cancel Batch Mode</button>
+    </div>
   </div>
 
   <!-- D — Film Assignment Panel -->
@@ -396,6 +439,12 @@
     prevMonthButton: document.getElementById('prev-month-button'),
     nextMonthButton: document.getElementById('next-month-button'),
     calendarDays: [],
+    daySummaryPanel: document.getElementById('day-summary-panel'),
+    batchEditorPanel: document.getElementById('batch-editor-panel'),
+    batchSummaryText: document.getElementById('batch-summary-text'),
+    batchLoadSelect: document.getElementById('batch-load-select'),
+    batchPublishButton: document.getElementById('batch-publish-button'),
+    batchCancelButton: document.getElementById('batch-cancel-button'),
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
     applyLoadButton: document.getElementById('apply-load-button'),
@@ -411,6 +460,12 @@
     draftShowtimes: [],
     liveShowtimes: [],
     calendarDayStates: {},
+    batchMode: false,
+    batchAnchorDate: null,
+    batchSelectedDates: [],
+    batchReturnDate: null,
+    longPressTimer: null,
+    longPressTriggered: false
     pendingNewShowtimeId: null,
     pendingNewShowtimeIsUnsaved: false
   };
@@ -508,6 +563,27 @@
     if (hasMatchingValue) {
       ui.loadSelect.value = currentValue;
     }
+  }
+
+  function populateBatchLoadSelect() {
+    if (!ui.batchLoadSelect) return;
+
+    ui.batchLoadSelect.innerHTML = '';
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choose a load...';
+    ui.batchLoadSelect.appendChild(placeholder);
+
+    LOAD_TEMPLATES.forEach((load) => {
+      const option = document.createElement('option');
+      option.value = load.id;
+      option.textContent = load.load_kind === 'custom'
+        ? `${load.name} (Custom)`
+        : load.name;
+
+      ui.batchLoadSelect.appendChild(option);
+    });
   }
 
   function renderLoadPreview(loadId) {
@@ -935,6 +1011,71 @@
     ui.calendarDays = Array.from(document.querySelectorAll('.day[data-date]'));
   }
 
+  function updateBatchUi() {
+    const isBatch = appState.batchMode;
+
+    if (ui.daySummaryPanel) {
+      ui.daySummaryPanel.hidden = isBatch;
+    }
+
+    if (ui.batchEditorPanel) {
+      ui.batchEditorPanel.hidden = !isBatch;
+    }
+
+    if (ui.batchSummaryText) {
+      const count = appState.batchSelectedDates.length;
+      ui.batchSummaryText.textContent = count
+        ? `${count} date${count === 1 ? '' : 's'} selected: ${appState.batchSelectedDates.join(', ')}`
+        : 'No dates selected.';
+    }
+
+    updateCalendarIndicators();
+  }
+
+  function enterBatchMode(nextDate) {
+    appState.batchMode = true;
+    appState.batchReturnDate = appState.selectedDate;
+
+    if (!appState.batchSelectedDates.includes(appState.batchAnchorDate)) {
+      appState.batchSelectedDates.push(appState.batchAnchorDate);
+    }
+
+    if (!appState.batchSelectedDates.includes(nextDate)) {
+      appState.batchSelectedDates.push(nextDate);
+    }
+
+    updateBatchUi();
+  }
+
+  function cancelBatchMode() {
+    const returnDate = appState.batchReturnDate || appState.selectedDate;
+
+    appState.batchMode = false;
+    appState.batchAnchorDate = null;
+    appState.batchSelectedDates = [];
+    appState.batchReturnDate = null;
+    appState.selectedDate = returnDate;
+
+    updateBatchUi();
+    loadSelectedDateState();
+  }
+
+  function handleLongPressDate(dateStr) {
+    if (!dateStr) return;
+
+    if (!appState.batchAnchorDate) {
+      appState.batchAnchorDate = dateStr;
+      appState.selectedDate = dateStr;
+      appState.batchSelectedDates = [dateStr];
+      updateBatchUi();
+      return;
+    }
+
+    if (dateStr !== appState.batchAnchorDate) {
+      enterBatchMode(dateStr);
+    }
+  }
+
   async function fetchCalendarDayStates() {
     const visibleDates = ui.calendarDays.map((dayEl) => dayEl.dataset.date).filter(Boolean);
 
@@ -1003,13 +1144,38 @@
         hasEdits: false
       };
 
-      dayEl.classList.remove('has-draft', 'has-live', 'has-edits');
+      dayEl.classList.remove('has-draft', 'has-live', 'has-edits', 'is-batch-selected');
       dayEl.classList.toggle('is-selected', dayDate === appState.selectedDate);
+
+      if (appState.batchSelectedDates.includes(dayDate)) {
+        dayEl.classList.add('is-batch-selected');
+      }
 
       if (state.hasDraft) dayEl.classList.add('has-draft');
       if (state.hasLive) dayEl.classList.add('has-live');
       if (state.hasEdits) dayEl.classList.add('has-edits');
     });
+  }
+
+  function startLongPress(event) {
+    const dayEl = event.target.closest('.day[data-date]');
+    if (!dayEl) return;
+
+    appState.longPressTriggered = false;
+
+    const dateStr = dayEl.dataset.date;
+
+    appState.longPressTimer = window.setTimeout(() => {
+      appState.longPressTriggered = true;
+      handleLongPressDate(dateStr);
+    }, 2500);
+  }
+
+  function clearLongPress() {
+    if (appState.longPressTimer) {
+      window.clearTimeout(appState.longPressTimer);
+      appState.longPressTimer = null;
+    }
   }
 
   function updateHeaderAndSummary() {
@@ -1428,16 +1594,126 @@
   }
 
   async function handleCalendarDayClick(event) {
+    if (appState.longPressTriggered) {
+      appState.longPressTriggered = false;
+      return;
+    }
+
     const dayEl = event.target.closest('.day[data-date]');
     if (!dayEl) return;
 
     const nextDate = dayEl.dataset.date;
     if (!nextDate || nextDate === appState.selectedDate) return;
 
-    appState.selectedDate = nextDate;
-    appState.pendingNewShowtimeId = null;
-    appState.pendingNewShowtimeIsUnsaved = false;
-    await loadSelectedDateState();
+    if (appState.batchMode) {
+      if (appState.batchSelectedDates.includes(nextDate)) {
+        appState.batchSelectedDates = appState.batchSelectedDates.filter((date) => date !== nextDate);
+      } else {
+        appState.batchSelectedDates.push(nextDate);
+      }
+
+      updateBatchUi();
+      return;
+    }
+
+    try {
+      appState.selectedDate = nextDate;
+      appState.pendingNewShowtimeId = null;
+      appState.pendingNewShowtimeIsUnsaved = false;
+      await loadSelectedDateState();
+    } catch (err) {
+      console.error('Failed to switch selected date:', err);
+      alert(`Could not load selected date: ${err.message || err}`);
+    }
+  }
+
+  async function applyBatchLoadToDrafts() {
+    const selectedLoadId = ui.batchLoadSelect?.value || '';
+    const selectedFilmId = ui.filmSelect?.value || appState.draftSchedule?.film_id || '';
+
+    if (!selectedLoadId) return;
+
+    if (!selectedFilmId) {
+      alert('Select a film before applying a batch load.');
+      ui.batchLoadSelect.value = '';
+      return;
+    }
+
+    if (!appState.batchSelectedDates.length) {
+      alert('No batch dates selected.');
+      ui.batchLoadSelect.value = '';
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Apply this load to ${appState.batchSelectedDates.length} selected date(s)? Existing drafts on those days will be replaced.`
+    );
+
+    if (!confirmed) {
+      ui.batchLoadSelect.value = '';
+      return;
+    }
+
+    for (const dateStr of appState.batchSelectedDates) {
+      const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
+        p_schedule_date: dateStr,
+        p_film_id: selectedFilmId,
+        p_load_template_id: selectedLoadId
+      });
+
+      if (error) {
+        console.error('Failed to apply batch load:', dateStr, error);
+        alert(`Could not apply load to ${dateStr}: ${error.message}`);
+        return;
+      }
+    }
+
+    await fetchCalendarDayStates();
+    updateCalendarIndicators();
+    ui.batchSummaryText.textContent = `Drafts created for ${appState.batchSelectedDates.length} selected date(s).`;
+  }
+
+  async function publishBatchDates() {
+    if (!appState.batchSelectedDates.length) {
+      alert('No batch dates selected.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Publish ${appState.batchSelectedDates.length} selected date(s) live?`
+    );
+
+    if (!confirmed) return;
+
+    ui.batchPublishButton.disabled = true;
+
+    try {
+      for (const dateStr of appState.batchSelectedDates) {
+        const { error } = await supabaseClient.rpc('publish_daily_schedule', {
+          p_schedule_date: dateStr
+        });
+
+        if (error) {
+          throw new Error(`${dateStr}: ${error.message}`);
+        }
+      }
+
+      const returnDate = appState.batchReturnDate || appState.selectedDate;
+
+      appState.batchMode = false;
+      appState.batchAnchorDate = null;
+      appState.batchSelectedDates = [];
+      appState.batchReturnDate = null;
+      appState.selectedDate = returnDate;
+
+      updateBatchUi();
+      await loadSelectedDateState();
+    } catch (err) {
+      console.error('Failed to publish batch dates:', err);
+      alert(`Could not publish batch: ${err.message || err}`);
+    } finally {
+      ui.batchPublishButton.disabled = false;
+    }
   }
 
   function setAuthenticatedUi(session) {
@@ -1519,6 +1795,23 @@
 
     populateFilmSelect();
     populateLoadSelect();
+    populateBatchLoadSelect();
+
+    if (ui.batchLoadSelect && !ui.batchLoadSelect.dataset.bound) {
+      ui.batchLoadSelect.addEventListener('change', applyBatchLoadToDrafts);
+      ui.batchLoadSelect.dataset.bound = 'true';
+    }
+
+    if (ui.batchPublishButton && !ui.batchPublishButton.dataset.bound) {
+      ui.batchPublishButton.addEventListener('click', publishBatchDates);
+      ui.batchPublishButton.dataset.bound = 'true';
+    }
+
+    if (ui.batchCancelButton && !ui.batchCancelButton.dataset.bound) {
+      ui.batchCancelButton.addEventListener('click', cancelBatchMode);
+      ui.batchCancelButton.dataset.bound = 'true';
+    }
+
     renderFilmPreview(FILMS[0]?.id || '');
     renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
 
@@ -1587,6 +1880,15 @@
     const calendarGrid = document.getElementById('calendar-grid');
     if (calendarGrid && !calendarGrid.dataset.bound) {
       calendarGrid.addEventListener('click', handleCalendarDayClick);
+
+      calendarGrid.addEventListener('mousedown', startLongPress);
+      calendarGrid.addEventListener('mouseup', clearLongPress);
+      calendarGrid.addEventListener('mouseleave', clearLongPress);
+
+      calendarGrid.addEventListener('touchstart', startLongPress, { passive: true });
+      calendarGrid.addEventListener('touchend', clearLongPress);
+      calendarGrid.addEventListener('touchcancel', clearLongPress);
+
       calendarGrid.dataset.bound = 'true';
     }
 
