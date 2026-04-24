@@ -174,7 +174,7 @@
       transition: opacity 180ms ease, transform 180ms ease;
     }
 
-    .batch-panel.is-entering {
+    /* .batch-panel.is-entering {
       opacity: 0;
       transform: translateY(8px);
     }
@@ -189,10 +189,10 @@
       font-weight: 700;
       margin-bottom: 12px;
       padding: 6px 10px;
-    }
+    } */
 
     .day.is-batch-selected {
-      animation: batchWiggle 1300ms ease-in-out infinite, batchGlow 1800ms ease-in-out infinite;
+      animation: batchWiggle 1300ms ease-in-out infinite;
       background: rgba(243, 188, 67, 0.16);
       border-color: #f3bc43;
     }
@@ -211,7 +211,7 @@
       }
     }
 
-    @keyframes batchGlow {
+    /* @keyframes batchGlow {
       0%, 100% {
         box-shadow: inset 0 0 0 2px rgba(243, 188, 67, 0.18);
       }
@@ -219,7 +219,7 @@
       50% {
         box-shadow: inset 0 0 0 2px rgba(243, 188, 67, 0.42);
       }
-    }
+    } */
 
     /* D — Film */
 
@@ -350,7 +350,7 @@
 
   <!-- C2 — Batch Editor Panel -->
   <div id="batch-editor-panel" class="panel batch-panel" hidden>
-    <div id="batch-mode-hint" class="batch-mode-hint" hidden>Batch Mode Activated</div>
+    <!-- <div id="batch-mode-hint" class="batch-mode-hint" hidden>Batch Mode Activated</div> -->
     <h2>Batch Editor</h2>
     <p id="batch-summary-text">No dates selected.</p>
 
@@ -480,7 +480,7 @@
     batchLoadSelect: document.getElementById('batch-load-select'),
     batchPublishButton: document.getElementById('batch-publish-button'),
     batchCancelButton: document.getElementById('batch-cancel-button'),
-    batchModeHint: document.getElementById('batch-mode-hint'),
+    /* batchModeHint: document.getElementById('batch-mode-hint'), */
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
     applyLoadButton: document.getElementById('apply-load-button'),
@@ -1068,7 +1068,7 @@
     updateCalendarIndicators();
   }
 
-  function showBatchModeHint() {
+  /* function showBatchModeHint() {
     if (!ui.batchModeHint) return;
 
     ui.batchModeHint.hidden = false;
@@ -1078,9 +1078,9 @@
         ui.batchModeHint.hidden = true;
       }
     }, 1800);
-  }
+  } */
 
-  function animateBatchPanelIn() {
+  /* function animateBatchPanelIn() {
     if (!ui.batchEditorPanel) return;
 
     ui.batchEditorPanel.classList.add('is-entering');
@@ -1090,7 +1090,7 @@
         ui.batchEditorPanel.classList.remove('is-entering');
       });
     });
-  }
+  } */
 
   function enterBatchMode(nextDate) {
     appState.batchMode = true;
@@ -1105,8 +1105,8 @@
     }
 
     updateBatchUi();
-    animateBatchPanelIn();
-    showBatchModeHint();
+    /* animateBatchPanelIn();
+    showBatchModeHint(); */
   }
 
   function cancelBatchMode() {
