@@ -130,7 +130,6 @@
       transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
       -webkit-tap-highlight-color: transparent;
       -webkit-user-select: none;
-      touch-action: manipulation;
       user-select: none;
     }
 
@@ -174,23 +173,6 @@
       transition: opacity 180ms ease, transform 180ms ease;
     }
 
-    /* .batch-panel.is-entering {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-
-    .batch-mode-hint {
-      background: rgba(230, 120, 45, 0.12);
-      border: 1px solid rgba(230, 120, 45, 0.28);
-      border-radius: 999px;
-      color: #a14f17;
-      display: inline-flex;
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-      padding: 6px 10px;
-    } */
-
     .day.is-batch-selected {
       animation: batchWiggle 1300ms ease-in-out infinite;
       background: rgba(243, 188, 67, 0.16);
@@ -210,16 +192,6 @@
         transform: rotate(1.25deg);
       }
     }
-
-    /* @keyframes batchGlow {
-      0%, 100% {
-        box-shadow: inset 0 0 0 2px rgba(243, 188, 67, 0.18);
-      }
-
-      50% {
-        box-shadow: inset 0 0 0 2px rgba(243, 188, 67, 0.42);
-      }
-    } */
 
     /* D — Film */
 
@@ -1068,30 +1040,6 @@
     updateCalendarIndicators();
   }
 
-  /* function showBatchModeHint() {
-    if (!ui.batchModeHint) return;
-
-    ui.batchModeHint.hidden = false;
-
-    window.setTimeout(() => {
-      if (ui.batchModeHint) {
-        ui.batchModeHint.hidden = true;
-      }
-    }, 1800);
-  } */
-
-  /* function animateBatchPanelIn() {
-    if (!ui.batchEditorPanel) return;
-
-    ui.batchEditorPanel.classList.add('is-entering');
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        ui.batchEditorPanel.classList.remove('is-entering');
-      });
-    });
-  } */
-
   function enterBatchMode(nextDate) {
     appState.batchMode = true;
     appState.batchReturnDate = appState.selectedDate;
@@ -1105,8 +1053,6 @@
     }
 
     updateBatchUi();
-    /* animateBatchPanelIn();
-    showBatchModeHint(); */
   }
 
   function cancelBatchMode() {
