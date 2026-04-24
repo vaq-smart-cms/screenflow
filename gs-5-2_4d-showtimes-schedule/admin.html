@@ -128,6 +128,10 @@
       padding: 10px;
       text-align: center;
       transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      user-select: none;
     }
 
     .day:hover {
@@ -1161,18 +1165,21 @@
     const dayEl = event.target.closest('.day[data-date]');
     if (!dayEl) return;
 
+    const dateStr = dayEl.dataset.date;
+    console.log('long press started on', dateStr);
+
     appState.longPressTriggered = false;
 
-    const dateStr = dayEl.dataset.date;
-
     appState.longPressTimer = window.setTimeout(() => {
+      console.log('long press completed on', dateStr);
       appState.longPressTriggered = true;
       handleLongPressDate(dateStr);
-    }, 2500);
+    }, 900);
   }
 
   function clearLongPress() {
     if (appState.longPressTimer) {
+      console.log('long press cleared');
       window.clearTimeout(appState.longPressTimer);
       appState.longPressTimer = null;
     }
@@ -1890,6 +1897,7 @@
       calendarGrid.addEventListener('touchcancel', clearLongPress);
 
       calendarGrid.dataset.bound = 'true';
+      console.log('calendarGrid bound for click + long press');
     }
 
     supabaseClient.auth.onAuthStateChange((_event, session) => {
