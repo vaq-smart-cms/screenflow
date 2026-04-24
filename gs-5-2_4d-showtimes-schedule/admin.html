@@ -1020,7 +1020,7 @@
   }
 
   function updateBatchUi() {
-    const isBatch = appState.batchMode;
+    const isBatch = appState.batchMode === true;
 
     if (ui.daySummaryPanel) {
       ui.daySummaryPanel.hidden = isBatch;
@@ -1071,17 +1071,24 @@
   function handleLongPressDate(dateStr) {
     if (!dateStr) return;
 
-    if (!appState.batchAnchorDate) {
+    if (!appState.batchMode) {
+      appState.batchMode = true;
+      appState.batchReturnDate = appState.selectedDate;
       appState.batchAnchorDate = dateStr;
       appState.selectedDate = dateStr;
       appState.batchSelectedDates = [dateStr];
+
       updateBatchUi();
       return;
     }
 
-    if (dateStr !== appState.batchAnchorDate) {
-      enterBatchMode(dateStr);
+    if (appState.batchSelectedDates.includes(dateStr)) {
+      appState.batchSelectedDates = appState.batchSelectedDates.filter((date) => date !== dateStr);
+    } else {
+      appState.batchSelectedDates.push(dateStr);
     }
+
+    updateBatchUi();
   }
 
   async function fetchCalendarDayStates() {
@@ -1155,7 +1162,7 @@
       dayEl.classList.remove('has-draft', 'has-live', 'has-edits', 'is-batch-selected');
       dayEl.classList.toggle('is-selected', dayDate === appState.selectedDate);
 
-      if (appState.batchSelectedDates.includes(dayDate)) {
+      if (appState.batchMode && appState.batchSelectedDates.includes(dayDate)) {
         dayEl.classList.add('is-batch-selected');
       }
 
@@ -1178,7 +1185,7 @@
       console.log('long press completed on', dateStr);
       appState.longPressTriggered = true;
       handleLongPressDate(dateStr);
-    }, 2500);
+    }, 1500);
   }
 
   function clearLongPress() {
@@ -1614,7 +1621,7 @@
     if (!dayEl) return;
 
     const nextDate = dayEl.dataset.date;
-    if (!nextDate || nextDate === appState.selectedDate) return;
+    if (!nextDate) return;
 
     if (appState.batchMode) {
       if (appState.batchSelectedDates.includes(nextDate)) {
@@ -1626,6 +1633,8 @@
       updateBatchUi();
       return;
     }
+
+    if (nextDate === appState.selectedDate) return;
 
     try {
       appState.selectedDate = nextDate;
