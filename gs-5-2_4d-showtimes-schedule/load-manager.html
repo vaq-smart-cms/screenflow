@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VAQ 4D Load Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Reuse the existing 4D admin stylesheet -->
+  <link rel="stylesheet" href="./admin.css?v=1">
+</head>
+
+<body>
+
+<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+  <h2>Sign In</h2>
+  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
+
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+    <input id="email-input" type="email" autocomplete="username">
+  </label>
+
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+    <input id="password-input" type="password" autocomplete="current-password">
+  </label>
+
+  <button id="sign-in-button" class="primary" type="button" style="width:100%; margin-bottom:10px;">Sign In</button>
+  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
+</div>
+
+<div id="app-shell" style="display:none;">
+
+  <!-- A — Header -->
+  <div class="panel header">
+    <div>
+      <h1>4D Load Manager</h1>
+      <p id="session-text">Signed in as: Admin User</p>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <a href="./admin.html">
+        <button class="secondary" type="button">← Back to Calendar</button>
+      </a>
+      <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- B — Load List -->
+  <div class="panel">
+    <h2>Loads</h2>
+    <p style="color:var(--text-soft);">Select a load template to review or edit its showtimes.</p>
+
+    <div id="load-list">
+      <p style="color:var(--text-soft);">Loading loads...</p>
+    </div>
+
+    <button id="create-load-button" class="primary" type="button">+ Create New Load</button>
+  </div>
+
+  <!-- C — Load Details -->
+  <div class="panel">
+    <h2>Load Details</h2>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Name</span>
+      <input id="load-name-input" type="text" placeholder="Example: Green Load">
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Type</span>
+      <select id="load-kind-select">
+        <option value="green">Green</option>
+        <option value="yellow">Yellow</option>
+        <option value="red">Red</option>
+        <option value="custom">Custom</option>
+      </select>
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Display Colour</span>
+      <input id="load-color-input" type="color" value="#7d9b2d">
+    </label>
+
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <input id="load-active-checkbox" type="checkbox" checked>
+      <span>Active / available in scheduler</span>
+    </label>
+
+    <button id="save-load-button" class="primary" type="button">Save Load Details</button>
+  </div>
+
+  <!-- D — Template Showtime Editor -->
+  <div class="panel">
+    <h2>Template Showtimes</h2>
+    <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
+
+    <div id="load-times-container">
+      <p style="color:var(--text-soft);">Select a load to edit showtimes.</p>
+    </div>
+
+    <button id="add-load-time-button" class="secondary" type="button">+ Add Showtime</button>
+  </div>
+
+  <!-- E — Actions -->
+  <div class="panel">
+    <h2>Actions</h2>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="duplicate-load-button" class="secondary" type="button">Duplicate Load</button>
+      <button id="delete-load-button" class="accent" type="button">Delete Load</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let LOAD_TEMPLATES = [];
+  let LOAD_TEMPLATE_TIMES = [];
+
+  const appState = {
+    selectedLoadId: null
+  };
+
+  const ui = {
+    authPanel: document.getElementById('auth-panel'),
+    appShell: document.getElementById('app-shell'),
+    emailInput: document.getElementById('email-input'),
+    passwordInput: document.getElementById('password-input'),
+    signInButton: document.getElementById('sign-in-button'),
+    signOutButton: document.getElementById('sign-out-button'),
+    authMessage: document.getElementById('auth-message'),
+    sessionText: document.getElementById('session-text'),
+
+    loadList: document.getElementById('load-list'),
+    createLoadButton: document.getElementById('create-load-button'),
+
+    loadNameInput: document.getElementById('load-name-input'),
+    loadKindSelect: document.getElementById('load-kind-select'),
+    loadColorInput: document.getElementById('load-color-input'),
+    loadActiveCheckbox: document.getElementById('load-active-checkbox'),
+    saveLoadButton: document.getElementById('save-load-button'),
+
+    loadTimesContainer: document.getElementById('load-times-container'),
+    addLoadTimeButton: document.getElementById('add-load-time-button'),
+
+    duplicateLoadButton: document.getElementById('duplicate-load-button'),
+    deleteLoadButton: document.getElementById('delete-load-button')
+  };
+
+  function setAuthenticatedUi(session) {
+    const isAuthed = !!session;
+
+    ui.authPanel.style.display = isAuthed ? 'none' : 'block';
+    ui.appShell.style.display = isAuthed ? 'block' : 'none';
+
+    if (session) {
+      ui.sessionText.textContent = `Signed in as: ${session.user.email}`;
+    }
+  }
+
+  async function handleSignIn() {
+    const email = ui.emailInput.value.trim();
+    const password = ui.passwordInput.value;
+
+    if (!email || !password) {
+      ui.authMessage.textContent = 'Enter your email and password.';
+      return;
+    }
+
+    ui.signInButton.disabled = true;
+    ui.authMessage.textContent = 'Signing in...';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    ui.signInButton.disabled = false;
+
+    if (error) {
+      ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
+      return;
+    }
+
+    ui.authMessage.textContent = 'Sign-in successful.';
+  }
+
+  async function handleSignOut() {
+    await supabaseClient.auth.signOut();
+
+    LOAD_TEMPLATES = [];
+    LOAD_TEMPLATE_TIMES = [];
+    appState.selectedLoadId = null;
+
+    ui.passwordInput.value = '';
+    ui.authMessage.textContent = 'Signed out.';
+    setAuthenticatedUi(null);
+  }
+
+  async function fetchLoads() {
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
+      .order('is_system_default', { ascending: false })
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch load templates:', error);
+      LOAD_TEMPLATES = [];
+      return;
+    }
+
+    LOAD_TEMPLATES = data || [];
+  }
+
+  async function fetchLoadTimes(loadId) {
+    if (!loadId) {
+      LOAD_TEMPLATE_TIMES = [];
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('load_template_times')
+      .select('id, load_template_id, show_time, sort_order')
+      .eq('load_template_id', loadId)
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('show_time', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch load template times:', error);
+      LOAD_TEMPLATE_TIMES = [];
+      return;
+    }
+
+    LOAD_TEMPLATE_TIMES = data || [];
+  }
+
+  function renderLoadList() {
+    ui.loadList.innerHTML = '';
+
+    if (!LOAD_TEMPLATES.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'No loads found.';
+      ui.loadList.appendChild(empty);
+      return;
+    }
+
+    LOAD_TEMPLATES.forEach((load) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = load.id === appState.selectedLoadId ? 'primary' : 'secondary';
+      button.style.margin = '0 8px 8px 0';
+      button.textContent = load.name;
+
+      button.addEventListener('click', async () => {
+        appState.selectedLoadId = load.id;
+        await fetchLoadTimes(load.id);
+        renderLoadList();
+        renderLoadDetails();
+        renderLoadTimes();
+      });
+
+      ui.loadList.appendChild(button);
+    });
+  }
+
+  function renderLoadDetails() {
+    const load = LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId);
+
+    if (!load) {
+      ui.loadNameInput.value = '';
+      ui.loadKindSelect.value = 'custom';
+      ui.loadColorInput.value = '#7d9b2d';
+      ui.loadActiveCheckbox.checked = true;
+      return;
+    }
+
+    ui.loadNameInput.value = load.name || '';
+    ui.loadKindSelect.value = load.load_kind || 'custom';
+    ui.loadColorInput.value = load.display_color || '#7d9b2d';
+    ui.loadActiveCheckbox.checked = !!load.is_active;
+  }
+
+  function renderLoadTimes() {
+    ui.loadTimesContainer.innerHTML = '';
+
+    if (!appState.selectedLoadId) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'Select a load to edit showtimes.';
+      ui.loadTimesContainer.appendChild(empty);
+      return;
+    }
+
+    if (!LOAD_TEMPLATE_TIMES.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'This load has no showtimes yet.';
+      ui.loadTimesContainer.appendChild(empty);
+      return;
+    }
+
+    LOAD_TEMPLATE_TIMES.forEach((timeRow) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'showtime';
+
+      const timeInput = document.createElement('input');
+      timeInput.type = 'time';
+      timeInput.value = String(timeRow.show_time || '').slice(0, 5);
+
+      const saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.textContent = 'Save';
+      saveButton.addEventListener('click', async () => {
+        await updateLoadTime(timeRow.id, timeInput.value);
+      });
+
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', async () => {
+        await deleteLoadTime(timeRow.id);
+      });
+
+      rowEl.appendChild(timeInput);
+      rowEl.appendChild(saveButton);
+      rowEl.appendChild(deleteButton);
+
+      ui.loadTimesContainer.appendChild(rowEl);
+    });
+  }
+
+  async function saveLoadDetails() {
+    const loadId = appState.selectedLoadId;
+
+    if (!loadId) {
+      alert('Select a load first.');
+      return;
+    }
+
+    const payload = {
+      name: ui.loadNameInput.value.trim(),
+      load_kind: ui.loadKindSelect.value,
+      display_color: ui.loadColorInput.value,
+      is_active: ui.loadActiveCheckbox.checked,
+      updated_at: new Date().toISOString()
+    };
+
+    if (!payload.name) {
+      alert('Load name is required.');
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('load_templates')
+      .update(payload)
+      .eq('id', loadId);
+
+    if (error) {
+      console.error('Failed to save load:', error);
+      alert(`Could not save load: ${error.message}`);
+      return;
+    }
+
+    await refreshLoadManager(loadId);
+  }
+
+  async function updateLoadTime(timeId, showTime) {
+    if (!timeId || !showTime) return;
+
+    const { error } = await supabaseClient
+      .from('load_template_times')
+      .update({ show_time: `${showTime}:00` })
+      .eq('id', timeId);
+
+    if (error) {
+      console.error('Failed to update load time:', error);
+      alert(`Could not update time: ${error.message}`);
+      return;
+    }
+
+    await refreshLoadManager(appState.selectedLoadId);
+  }
+
+  async function deleteLoadTime(timeId) {
+    if (!timeId) return;
+
+    const confirmed = window.confirm('Delete this showtime from the load?');
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+      .from('load_template_times')
+      .delete()
+      .eq('id', timeId);
+
+    if (error) {
+      console.error('Failed to delete load time:', error);
+      alert(`Could not delete time: ${error.message}`);
+      return;
+    }
+
+    await refreshLoadManager(appState.selectedLoadId);
+  }
+
+  async function addLoadTime() {
+    if (!appState.selectedLoadId) {
+      alert('Select a load first.');
+      return;
+    }
+
+    const nextSortOrder = (LOAD_TEMPLATE_TIMES.reduce((max, row) => {
+      const value = Number(row.sort_order);
+      return Number.isFinite(value) ? Math.max(max, value) : max;
+    }, 0) || 0) + 1;
+
+    const { error } = await supabaseClient
+      .from('load_template_times')
+      .insert({
+        load_template_id: appState.selectedLoadId,
+        show_time: '10:30:00',
+        sort_order: nextSortOrder
+      });
+
+    if (error) {
+      console.error('Failed to add load time:', error);
+      alert(`Could not add time: ${error.message}`);
+      return;
+    }
+
+    await refreshLoadManager(appState.selectedLoadId);
+  }
+
+  async function createLoad() {
+    const name = window.prompt('Name for the new load:', 'New Custom Load');
+    if (!name) return;
+
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .insert({
+        name: name.trim(),
+        load_kind: 'custom',
+        display_color: '#646e78',
+        is_active: true,
+        is_system_default: false
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to create load:', error);
+      alert(`Could not create load: ${error.message}`);
+      return;
+    }
+
+    await refreshLoadManager(data.id);
+  }
+
+  async function duplicateLoad() {
+    const source = LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId);
+    if (!source) {
+      alert('Select a load first.');
+      return;
+    }
+
+    const name = window.prompt('Name for duplicated load:', `${source.name} Copy`);
+    if (!name) return;
+
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .insert({
+        name: name.trim(),
+        load_kind: 'custom',
+        display_color: source.display_color || '#646e78',
+        is_active: true,
+        is_system_default: false
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to duplicate load:', error);
+      alert(`Could not duplicate load: ${error.message}`);
+      return;
+    }
+
+    const copiedTimes = LOAD_TEMPLATE_TIMES.map((row) => ({
+      load_template_id: data.id,
+      show_time: row.show_time,
+      sort_order: row.sort_order
+    }));
+
+    if (copiedTimes.length) {
+      const timesResult = await supabaseClient
+        .from('load_template_times')
+        .insert(copiedTimes);
+
+      if (timesResult.error) {
+        console.error('Failed to copy load times:', timesResult.error);
+        alert(`Load duplicated, but times could not be copied: ${timesResult.error.message}`);
+      }
+    }
+
+    await refreshLoadManager(data.id);
+  }
+
+  async function deleteLoad() {
+    const load = LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId);
+    if (!load) {
+      alert('Select a load first.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete ${load.name}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    await supabaseClient
+      .from('load_template_times')
+      .delete()
+      .eq('load_template_id', load.id);
+
+    const { error } = await supabaseClient
+      .from('load_templates')
+      .delete()
+      .eq('id', load.id);
+
+    if (error) {
+      console.error('Failed to delete load:', error);
+      alert(`Could not delete load: ${error.message}`);
+      return;
+    }
+
+    await refreshLoadManager(null);
+  }
+
+  async function refreshLoadManager(preferredLoadId = appState.selectedLoadId) {
+    await fetchLoads();
+
+    appState.selectedLoadId =
+      preferredLoadId ||
+      LOAD_TEMPLATES[0]?.id ||
+      null;
+
+    await fetchLoadTimes(appState.selectedLoadId);
+
+    renderLoadList();
+    renderLoadDetails();
+    renderLoadTimes();
+  }
+
+  async function initializeLoadManager() {
+    const { data, error } = await supabaseClient.auth.getSession();
+    const session = data?.session || null;
+
+    if (error || !session) {
+      setAuthenticatedUi(null);
+      return;
+    }
+
+    setAuthenticatedUi(session);
+    await refreshLoadManager();
+  }
+
+  async function initializePage() {
+    ui.signInButton.addEventListener('click', handleSignIn);
+    ui.signOutButton.addEventListener('click', handleSignOut);
+    ui.saveLoadButton.addEventListener('click', saveLoadDetails);
+    ui.addLoadTimeButton.addEventListener('click', addLoadTime);
+    ui.createLoadButton.addEventListener('click', createLoad);
+    ui.duplicateLoadButton.addEventListener('click', duplicateLoad);
+    ui.deleteLoadButton.addEventListener('click', deleteLoad);
+
+    ui.passwordInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    ui.emailInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+      setAuthenticatedUi(session);
+      if (session) {
+        await refreshLoadManager();
+      }
+    });
+
+    await initializeLoadManager();
+  }
+
+  document.addEventListener('DOMContentLoaded', initializePage);
+</script>
+
+</body>
+</html>
