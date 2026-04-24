@@ -281,7 +281,9 @@
     }
 
     ui.loadNameInput.value = load.name || '';
-    ui.loadKindSelect.value = load.load_kind || 'custom';
+    ui.loadKindSelect.value = ['green', 'yellow', 'red', 'custom'].includes(load.load_kind)
+      ? load.load_kind
+      : 'custom';
     ui.loadColorInput.value = load.display_color || '#7d9b2d';
     ui.loadActiveCheckbox.checked = !!load.is_active;
   }
@@ -368,6 +370,7 @@
     }
 
     await refreshLoadManager(loadId);
+    alert('Load details saved.');
   }
 
   async function updateLoadTime(timeId, showTime) {
@@ -515,6 +518,11 @@
       return;
     }
 
+    if (load.is_system_default) {
+      alert('System default loads cannot be deleted. You can edit their times or duplicate them instead.');
+      return;
+    }
+
     const confirmed = window.confirm(`Delete ${load.name}? This cannot be undone.`);
     if (!confirmed) return;
 
@@ -586,6 +594,17 @@
         event.preventDefault();
         handleSignIn();
       }
+    });
+
+    ui.loadKindSelect.addEventListener('change', () => {
+      const colourByKind = {
+        green: '#7d9b2d',
+        yellow: '#f3bc43',
+        red: '#e6782d',
+        custom: '#646e78'
+      };
+
+      ui.loadColorInput.value = colourByKind[ui.loadKindSelect.value] || '#646e78';
     });
 
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
