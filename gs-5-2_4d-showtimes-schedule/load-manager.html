@@ -79,7 +79,10 @@
 
     <label style="display:block; margin-bottom:12px;">
       <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Display Colour</span>
-      <input id="load-color-input" type="color" value="#7d9b2d">
+      <div class="color-row">
+        <input id="load-color-input" type="color" value="#7d9b2d">
+        <span id="load-color-preview" class="color-preview">#7d9b2d</span>
+      </div>
     </label>
 
     <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
@@ -144,6 +147,7 @@
     loadNameInput: document.getElementById('load-name-input'),
     loadKindSelect: document.getElementById('load-kind-select'),
     loadColorInput: document.getElementById('load-color-input'),
+    loadColorPreview: document.getElementById('load-color-preview'),
     loadActiveCheckbox: document.getElementById('load-active-checkbox'),
     saveLoadButton: document.getElementById('save-load-button'),
 
@@ -187,6 +191,8 @@
     }
 
     ui.authMessage.textContent = 'Sign-in successful.';
+
+    await initializeLoadManager();
   }
 
   async function handleSignOut() {
@@ -211,6 +217,7 @@
     if (error) {
       console.error('Failed to fetch load templates:', error);
       LOAD_TEMPLATES = [];
+      ui.loadList.innerHTML = `<p style="color:#a14f17;">Could not load templates: ${error.message}</p>`;
       return;
     }
 
@@ -605,6 +612,12 @@
       };
 
       ui.loadColorInput.value = colourByKind[ui.loadKindSelect.value] || '#646e78';
+    });
+
+    ui.loadColorInput.addEventListener('input', () => {
+      ui.loadColorPreview.textContent = ui.loadColorInput.value;
+      ui.loadColorPreview.style.background = ui.loadColorInput.value;
+      ui.loadColorPreview.style.color = '#ffffff';
     });
 
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
