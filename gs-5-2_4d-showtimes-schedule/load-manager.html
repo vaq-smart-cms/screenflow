@@ -210,22 +210,11 @@
   async function fetchLoads() {
     console.log('fetchLoads() start');
 
-    const loadQuery = supabaseClient
+    const { data, error } = await supabaseClient
       .from('load_templates')
       .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
       .order('is_system_default', { ascending: false })
       .order('name', { ascending: true });
-
-    const timeout = new Promise((resolve) => {
-      window.setTimeout(() => {
-        resolve({
-          data: null,
-          error: new Error('fetchLoads timed out after 8 seconds')
-        });
-      }, 8000);
-    });
-
-    const { data, error } = await Promise.race([loadQuery, timeout]);
 
     console.log('fetchLoads() result:', { data, error });
 
@@ -601,18 +590,32 @@
   async function initializeLoadManager() {
     console.log('initializeLoadManager() start');
 
-    const { data, error } = await supabaseClient.auth.getSession();
-    const session = data?.session || null;
+    let session = null;
 
-    if (error || !session) {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        setAuthenticatedUi(null);
+        return;
+      }
+
+      session = data?.session || null;
+
+      if (session) break;
+
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+
+    console.log('Load Manager session:', session);
+
+    if (!session) {
       setAuthenticatedUi(null);
       return;
     }
 
     setAuthenticatedUi(session);
-
-    console.log('Load Manager session:', session);
-
     await refreshLoadManager();
   }
 
@@ -658,14 +661,10 @@
       ui.loadColorPreview.style.color = '#ffffff';
     });
 
-    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
-
-      if (session) {
-        await refreshLoadManager();
-      }
     });
-
+    
     await initializeLoadManager();
   }
 
