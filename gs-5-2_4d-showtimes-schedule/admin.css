@@ -292,3 +292,11 @@ input[type="color"] {
   padding: 8px 12px;
 }
 
+.load-button {
+  transition: opacity 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.load-button:hover {
+  opacity: 1 !important;
+  transform: translateY(-1px);
+}

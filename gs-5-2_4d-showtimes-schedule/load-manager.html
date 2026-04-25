@@ -208,15 +208,11 @@
   }
 
   async function fetchLoads() {
-    console.log('fetchLoads() start');
-
     const { data, error } = await supabaseClient
       .from('load_templates')
       .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
       .order('is_system_default', { ascending: false })
       .order('name', { ascending: true });
-
-    console.log('fetchLoads() result:', { data, error });
 
     if (error) {
       console.error('Failed to fetch load templates:', error);
@@ -226,7 +222,6 @@
     }
 
     LOAD_TEMPLATES = data || [];
-    console.log('LOAD_TEMPLATES after fetch:', LOAD_TEMPLATES);
   }
 
   async function fetchLoadTimes(loadId) {
@@ -251,6 +246,14 @@
     LOAD_TEMPLATE_TIMES = data || [];
   }
 
+  function getLoadButtonColor(load) {
+    if (load.load_kind === 'green') return '#7d9b2d';
+    if (load.load_kind === 'yellow') return '#f3bc43';
+    if (load.load_kind === 'red') return '#e6782d';
+
+    return load.display_color || '#646e78';
+  }
+
   function renderLoadList() {
     ui.loadList.innerHTML = '';
 
@@ -265,8 +268,15 @@
     LOAD_TEMPLATES.forEach((load) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = load.id === appState.selectedLoadId ? 'primary' : 'secondary';
+      const buttonColor = getLoadButtonColor(load);
+      const isSelected = load.id === appState.selectedLoadId;
+
+      button.className = 'load-button';
+      button.style.background = buttonColor;
+      button.style.color = '#ffffff';
       button.style.margin = '0 8px 8px 0';
+      button.style.opacity = isSelected ? '1' : '0.72';
+      button.style.boxShadow = isSelected ? 'inset 0 0 0 3px rgba(255,255,255,0.45)' : 'none';
       button.textContent = load.name;
 
       button.addEventListener('click', async () => {
@@ -300,6 +310,91 @@
     ui.loadActiveCheckbox.checked = !!load.is_active;
   }
 
+  function getTimePartsFromTimeString(timeString) {
+    if (!timeString) {
+      return { hour12: '10', minute: '30', ampm: 'AM' };
+    }
+
+    const cleanTime = String(timeString).slice(0, 5);
+    const [hourRaw, minuteRaw] = cleanTime.split(':').map(Number);
+
+    if (Number.isNaN(hourRaw) || Number.isNaN(minuteRaw)) {
+      return { hour12: '10', minute: '30', ampm: 'AM' };
+    }
+
+    let hour = hourRaw;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+
+    hour = hour % 12;
+    if (hour === 0) hour = 12;
+
+    return {
+      hour12: String(hour),
+      minute: String(minuteRaw).padStart(2, '0'),
+      ampm
+    };
+  }
+
+  function buildTimeFrom12HourParts(hour12, minute, ampm) {
+    let hour = Number(hour12);
+    const mins = Number(minute);
+
+    if (
+      Number.isNaN(hour) ||
+      Number.isNaN(mins) ||
+      hour < 1 ||
+      hour > 12 ||
+      mins < 0 ||
+      mins > 59
+    ) {
+      return null;
+    }
+
+    if (ampm === 'AM') {
+      if (hour === 12) hour = 0;
+    } else if (ampm === 'PM') {
+      if (hour !== 12) hour += 12;
+    } else {
+      return null;
+    }
+
+    return `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}:00`;
+  }
+
+  function createHourOptions(selectedValue) {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 1; i <= 12; i += 1) {
+      const option = document.createElement('option');
+      option.value = String(i);
+      option.textContent = String(i);
+      if (String(i) === String(selectedValue)) option.selected = true;
+      fragment.appendChild(option);
+    }
+
+    return fragment;
+  }
+
+  function createMinuteOptions(selectedValue) {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < 60; i += 5) {
+      const value = String(i).padStart(2, '0');
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      if (value === String(selectedValue)) option.selected = true;
+      fragment.appendChild(option);
+    }
+
+    return fragment;
+  }
+
+  function formatTimeLabel(timeString) {
+    const parts = getTimePartsFromTimeString(timeString);
+    return `${parts.hour12}:${parts.minute} ${parts.ampm}`;
+  }
+
   function renderLoadTimes() {
     ui.loadTimesContainer.innerHTML = '';
 
@@ -323,15 +418,73 @@
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
 
-      const timeInput = document.createElement('input');
-      timeInput.type = 'time';
-      timeInput.value = String(timeRow.show_time || '').slice(0, 5);
+      const timeParts = getTimePartsFromTimeString(timeRow.show_time);
+
+      const leftWrap = document.createElement('div');
+      leftWrap.style.display = 'flex';
+      leftWrap.style.alignItems = 'center';
+      leftWrap.style.flexWrap = 'wrap';
+      leftWrap.style.gap = '8px';
+
+      const hourSelect = document.createElement('select');
+      hourSelect.appendChild(createHourOptions(timeParts.hour12));
+
+      const minuteSelect = document.createElement('select');
+      minuteSelect.appendChild(createMinuteOptions(timeParts.minute));
+
+      const ampmSelect = document.createElement('select');
+      ['AM', 'PM'].forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        if (value === timeParts.ampm) option.selected = true;
+        ampmSelect.appendChild(option);
+      });
+
+      const previewText = document.createElement('span');
+      previewText.style.color = 'var(--text-soft)';
+      previewText.textContent = formatTimeLabel(timeRow.show_time);
+
+      function updatePreview() {
+        const builtTime = buildTimeFrom12HourParts(
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
+
+        previewText.textContent = builtTime ? formatTimeLabel(builtTime) : 'Invalid time';
+      }
+
+      hourSelect.addEventListener('change', updatePreview);
+      minuteSelect.addEventListener('change', updatePreview);
+      ampmSelect.addEventListener('change', updatePreview);
+
+      leftWrap.appendChild(hourSelect);
+      leftWrap.appendChild(minuteSelect);
+      leftWrap.appendChild(ampmSelect);
+      leftWrap.appendChild(previewText);
+
+      const actionsWrap = document.createElement('div');
+      actionsWrap.style.display = 'flex';
+      actionsWrap.style.flexWrap = 'wrap';
+      actionsWrap.style.gap = '8px';
 
       const saveButton = document.createElement('button');
       saveButton.type = 'button';
       saveButton.textContent = 'Save';
       saveButton.addEventListener('click', async () => {
-        await updateLoadTime(timeRow.id, timeInput.value);
+        const builtTime = buildTimeFrom12HourParts(
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
+
+        if (!builtTime) {
+          alert('Please choose a valid time.');
+          return;
+        }
+
+        await updateLoadTime(timeRow.id, builtTime);
       });
 
       const deleteButton = document.createElement('button');
@@ -341,9 +494,11 @@
         await deleteLoadTime(timeRow.id);
       });
 
-      rowEl.appendChild(timeInput);
-      rowEl.appendChild(saveButton);
-      rowEl.appendChild(deleteButton);
+      actionsWrap.appendChild(saveButton);
+      actionsWrap.appendChild(deleteButton);
+
+      rowEl.appendChild(leftWrap);
+      rowEl.appendChild(actionsWrap);
 
       ui.loadTimesContainer.appendChild(rowEl);
     });
@@ -388,9 +543,11 @@
   async function updateLoadTime(timeId, showTime) {
     if (!timeId || !showTime) return;
 
+    const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
+
     const { error } = await supabaseClient
       .from('load_template_times')
-      .update({ show_time: `${showTime}:00` })
+      .update({ show_time: normalizedTime })
       .eq('id', timeId);
 
     if (error) {
@@ -428,6 +585,24 @@
       return;
     }
 
+    const existingRows = LOAD_TEMPLATE_TIMES
+      .slice()
+      .sort((a, b) => String(a.show_time).localeCompare(String(b.show_time)));
+
+    let defaultTime = '10:30:00';
+
+    if (existingRows.length) {
+      const lastTime = String(existingRows[existingRows.length - 1].show_time || '10:30:00').slice(0, 5);
+      const [hh, mm] = lastTime.split(':').map(Number);
+
+      if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
+        const tempDate = new Date(2000, 0, 1, hh, mm);
+        tempDate.setMinutes(tempDate.getMinutes() + 30);
+
+        defaultTime = `${String(tempDate.getHours()).padStart(2, '0')}:${String(tempDate.getMinutes()).padStart(2, '0')}:00`;
+      }
+    }
+
     const nextSortOrder = (LOAD_TEMPLATE_TIMES.reduce((max, row) => {
       const value = Number(row.sort_order);
       return Number.isFinite(value) ? Math.max(max, value) : max;
@@ -437,7 +612,7 @@
       .from('load_template_times')
       .insert({
         load_template_id: appState.selectedLoadId,
-        show_time: '10:30:00',
+        show_time: defaultTime,
         sort_order: nextSortOrder
       });
 
@@ -558,29 +733,19 @@
   }
 
   async function refreshLoadManager(preferredLoadId = appState.selectedLoadId) {
-    console.log('refreshLoadManager() start');
-
     try {
-      console.log('before fetchLoads()');
       await fetchLoads();
-      console.log('after fetchLoads()', LOAD_TEMPLATES);
-
       appState.selectedLoadId =
         preferredLoadId ||
         LOAD_TEMPLATES[0]?.id ||
         null;
 
-      console.log('selectedLoadId:', appState.selectedLoadId);
-
-      console.log('before fetchLoadTimes()');
       await fetchLoadTimes(appState.selectedLoadId);
-      console.log('after fetchLoadTimes()', LOAD_TEMPLATE_TIMES);
 
       renderLoadList();
       renderLoadDetails();
       renderLoadTimes();
 
-      console.log('refreshLoadManager() complete');
     } catch (err) {
       console.error('refreshLoadManager() failed:', err);
       ui.loadList.innerHTML = `<p style="color:#a14f17;">Load Manager failed: ${err.message || err}</p>`;
@@ -588,8 +753,6 @@
   }
 
   async function initializeLoadManager() {
-    console.log('initializeLoadManager() start');
-
     let session = null;
 
     for (let attempt = 0; attempt < 10; attempt += 1) {
@@ -608,8 +771,6 @@
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
 
-    console.log('Load Manager session:', session);
-
     if (!session) {
       setAuthenticatedUi(null);
       return;
@@ -620,8 +781,6 @@
   }
 
   async function initializePage() {
-    console.log('Load Manager initializePage() start');
-
     ui.signInButton.addEventListener('click', handleSignIn);
     ui.signOutButton.addEventListener('click', handleSignOut);
     ui.saveLoadButton.addEventListener('click', saveLoadDetails);
@@ -664,7 +823,7 @@
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
     });
-    
+
     await initializeLoadManager();
   }
 
