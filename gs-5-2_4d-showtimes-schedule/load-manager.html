@@ -209,12 +209,23 @@
 
   async function fetchLoads() {
     console.log('fetchLoads() start');
-    
-    const { data, error } = await supabaseClient
+
+    const loadQuery = supabaseClient
       .from('load_templates')
       .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
       .order('is_system_default', { ascending: false })
       .order('name', { ascending: true });
+
+    const timeout = new Promise((resolve) => {
+      window.setTimeout(() => {
+        resolve({
+          data: null,
+          error: new Error('fetchLoads timed out after 8 seconds')
+        });
+      }, 8000);
+    });
+
+    const { data, error } = await Promise.race([loadQuery, timeout]);
 
     console.log('fetchLoads() result:', { data, error });
 
