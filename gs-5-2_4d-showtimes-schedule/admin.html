@@ -141,7 +141,9 @@
   <!-- H — Secondary Tools -->
   <div class="panel">
     <h2>Tools</h2>
-    <button>Manage Loads</button>
+    <a href="./load-manager.html">
+      <button type="button">Manage Loads</button>
+    </a>
     <button>Manage Films</button>
     <button>Help</button>
   </div>
@@ -847,7 +849,7 @@
 
     const { data, error } = await supabaseClient
       .from('daily_schedules')
-      .select('schedule_date, status, has_manual_edits')
+      .select('schedule_date, status, has_manual_edits, load_templates(display_color, name)')
       .in('schedule_date', visibleDates);
 
     if (error) {
@@ -862,7 +864,9 @@
       dayStateMap[dateStr] = {
         hasDraft: false,
         hasLive: false,
-        hasEdits: false
+        hasEdits: false,
+        loadColor: '',
+        loadName: ''
       };
     });
 
@@ -884,6 +888,17 @@
 
       if (row.status === 'live') {
         dayStateMap[row.schedule_date].hasLive = true;
+      }
+
+      const loadColor = row.load_templates?.display_color || '';
+      const loadName = row.load_templates?.name || '';
+
+      if (loadColor) {
+        dayStateMap[row.schedule_date].loadColor = loadColor;
+      }
+
+      if (loadName) {
+        dayStateMap[row.schedule_date].loadName = loadName;
       }
     });
 
@@ -915,6 +930,20 @@
       if (state.hasDraft) dayEl.classList.add('has-draft');
       if (state.hasLive) dayEl.classList.add('has-live');
       if (state.hasEdits) dayEl.classList.add('has-edits');
+
+      let dot = dayEl.querySelector('.load-dot');
+
+      if (dot) {
+        dot.remove();
+      }
+
+      if (state.loadColor) {
+        dot = document.createElement('span');
+        dot.className = 'load-dot';
+        dot.style.background = state.loadColor;
+        dot.title = state.loadName || 'Assigned load';
+        dayEl.appendChild(dot);
+      }      
     });
   }
 

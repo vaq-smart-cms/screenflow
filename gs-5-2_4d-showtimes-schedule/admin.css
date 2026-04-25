@@ -127,6 +127,7 @@ input[type="color"] {
 }
 
 .day {
+  position: relative;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -184,6 +185,19 @@ input[type="color"] {
   animation: batchWiggle 1300ms ease-in-out infinite;
   background: rgba(243, 188, 67, 0.16);
   border-color: #f3bc43;
+}
+
+.load-dot {
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  bottom: 4px;
+  box-shadow: 0 1px 3px rgba(44, 60, 73, 0.22);
+  display: block;
+  height: 8px;
+  pointer-events: none;
+  position: absolute;
+  right: 4px;
+  width: 8px;
 }
 
 @keyframes batchWiggle {
