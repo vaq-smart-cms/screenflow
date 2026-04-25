@@ -124,6 +124,36 @@
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  const CACHE_TTL_MS = 10 * 60 * 1000;
+
+  function readCache(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      const isFresh = Date.now() - parsed.savedAt < CACHE_TTL_MS;
+
+      return isFresh ? parsed.value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeCache(key, value) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          savedAt: Date.now(),
+          value
+        })
+      );
+    } catch {
+      // Ignore cache write failures.
+    }
+  }
+
   let LOAD_TEMPLATES = [];
   let LOAD_TEMPLATE_TIMES = [];
 
@@ -208,6 +238,10 @@
   }
 
   async function fetchLoads() {
+    const cachedLoads = readCache('vaq_4d_load_templates');
+    if (cachedLoads) {
+      LOAD_TEMPLATES = cachedLoads;
+    }
     const { data, error } = await supabaseClient
       .from('load_templates')
       .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
@@ -222,12 +256,23 @@
     }
 
     LOAD_TEMPLATES = data || [];
+
+    writeCache('vaq_4d_load_templates', LOAD_TEMPLATES);
+
   }
 
   async function fetchLoadTimes(loadId) {
+    
     if (!loadId) {
       LOAD_TEMPLATE_TIMES = [];
       return;
+    }
+
+    const cacheKey = `vaq_4d_load_template_times_${loadId}`;
+    const cachedTimes = readCache(cacheKey);
+
+    if (cachedTimes) {
+      LOAD_TEMPLATE_TIMES = cachedTimes;
     }
 
     const { data, error } = await supabaseClient
@@ -244,6 +289,9 @@
     }
 
     LOAD_TEMPLATE_TIMES = data || [];
+
+    writeCache(cacheKey, LOAD_TEMPLATE_TIMES);
+
   }
 
   function getLoadButtonColor(load) {
@@ -556,6 +604,7 @@
       return;
     }
 
+    localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
     await refreshLoadManager(appState.selectedLoadId);
   }
 
@@ -576,6 +625,7 @@
       return;
     }
 
+    localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
     await refreshLoadManager(appState.selectedLoadId);
   }
 
@@ -622,6 +672,7 @@
       return;
     }
 
+    localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
     await refreshLoadManager(appState.selectedLoadId);
   }
 
