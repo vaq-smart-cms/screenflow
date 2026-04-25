@@ -214,6 +214,8 @@
       .order('is_system_default', { ascending: false })
       .order('name', { ascending: true });
 
+    console.log('fetchLoads() result:', { data, error });
+
     if (error) {
       console.error('Failed to fetch load templates:', error);
       LOAD_TEMPLATES = [];
@@ -222,6 +224,7 @@
     }
 
     LOAD_TEMPLATES = data || [];
+    console.log('LOAD_TEMPLATES after fetch:', LOAD_TEMPLATES);
   }
 
   async function fetchLoadTimes(loadId) {
@@ -553,6 +556,8 @@
   }
 
   async function refreshLoadManager(preferredLoadId = appState.selectedLoadId) {
+    console.log('refreshLoadManager() start');
+
     await fetchLoads();
 
     appState.selectedLoadId =
@@ -568,6 +573,8 @@
   }
 
   async function initializeLoadManager() {
+    console.log('initializeLoadManager() start');
+
     const { data, error } = await supabaseClient.auth.getSession();
     const session = data?.session || null;
 
@@ -577,10 +584,15 @@
     }
 
     setAuthenticatedUi(session);
+
+    console.log('Load Manager session:', session);
+
     await refreshLoadManager();
   }
 
   async function initializePage() {
+    console.log('Load Manager initializePage() start');
+
     ui.signInButton.addEventListener('click', handleSignIn);
     ui.signOutButton.addEventListener('click', handleSignOut);
     ui.saveLoadButton.addEventListener('click', saveLoadDetails);
@@ -622,6 +634,7 @@
 
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       setAuthenticatedUi(session);
+
       if (session) {
         await refreshLoadManager();
       }
