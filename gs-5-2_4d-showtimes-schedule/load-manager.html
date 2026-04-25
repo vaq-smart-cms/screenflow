@@ -208,6 +208,8 @@
   }
 
   async function fetchLoads() {
+    console.log('fetchLoads() start');
+    
     const { data, error } = await supabaseClient
       .from('load_templates')
       .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
@@ -558,18 +560,31 @@
   async function refreshLoadManager(preferredLoadId = appState.selectedLoadId) {
     console.log('refreshLoadManager() start');
 
-    await fetchLoads();
+    try {
+      console.log('before fetchLoads()');
+      await fetchLoads();
+      console.log('after fetchLoads()', LOAD_TEMPLATES);
 
-    appState.selectedLoadId =
-      preferredLoadId ||
-      LOAD_TEMPLATES[0]?.id ||
-      null;
+      appState.selectedLoadId =
+        preferredLoadId ||
+        LOAD_TEMPLATES[0]?.id ||
+        null;
 
-    await fetchLoadTimes(appState.selectedLoadId);
+      console.log('selectedLoadId:', appState.selectedLoadId);
 
-    renderLoadList();
-    renderLoadDetails();
-    renderLoadTimes();
+      console.log('before fetchLoadTimes()');
+      await fetchLoadTimes(appState.selectedLoadId);
+      console.log('after fetchLoadTimes()', LOAD_TEMPLATE_TIMES);
+
+      renderLoadList();
+      renderLoadDetails();
+      renderLoadTimes();
+
+      console.log('refreshLoadManager() complete');
+    } catch (err) {
+      console.error('refreshLoadManager() failed:', err);
+      ui.loadList.innerHTML = `<p style="color:#a14f17;">Load Manager failed: ${err.message || err}</p>`;
+    }
   }
 
   async function initializeLoadManager() {
