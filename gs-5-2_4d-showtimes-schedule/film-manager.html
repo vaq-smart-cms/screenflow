@@ -77,6 +77,11 @@
     </label>
 
     <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Testimonial</span>
+      <textarea id="film-testimonial-input" rows="3" placeholder="Optional short quote or guest-facing testimonial"></textarea>
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
       <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
       <textarea id="film-accessibility-input" rows="3" placeholder="Accessibility notes or accommodations"></textarea>
     </label>
@@ -167,6 +172,7 @@
     filmTitleInput: document.getElementById('film-title-input'),
     filmSynopsisInput: document.getElementById('film-synopsis-input'),
     filmAdvisoryInput: document.getElementById('film-advisory-input'),
+    filmTestimonialInput: document.getElementById('film-testimonial-input'),
     filmAccessibilityInput: document.getElementById('film-accessibility-input'),
     filmActiveCheckbox: document.getElementById('film-active-checkbox'),
     saveFilmButton: document.getElementById('save-film-button'),
@@ -322,6 +328,7 @@
       ui.filmTitleInput.value = '';
       ui.filmSynopsisInput.value = '';
       ui.filmAdvisoryInput.value = '';
+      ui.filmTestimonialInput.value = '';
       ui.filmAccessibilityInput.value = '';
       ui.filmActiveCheckbox.checked = true;
       ui.filmPosterUrlInput.value = '';
@@ -333,6 +340,7 @@
     ui.filmTitleInput.value = film.title || '';
     ui.filmSynopsisInput.value = film.synopsis || '';
     ui.filmAdvisoryInput.value = film.advisory_text || '';
+    ui.filmTestimonialInput.value = film.testimonial || '';
     ui.filmAccessibilityInput.value = film.accessibility_text || '';
     ui.filmActiveCheckbox.checked = !!film.is_active;
     ui.filmPosterUrlInput.value = film.poster_url || '';
@@ -371,6 +379,7 @@
       title: ui.filmTitleInput.value.trim(),
       synopsis: ui.filmSynopsisInput.value.trim(),
       advisory_text: ui.filmAdvisoryInput.value.trim(),
+      testimonial: ui.filmTestimonialInput.value.trim(),
       accessibility_text: ui.filmAccessibilityInput.value.trim(),
       poster_url: ui.filmPosterUrlInput.value.trim(),
       is_active: ui.filmActiveCheckbox.checked,
@@ -407,6 +416,7 @@
       .insert({
         title: title.trim(),
         synopsis: '',
+        testimonial: '',
         advisory_text: '',
         accessibility_text: '',
         poster_url: '',
@@ -440,6 +450,7 @@
       .insert({
         title: title.trim(),
         synopsis: source.synopsis || '',
+        testimonial: source.testimonial || '',
         advisory_text: source.advisory_text || '',
         accessibility_text: source.accessibility_text || '',
         poster_url: source.poster_url || '',
