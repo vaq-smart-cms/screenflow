@@ -94,11 +94,18 @@ input[type="color"] {
   border-radius: 14px;
   box-shadow: var(--shadow);
   color: var(--text);
-  display: flex;
   gap: 12px;
   margin: 0 auto 16px;
   max-width: 520px;
   padding: 12px 14px;
+}
+
+.boot-panel:not([hidden]) {
+  display: flex;
+}
+
+.boot-panel[hidden] {
+  display: none;
 }
 
 .boot-panel.is-hiding {

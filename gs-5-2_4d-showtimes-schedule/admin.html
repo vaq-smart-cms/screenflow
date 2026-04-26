@@ -1622,12 +1622,8 @@
       return;
     }
 
-    ui.bootPanel.classList.add('is-hiding');
-
-    window.setTimeout(() => {
-      ui.bootPanel.hidden = true;
-      ui.bootPanel.classList.remove('is-hiding');
-    }, 170);
+    ui.bootPanel.hidden = true;
+    ui.bootPanel.classList.remove('is-hiding');
   }
 
   function setAuthenticatedUi(session) {
@@ -1778,7 +1774,6 @@
       calendarGrid.addEventListener('touchcancel', clearLongPress);
 
       calendarGrid.dataset.bound = 'true';
-      console.log('calendarGrid bound for click + long press');
     }
 
     supabaseClient.auth.onAuthStateChange((_event, session) => {
