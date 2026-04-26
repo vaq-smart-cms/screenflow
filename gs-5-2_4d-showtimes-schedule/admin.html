@@ -1622,8 +1622,6 @@
       return;
     }
 
-    if (ui.bootPanel.hidden) return;
-
     ui.bootPanel.classList.add('is-hiding');
 
     window.setTimeout(() => {
@@ -1670,6 +1668,8 @@
   }
 
   async function handleSignOut() {
+    setBootUi(false);
+
     const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
@@ -1684,61 +1684,70 @@
     appState.liveSchedule = null;
     appState.draftShowtimes = [];
     appState.liveShowtimes = [];
+    appState.calendarDayStates = {};
+    appState.batchMode = false;
+    appState.batchAnchorDate = null;
+    appState.batchSelectedDates = [];
+    appState.batchReturnDate = null;
+
     ui.passwordInput.value = '';
     ui.authMessage.textContent = 'Signed out.';
-    setBootUi(false);
+
     setAuthenticatedUi(null);
   }
 
   async function initializeAdminApp() {
     setBootUi(true);
 
-    let session = null;
+    try {
+      let session = null;
 
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      const { data, error } = await supabaseClient.auth.getSession();
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const { data, error } = await supabaseClient.auth.getSession();
 
-      if (error) {
-        console.error('Session check failed:', error);
-        setBootUi(false);
+        if (error) {
+          console.error('Session check failed:', error);
+          setAuthenticatedUi(null);
+          return;
+        }
+
+        session = data?.session || null;
+
+        if (session) break;
+
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+
+      if (!session) {
         setAuthenticatedUi(null);
         return;
       }
 
-      session = data?.session || null;
+      setAuthenticatedUi(session);
 
-      if (session) break;
+      await fetchActiveFilms();
+      await fetchActiveLoads();
+      await fetchLoadTemplateTimes();
 
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    }
+      populateFilmSelect();
+      populateLoadSelect();
+      populateBatchLoadSelect();
 
-    if (!session) {
-      setBootUi(false);
+      renderFilmPreview(FILMS[0]?.id || '');
+      renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
+
+      await loadSelectedDateState();
+
+      if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
+        ui.loadSelect.value = LOAD_TEMPLATES[0].id;
+        renderLoadPreview(LOAD_TEMPLATES[0].id);
+      }
+    } catch (err) {
+      console.error('Admin initialization failed:', err);
       setAuthenticatedUi(null);
-      return;
+    } finally {
+      setBootUi(false);
     }
-
-    setAuthenticatedUi(session);
-
-    await fetchActiveFilms();
-    await fetchActiveLoads();
-    await fetchLoadTemplateTimes();
-
-    populateFilmSelect();
-    populateLoadSelect();
-    populateBatchLoadSelect();
-
-    renderFilmPreview(FILMS[0]?.id || '');
-    renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
-
-    await loadSelectedDateState();
-
-    if (!appState.draftSchedule?.applied_load_template_id && LOAD_TEMPLATES.length) {
-      ui.loadSelect.value = LOAD_TEMPLATES[0].id;
-      renderLoadPreview(LOAD_TEMPLATES[0].id);
-    }
-
-    setBootUi(false);
   }
 
   async function initializePage() {
@@ -1775,6 +1784,11 @@
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
     });
+
+    if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
+      ui.signOutButton.addEventListener('click', handleSignOut);
+      ui.signOutButton.dataset.bound = 'true';
+    }
 
     if (ui.prevMonthButton && !ui.prevMonthButton.dataset.bound) {
       ui.prevMonthButton.addEventListener('click', async () => {
