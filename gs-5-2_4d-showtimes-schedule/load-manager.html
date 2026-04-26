@@ -4,8 +4,6 @@
   <meta charset="utf-8">
   <title>VAQ 4D Load Manager</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Reuse the existing 4D admin stylesheet -->
   <link rel="stylesheet" href="./admin.css?v=1">
 </head>
 
@@ -277,7 +275,7 @@
 
     const { data, error } = await supabaseClient
       .from('load_template_times')
-      .select('id, load_template_id, show_time, sort_order')
+      .select('id, load_template_id, show_time, sort_order, is_after_hours')
       .eq('load_template_id', loadId)
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('show_time', { ascending: true });
@@ -462,6 +460,13 @@
       return;
     }
 
+    if (timeRow.is_after_hours) {
+      const badge = document.createElement('span');
+      badge.className = 'showtime-badge';
+      badge.textContent = 'After-hours';
+      leftWrap.appendChild(badge);
+    }
+
     LOAD_TEMPLATE_TIMES.forEach((timeRow) => {
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
@@ -592,10 +597,14 @@
     if (!timeId || !showTime) return;
 
     const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
+    const isAfterHours = normalizedTime >= '17:00:00';
 
     const { error } = await supabaseClient
       .from('load_template_times')
-      .update({ show_time: normalizedTime })
+      .update({
+        show_time: normalizedTime,
+        is_after_hours: isAfterHours
+      })
       .eq('id', timeId);
 
     if (error) {
@@ -663,7 +672,8 @@
       .insert({
         load_template_id: appState.selectedLoadId,
         show_time: defaultTime,
-        sort_order: nextSortOrder
+        sort_order: nextSortOrder,
+        is_after_hours: defaultTime >= '17:00:00'
       });
 
     if (error) {
