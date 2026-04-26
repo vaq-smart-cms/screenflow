@@ -91,7 +91,10 @@
       <span>Active / available in scheduler</span>
     </label>
 
-    <button id="save-film-button" class="primary" type="button">Save Film Details</button>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="save-film-button" class="primary" type="button">Save Film Details</button>
+      <button id="cancel-film-edit-button" class="secondary" type="button">Cancel</button>
+    </div>
     <p id="film-save-status" style="margin-top:10px; color:var(--text-soft);"></p>
   </div>
 
@@ -169,6 +172,7 @@
     filmAccessibilityInput: document.getElementById('film-accessibility-input'),
     filmActiveCheckbox: document.getElementById('film-active-checkbox'),
     saveFilmButton: document.getElementById('save-film-button'),
+    cancelFilmEditButton: document.getElementById('cancel-film-edit-button'),
 
     filmPosterUrlInput: document.getElementById('film-poster-url-input'),
     filmPosterSrcsetInput: document.getElementById('film-poster-srcset-input'),
@@ -290,6 +294,22 @@
 
     ui.filmSaveStatus.textContent = message;
     ui.filmSaveStatus.style.color = isError ? '#a14f17' : 'var(--text-soft)';
+  }
+
+  function cancelFilmEdit() {
+    if (!appState.selectedFilmId) {
+      setFilmDirtyState(false);
+      renderFilmDetails();
+      renderPosterPreview();
+      return;
+    }
+
+    if (!confirmDiscardUnsavedChanges()) return;
+
+    setFilmDirtyState(false);
+    renderFilmDetails();
+    renderPosterPreview();
+    setFilmSaveStatus('Changes cancelled.');
   }
 
   function setFilmDirtyState(isDirty) {
@@ -586,6 +606,7 @@
     ui.saveFilmButton.addEventListener('click', saveFilmDetails);
     ui.duplicateFilmButton.addEventListener('click', duplicateFilm);
     ui.deleteFilmButton.addEventListener('click', deleteFilm);
+    ui.cancelFilmEditButton.addEventListener('click', cancelFilmEdit);
 
     [
       ui.filmTitleInput,

@@ -332,3 +332,63 @@ input[type="color"] {
   opacity: 1 !important;
   transform: translateY(-1px);
 }
+
+/* H - Tools in Footer */
+
+.tool-button-row {
+  display: grid;
+  gap: 10px;
+}
+
+.tool-link {
+  color: inherit;
+  display: block;
+  text-decoration: none;
+}
+
+.tool-link:hover,
+.tool-link:focus {
+  text-decoration: none;
+}
+
+.tool-button {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(44, 60, 73, 0.06);
+  color: var(--text);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  padding: 12px;
+  text-align: left;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  width: 100%;
+}
+
+.tool-button:hover {
+  border-color: var(--vaq-blue);
+  box-shadow: 0 10px 22px rgba(44, 60, 73, 0.12);
+  transform: translateY(-1px);
+}
+
+.tool-button small {
+  color: var(--text-soft);
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.tool-icon {
+  align-items: center;
+  background: #eef6fa;
+  border-radius: 12px;
+  display: inline-flex;
+  flex: 0 0 40px;
+  font-size: 1.25rem;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
