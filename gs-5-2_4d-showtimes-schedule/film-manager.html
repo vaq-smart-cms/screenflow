@@ -154,7 +154,8 @@
   let FILMS = [];
 
   const appState = {
-    selectedFilmId: null
+    selectedFilmId: null,
+    isDirty: false
   };
 
   const ui = {
@@ -301,6 +302,26 @@
     ui.filmSaveStatus.style.color = isError ? '#a14f17' : 'var(--text-soft)';
   }
 
+  function setFilmDirtyState(isDirty) {
+    appState.isDirty = isDirty;
+
+    if (!ui.filmSaveStatus) return;
+
+    if (isDirty) {
+      ui.filmSaveStatus.textContent = 'Unsaved changes';
+      ui.filmSaveStatus.style.color = '#a14f17';
+    } else if (ui.filmSaveStatus.textContent === 'Unsaved changes') {
+      ui.filmSaveStatus.textContent = '';
+      ui.filmSaveStatus.style.color = 'var(--text-soft)';
+    }
+  }
+
+  function confirmDiscardUnsavedChanges() {
+    if (!appState.isDirty) return true;
+
+    return window.confirm('You have unsaved film changes. Discard them?');
+  }
+
   function renderFilmList() {
     ui.filmList.innerHTML = '';
 
@@ -328,7 +349,12 @@
       button.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
 
       button.addEventListener('click', () => {
+        if (film.id === appState.selectedFilmId) return;
+
+        if (!confirmDiscardUnsavedChanges()) return;
+
         appState.selectedFilmId = film.id;
+        setFilmDirtyState(false);
         renderFilmList();
         renderFilmDetails();
         renderPosterPreview();
@@ -339,6 +365,7 @@
   }
 
   function renderFilmDetails() {
+    setFilmSaveStatus('');
     const film = FILMS.find((item) => item.id === appState.selectedFilmId);
 
     if (!film) {
@@ -385,6 +412,7 @@
   }
 
   async function saveFilmDetails() {
+    ui.saveFilmButton.disabled = true;
     setFilmSaveStatus('Saving...');
     const filmId = appState.selectedFilmId;
 
@@ -422,6 +450,7 @@
 
     clearFilmCaches();
     await refreshFilmManager(filmId);
+    setFilmDirtyState(false);
     setFilmSaveStatus('Film details saved.');
   }
 
@@ -445,12 +474,14 @@
 
     if (error) {
       console.error('Failed to create film:', error);
-      alert(`Could not create film: ${error.message}`);
+      setFilmSaveStatus(`Could not create film: ${error.message}`, true);
       return;
     }
 
     clearFilmCaches();
     await refreshFilmManager(data.id);
+    setFilmDirtyState(false);
+    setFilmSaveStatus('New film created.');
   }
 
   async function duplicateFilm() {
@@ -479,12 +510,14 @@
 
     if (error) {
       console.error('Failed to duplicate film:', error);
-      alert(`Could not duplicate film: ${error.message}`);
+      setFilmSaveStatus(`Could not duplicate film: ${error.message}`, true);
       return;
     }
 
     clearFilmCaches();
     await refreshFilmManager(data.id);
+    setFilmDirtyState(false);
+    setFilmSaveStatus('Film duplicated.');
   }
 
   async function deleteFilm() {
@@ -504,12 +537,14 @@
 
     if (error) {
       console.error('Failed to delete film:', error);
-      alert(`Could not delete film: ${error.message}`);
+      setFilmSaveStatus(`Could not delete film: ${error.message}`, true);
       return;
     }
 
     clearFilmCaches();
     await refreshFilmManager(null);
+    setFilmDirtyState(false);
+    setFilmSaveStatus('Film deleted.');
   }
 
   async function refreshFilmManager(preferredFilmId = appState.selectedFilmId) {
@@ -523,6 +558,7 @@
     renderFilmList();
     renderFilmDetails();
     renderPosterPreview();
+    setFilmDirtyState(false);
   }
 
   async function initializeFilmManager() {
@@ -570,6 +606,26 @@
       input.addEventListener('input', renderPosterPreview);
     });
 
+    [
+      ui.filmTitleInput,
+      ui.filmSynopsisInput,
+      ui.filmAdvisoryInput,
+      ui.filmTestimonialInput,
+      ui.filmAccessibilityInput,
+      ui.filmPosterUrlInput,
+      ui.filmActiveCheckbox
+    ].forEach((input) => {
+      if (!input) return;
+
+      input.addEventListener('input', () => {
+        setFilmDirtyState(true);
+      });
+
+      input.addEventListener('change', () => {
+        setFilmDirtyState(true);
+      });
+    });
+
     ui.passwordInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -582,6 +638,13 @@
         event.preventDefault();
         handleSignIn();
       }
+    });
+
+    window.addEventListener('beforeunload', (event) => {
+      if (!appState.isDirty) return;
+
+      event.preventDefault();
+      event.returnValue = '';
     });
 
     supabaseClient.auth.onAuthStateChange((event, session) => {
