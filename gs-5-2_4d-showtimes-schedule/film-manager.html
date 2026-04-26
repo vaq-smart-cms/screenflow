@@ -271,7 +271,7 @@
 
     const { data, error } = await supabaseClient
       .from('films')
-      .select('id, title, poster_url, synopsis, advisory_text, accessibility_info, is_active, sort_order, created_at, updated_at')
+      .select('id, title, poster_url, synopsis, advisory_text, accessibility_text, is_active, sort_order, created_at, updated_at')
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('title', { ascending: true });
 
@@ -333,11 +333,9 @@
     ui.filmTitleInput.value = film.title || '';
     ui.filmSynopsisInput.value = film.synopsis || '';
     ui.filmAdvisoryInput.value = film.advisory_text || '';
-    ui.filmAccessibilityInput.value = film.accessibility_info || '';
+    ui.filmAccessibilityInput.value = film.accessibility_text || '';
     ui.filmActiveCheckbox.checked = !!film.is_active;
     ui.filmPosterUrlInput.value = film.poster_url || '';
-    ui.filmPosterSrcsetInput.value = film.poster_srcset || film.poster_url || '';
-    ui.filmPosterSizesInput.value = film.poster_sizes || '(max-width: 700px) 80px, 120px';
   }
 
   function renderPosterPreview() {
@@ -373,10 +371,8 @@
       title: ui.filmTitleInput.value.trim(),
       synopsis: ui.filmSynopsisInput.value.trim(),
       advisory_text: ui.filmAdvisoryInput.value.trim(),
-      accessibility_info: ui.filmAccessibilityInput.value.trim(),
+      accessibility_text: ui.filmAccessibilityInput.value.trim(),
       poster_url: ui.filmPosterUrlInput.value.trim(),
-      poster_srcset: ui.filmPosterSrcsetInput.value.trim(),
-      poster_sizes: ui.filmPosterSizesInput.value.trim(),
       is_active: ui.filmActiveCheckbox.checked,
       updated_at: new Date().toISOString()
     };
@@ -412,10 +408,8 @@
         title: title.trim(),
         synopsis: '',
         advisory_text: '',
-        accessibility_info: '',
+        accessibility_text: '',
         poster_url: '',
-        poster_srcset: '',
-        poster_sizes: '(max-width: 700px) 80px, 120px',
         is_active: true
       })
       .select('id')
@@ -447,10 +441,8 @@
         title: title.trim(),
         synopsis: source.synopsis || '',
         advisory_text: source.advisory_text || '',
-        accessibility_info: source.accessibility_info || '',
+        accessibility_text: source.accessibility_text || '',
         poster_url: source.poster_url || '',
-        poster_srcset: source.poster_srcset || '',
-        poster_sizes: source.poster_sizes || '(max-width: 700px) 80px, 120px',
         is_active: true
       })
       .select('id')
