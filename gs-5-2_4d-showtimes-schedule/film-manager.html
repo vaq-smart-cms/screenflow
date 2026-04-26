@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VAQ 4D Film Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="./admin.css?v=1">
+</head>
+
+<body>
+
+<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+  <h2>Sign In</h2>
+  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
+
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+    <input id="email-input" type="email" autocomplete="username">
+  </label>
+
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+    <input id="password-input" type="password" autocomplete="current-password">
+  </label>
+
+  <button id="sign-in-button" class="primary" type="button" style="width:100%; margin-bottom:10px;">Sign In</button>
+  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
+</div>
+
+<div id="app-shell" style="display:none;">
+
+  <!-- A — Header -->
+  <div class="panel header">
+    <div>
+      <h1>4D Film Manager</h1>
+      <p id="session-text">Signed in as: Admin User</p>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <a href="./admin.html">
+        <button class="secondary" type="button">← Back to Calendar</button>
+      </a>
+      <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- B — Film List -->
+  <div class="panel">
+    <h2>Films</h2>
+    <p style="color:var(--text-soft);">Select a film to review or edit its guest-facing details.</p>
+
+    <div id="film-list">
+      <p style="color:var(--text-soft);">Loading films...</p>
+    </div>
+
+    <button id="create-film-button" class="primary" type="button">+ Create New Film</button>
+  </div>
+
+  <!-- C — Film Details -->
+  <div class="panel">
+    <h2>Film Details</h2>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Film Title</span>
+      <input id="film-title-input" type="text" placeholder="Example: BBC Earth: North America 4D Experience">
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Synopsis</span>
+      <textarea id="film-synopsis-input" rows="5" placeholder="Guest-facing synopsis text"></textarea>
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
+      <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
+      <textarea id="film-accessibility-input" rows="3" placeholder="Accessibility notes or accommodations"></textarea>
+    </label>
+
+    <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <input id="film-active-checkbox" type="checkbox" checked>
+      <span>Active / available in scheduler</span>
+    </label>
+
+    <button id="save-film-button" class="primary" type="button">Save Film Details</button>
+  </div>
+
+  <!-- D — Poster Assets -->
+  <div class="panel">
+    <h2>Poster Assets</h2>
+    <p style="color:var(--text-soft);">Use relative paths to files hosted in this module folder.</p>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Poster URL / Primary Image</span>
+      <input id="film-poster-url-input" type="text" placeholder="./film-posters/web/na4d_poster_md.jpg">
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Poster Srcset</span>
+      <input id="film-poster-srcset-input" type="text" placeholder="./film-posters/web/na4d_poster_sm.jpg 300w, ./film-posters/web/na4d_poster_md.jpg 600w, ./film-posters/web/na4d_poster_lg.jpg 900w">
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Poster Sizes</span>
+      <input id="film-poster-sizes-input" type="text" placeholder="(max-width: 700px) 80px, 120px">
+    </label>
+
+    <div class="film-preview">
+      <img
+        id="poster-preview-image"
+        class="poster-image"
+        alt="Poster preview"
+        src=""
+      >
+      <div id="poster-preview-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+      <div>
+        <h3 id="poster-preview-title">No film selected</h3>
+        <p id="poster-preview-text" style="color:var(--text-soft);">Poster preview will appear here.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- E — Actions -->
+  <div class="panel">
+    <h2>Actions</h2>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="duplicate-film-button" class="secondary" type="button">Duplicate Film</button>
+      <button id="delete-film-button" class="accent" type="button">Delete Film</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const CACHE_TTL_MS = 10 * 60 * 1000;
+
+  let FILMS = [];
+
+  const appState = {
+    selectedFilmId: null
+  };
+
+  const ui = {
+    authPanel: document.getElementById('auth-panel'),
+    appShell: document.getElementById('app-shell'),
+    emailInput: document.getElementById('email-input'),
+    passwordInput: document.getElementById('password-input'),
+    signInButton: document.getElementById('sign-in-button'),
+    signOutButton: document.getElementById('sign-out-button'),
+    authMessage: document.getElementById('auth-message'),
+    sessionText: document.getElementById('session-text'),
+
+    filmList: document.getElementById('film-list'),
+    createFilmButton: document.getElementById('create-film-button'),
+
+    filmTitleInput: document.getElementById('film-title-input'),
+    filmSynopsisInput: document.getElementById('film-synopsis-input'),
+    filmAdvisoryInput: document.getElementById('film-advisory-input'),
+    filmAccessibilityInput: document.getElementById('film-accessibility-input'),
+    filmActiveCheckbox: document.getElementById('film-active-checkbox'),
+    saveFilmButton: document.getElementById('save-film-button'),
+
+    filmPosterUrlInput: document.getElementById('film-poster-url-input'),
+    filmPosterSrcsetInput: document.getElementById('film-poster-srcset-input'),
+    filmPosterSizesInput: document.getElementById('film-poster-sizes-input'),
+    posterPreviewImage: document.getElementById('poster-preview-image'),
+    posterPreviewFallback: document.getElementById('poster-preview-fallback'),
+    posterPreviewTitle: document.getElementById('poster-preview-title'),
+    posterPreviewText: document.getElementById('poster-preview-text'),
+
+    duplicateFilmButton: document.getElementById('duplicate-film-button'),
+    deleteFilmButton: document.getElementById('delete-film-button')
+  };
+
+  function readCache(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      const isFresh = Date.now() - parsed.savedAt < CACHE_TTL_MS;
+
+      return isFresh ? parsed.value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeCache(key, value) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          savedAt: Date.now(),
+          value
+        })
+      );
+    } catch {
+      // Ignore cache write failures.
+    }
+  }
+
+  function clearFilmCaches() {
+    localStorage.removeItem('vaq_4d_active_films');
+    localStorage.removeItem('vaq_4d_films_all');
+  }
+
+  function setAuthenticatedUi(session) {
+    const isAuthed = !!session;
+
+    ui.authPanel.style.display = isAuthed ? 'none' : 'block';
+    ui.appShell.style.display = isAuthed ? 'block' : 'none';
+
+    if (session) {
+      ui.sessionText.textContent = `Signed in as: ${session.user.email}`;
+    }
+  }
+
+  async function handleSignIn() {
+    const email = ui.emailInput.value.trim();
+    const password = ui.passwordInput.value;
+
+    if (!email || !password) {
+      ui.authMessage.textContent = 'Enter your email and password.';
+      return;
+    }
+
+    ui.signInButton.disabled = true;
+    ui.authMessage.textContent = 'Signing in...';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    ui.signInButton.disabled = false;
+
+    if (error) {
+      ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
+      return;
+    }
+
+    ui.authMessage.textContent = 'Sign-in successful.';
+    await initializeFilmManager();
+  }
+
+  async function handleSignOut() {
+    await supabaseClient.auth.signOut();
+
+    FILMS = [];
+    appState.selectedFilmId = null;
+
+    ui.passwordInput.value = '';
+    ui.authMessage.textContent = 'Signed out.';
+    setAuthenticatedUi(null);
+  }
+
+  async function fetchFilms() {
+    const cachedFilms = readCache('vaq_4d_films_all');
+    if (cachedFilms) {
+      FILMS = cachedFilms;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('films')
+      .select('id, title, poster_url, synopsis, advisory_text, accessibility_info, is_active, sort_order, created_at, updated_at')
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('title', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch films:', error);
+      FILMS = [];
+      ui.filmList.innerHTML = `<p style="color:#a14f17;">Could not load films: ${error.message}</p>`;
+      return;
+    }
+
+    FILMS = data || [];
+    writeCache('vaq_4d_films_all', FILMS);
+  }
+
+  function renderFilmList() {
+    ui.filmList.innerHTML = '';
+
+    if (!FILMS.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'No films found.';
+      ui.filmList.appendChild(empty);
+      return;
+    }
+
+    FILMS.forEach((film) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = film.id === appState.selectedFilmId ? 'primary' : 'secondary';
+      button.style.margin = '0 8px 8px 0';
+      button.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
+
+      button.addEventListener('click', () => {
+        appState.selectedFilmId = film.id;
+        renderFilmList();
+        renderFilmDetails();
+        renderPosterPreview();
+      });
+
+      ui.filmList.appendChild(button);
+    });
+  }
+
+  function renderFilmDetails() {
+    const film = FILMS.find((item) => item.id === appState.selectedFilmId);
+
+    if (!film) {
+      ui.filmTitleInput.value = '';
+      ui.filmSynopsisInput.value = '';
+      ui.filmAdvisoryInput.value = '';
+      ui.filmAccessibilityInput.value = '';
+      ui.filmActiveCheckbox.checked = true;
+      ui.filmPosterUrlInput.value = '';
+      ui.filmPosterSrcsetInput.value = '';
+      ui.filmPosterSizesInput.value = '(max-width: 700px) 80px, 120px';
+      return;
+    }
+
+    ui.filmTitleInput.value = film.title || '';
+    ui.filmSynopsisInput.value = film.synopsis || '';
+    ui.filmAdvisoryInput.value = film.advisory_text || '';
+    ui.filmAccessibilityInput.value = film.accessibility_info || '';
+    ui.filmActiveCheckbox.checked = !!film.is_active;
+    ui.filmPosterUrlInput.value = film.poster_url || '';
+    ui.filmPosterSrcsetInput.value = film.poster_srcset || film.poster_url || '';
+    ui.filmPosterSizesInput.value = film.poster_sizes || '(max-width: 700px) 80px, 120px';
+  }
+
+  function renderPosterPreview() {
+    const film = FILMS.find((item) => item.id === appState.selectedFilmId);
+
+    const title = ui.filmTitleInput.value.trim() || film?.title || 'No film selected';
+    const posterUrl = ui.filmPosterUrlInput.value.trim();
+
+    ui.posterPreviewTitle.textContent = title;
+    ui.posterPreviewText.textContent = posterUrl || 'Poster preview will appear here.';
+
+    if (!posterUrl) {
+      ui.posterPreviewImage.style.display = 'none';
+      ui.posterPreviewFallback.style.display = 'grid';
+      return;
+    }
+
+    ui.posterPreviewFallback.style.display = 'none';
+    ui.posterPreviewImage.style.display = 'block';
+    ui.posterPreviewImage.src = posterUrl;
+    ui.posterPreviewImage.alt = `${title} poster`;
+  }
+
+  async function saveFilmDetails() {
+    const filmId = appState.selectedFilmId;
+
+    if (!filmId) {
+      alert('Select a film first.');
+      return;
+    }
+
+    const payload = {
+      title: ui.filmTitleInput.value.trim(),
+      synopsis: ui.filmSynopsisInput.value.trim(),
+      advisory_text: ui.filmAdvisoryInput.value.trim(),
+      accessibility_info: ui.filmAccessibilityInput.value.trim(),
+      poster_url: ui.filmPosterUrlInput.value.trim(),
+      poster_srcset: ui.filmPosterSrcsetInput.value.trim(),
+      poster_sizes: ui.filmPosterSizesInput.value.trim(),
+      is_active: ui.filmActiveCheckbox.checked,
+      updated_at: new Date().toISOString()
+    };
+
+    if (!payload.title) {
+      alert('Film title is required.');
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('films')
+      .update(payload)
+      .eq('id', filmId);
+
+    if (error) {
+      console.error('Failed to save film:', error);
+      alert(`Could not save film: ${error.message}`);
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(filmId);
+    alert('Film details saved.');
+  }
+
+  async function createFilm() {
+    const title = window.prompt('Title for the new film:', 'New 4D Film');
+    if (!title) return;
+
+    const { data, error } = await supabaseClient
+      .from('films')
+      .insert({
+        title: title.trim(),
+        synopsis: '',
+        advisory_text: '',
+        accessibility_info: '',
+        poster_url: '',
+        poster_srcset: '',
+        poster_sizes: '(max-width: 700px) 80px, 120px',
+        is_active: true
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to create film:', error);
+      alert(`Could not create film: ${error.message}`);
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(data.id);
+  }
+
+  async function duplicateFilm() {
+    const source = FILMS.find((item) => item.id === appState.selectedFilmId);
+    if (!source) {
+      alert('Select a film first.');
+      return;
+    }
+
+    const title = window.prompt('Title for duplicated film:', `${source.title} Copy`);
+    if (!title) return;
+
+    const { data, error } = await supabaseClient
+      .from('films')
+      .insert({
+        title: title.trim(),
+        synopsis: source.synopsis || '',
+        advisory_text: source.advisory_text || '',
+        accessibility_info: source.accessibility_info || '',
+        poster_url: source.poster_url || '',
+        poster_srcset: source.poster_srcset || '',
+        poster_sizes: source.poster_sizes || '(max-width: 700px) 80px, 120px',
+        is_active: true
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to duplicate film:', error);
+      alert(`Could not duplicate film: ${error.message}`);
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(data.id);
+  }
+
+  async function deleteFilm() {
+    const film = FILMS.find((item) => item.id === appState.selectedFilmId);
+    if (!film) {
+      alert('Select a film first.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete ${film.title}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+      .from('films')
+      .delete()
+      .eq('id', film.id);
+
+    if (error) {
+      console.error('Failed to delete film:', error);
+      alert(`Could not delete film: ${error.message}`);
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(null);
+  }
+
+  async function refreshFilmManager(preferredFilmId = appState.selectedFilmId) {
+    await fetchFilms();
+
+    appState.selectedFilmId =
+      preferredFilmId ||
+      FILMS[0]?.id ||
+      null;
+
+    renderFilmList();
+    renderFilmDetails();
+    renderPosterPreview();
+  }
+
+  async function initializeFilmManager() {
+    let session = null;
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        setAuthenticatedUi(null);
+        return;
+      }
+
+      session = data?.session || null;
+
+      if (session) break;
+
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+
+    if (!session) {
+      setAuthenticatedUi(null);
+      return;
+    }
+
+    setAuthenticatedUi(session);
+    await refreshFilmManager();
+  }
+
+  async function initializePage() {
+    ui.signInButton.addEventListener('click', handleSignIn);
+    ui.signOutButton.addEventListener('click', handleSignOut);
+    ui.createFilmButton.addEventListener('click', createFilm);
+    ui.saveFilmButton.addEventListener('click', saveFilmDetails);
+    ui.duplicateFilmButton.addEventListener('click', duplicateFilm);
+    ui.deleteFilmButton.addEventListener('click', deleteFilm);
+
+    [
+      ui.filmTitleInput,
+      ui.filmPosterUrlInput,
+      ui.filmPosterSrcsetInput,
+      ui.filmPosterSizesInput
+    ].forEach((input) => {
+      input.addEventListener('input', renderPosterPreview);
+    });
+
+    ui.passwordInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    ui.emailInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      setAuthenticatedUi(session);
+    });
+
+    await initializeFilmManager();
+  }
+
+  document.addEventListener('DOMContentLoaded', initializePage);
+</script>
+
+</body>
+</html>
