@@ -38,104 +38,105 @@
   <!-- 4D SHOWTIMES ADMIN APP -->
 
   <div id="app-shell" style="display:none;">
+    
+    <div class="top-dashboard-grid">
 
-    <!-- A — Header / Status Bar -->
-    <div class="panel header">
-      <div>
-        <h1>4D Showtimes Admin</h1>
-        <p id="session-text">Signed in as: Admin User</p>
-      </div>
-      <div id="status-pill" class="status-pill">No date loaded</div>
-      <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
-    </div>
-
-    <!-- B — Calendar / Date Picker -->
-    <div class="panel">
-      <h2>Calendar</h2>
-      <p style="color:var(--text-soft);">Tap a date to load it as your working day.</p>
-
-      <div class="calendar-toolbar">
-        <button id="prev-month-button" class="secondary" type="button">‹ Previous</button>
-        <strong id="calendar-month-label">Month</strong>
-        <button id="next-month-button" class="secondary" type="button">Next ›</button>
-      </div>
-
-      <div class="calendar-weekdays">
-        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-      </div>
-
-      <div class="calendar-grid" id="calendar-grid"></div>
-    </div>
-
-    <!-- C — Day Summary Panel -->
-    <div id="day-summary-panel" class="panel">
-      <h2>Day Summary</h2>
-      <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
-      <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
-      <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
-      <p><strong>Film:</strong> <span id="summary-film">—</span></p>
-      <p><strong>Load:</strong> <span id="summary-load">—</span></p>
-      <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
-      <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
-      <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
-      <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
-    </div>
-
-    <!-- C2 — Batch Editor Panel -->
-    <div id="batch-editor-panel" class="panel batch-panel" hidden>
-      <!-- <div id="batch-mode-hint" class="batch-mode-hint" hidden>Batch Mode Activated</div> -->
-      <h2>Batch Editor</h2>
-      <p id="batch-summary-text">No dates selected.</p>
-
-      <label style="display:block; margin-bottom:12px;">
-        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Apply Load to Selected Dates</span>
-        <select id="batch-load-select">
-          <option value="">Choose a load...</option>
-        </select>
-      </label>
-
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
-        <button id="batch-cancel-button" class="secondary" type="button">Cancel Batch Mode</button>
-      </div>
-    </div>
-
-    <!-- D — Film Assignment Panel -->
-    <div class="panel">
-      <h2>Film Assignment</h2>
-      <label style="display:block; margin-bottom:12px;">
-        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
-        <select id="film-select"></select>
-      </label>
-
-      <div class="film-preview">
-        <img
-          id="film-poster-image"
-          src="./film-posters/web/na4d_poster_md.jpg"
-          alt="Film poster preview"
-          class="poster-image"
-          loading="eager"
-          decoding="async"
-        >
-        <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+      <!-- A — Header / Status Bar -->
+      <div class="panel header">
         <div>
-          <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
-          <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
-          <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-          <button class="secondary">Manage Films</button>
+          <h1>4D Showtimes Admin</h1>
+          <p id="session-text">Signed in as: Admin User</p>
+        </div>
+        <div id="status-pill" class="status-pill">No date loaded</div>
+        <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+      </div>
+
+      <!-- B — Calendar / Date Picker -->
+      <div class="panel">
+        <h2>Calendar</h2>
+        <p style="color:var(--text-soft);">Tap a date to load it as your working day.</p>
+        <div class="calendar-toolbar">
+          <button id="prev-month-button" class="secondary" type="button">‹ Previous</button>
+          <strong id="calendar-month-label">Month</strong>
+          <button id="next-month-button" class="secondary" type="button">Next ›</button>
+        </div>
+        <div class="calendar-weekdays">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
+
+      <!-- C2 — Batch Editor Panel -->
+      <div id="batch-editor-panel" class="panel batch-panel" hidden>
+        <h2>Batch Editor</h2>
+        <p id="batch-summary-text">No dates selected.</p>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Apply Load to Selected Dates</span>
+          <select id="batch-load-select">
+            <option value="">Choose a load...</option>
+          </select>
+        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
+          <button id="batch-cancel-button" class="secondary" type="button">Cancel Batch Mode</button>
         </div>
       </div>
+
     </div>
 
-    <!-- E — Load Assignment Panel -->
-    <div class="panel">
-      <h2>Load Assignment</h2>
-      <label style="display:block; margin-bottom:12px;">
-        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
-        <select id="load-select"></select>
-      </label>
-      <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
-      <button id="apply-load-button" class="primary">Apply Load to Draft</button>
+    <div class="admin-three-column-grid">
+
+      <!-- C — Day Summary Panel -->
+      <div id="day-summary-panel" class="panel">
+        <h2>Day Summary</h2>
+        <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
+        <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
+        <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+        <p><strong>Film:</strong> <span id="summary-film">—</span></p>
+        <p><strong>Load:</strong> <span id="summary-load">—</span></p>
+        <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
+        <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
+        <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
+        <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
+      </div>
+
+      <!-- D — Film Assignment Panel -->
+      <div class="panel">
+        <h2>Film Assignment</h2>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
+          <select id="film-select"></select>
+        </label>
+        <div class="film-preview">
+          <img
+            id="film-poster-image"
+            src="./film-posters/web/na4d_poster_md.jpg"
+            alt="Film poster preview"
+            class="poster-image"
+            loading="eager"
+            decoding="async"
+          >
+          <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+          <div>
+            <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
+            <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
+            <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+            <button class="secondary">Manage Films</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- E — Load Assignment Panel -->
+      <div class="panel">
+        <h2>Load Assignment</h2>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
+          <select id="load-select"></select>
+        </label>
+        <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
+        <button id="apply-load-button" class="primary">Apply Load to Draft</button>
+      </div>
+
     </div>
 
     <!-- F — Draft Showtimes Editor -->

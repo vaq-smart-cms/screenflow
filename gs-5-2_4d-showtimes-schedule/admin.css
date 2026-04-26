@@ -466,3 +466,38 @@ input[type="color"] {
   justify-content: center;
   width: 40px;
 }
+
+@media (min-width: 1275px) {
+  body {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .top-dashboard-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
+  }
+
+  .top-dashboard-grid .panel {
+    margin-bottom: 16px;
+  }
+
+  .top-dashboard-grid .header {
+    align-content: space-between;
+    align-items: flex-start;
+    display: grid;
+  }
+
+  .admin-three-column-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-three-column-grid .panel {
+    margin-bottom: 16px;
+  }
+}
