@@ -92,6 +92,7 @@
     </label>
 
     <button id="save-film-button" class="primary" type="button">Save Film Details</button>
+    <p id="film-save-status" style="margin-top:10px; color:var(--text-soft);"></p>
   </div>
 
   <!-- D — Poster Assets -->
@@ -168,6 +169,7 @@
 
     filmList: document.getElementById('film-list'),
     createFilmButton: document.getElementById('create-film-button'),
+    filmSaveStatus: document.getElementById('film-save-status'),
 
     filmTitleInput: document.getElementById('film-title-input'),
     filmSynopsisInput: document.getElementById('film-synopsis-input'),
@@ -292,6 +294,13 @@
     writeCache('vaq_4d_films_all', FILMS);
   }
 
+  function setFilmSaveStatus(message, isError = false) {
+    if (!ui.filmSaveStatus) return;
+
+    ui.filmSaveStatus.textContent = message;
+    ui.filmSaveStatus.style.color = isError ? '#a14f17' : 'var(--text-soft)';
+  }
+
   function renderFilmList() {
     ui.filmList.innerHTML = '';
 
@@ -306,8 +315,16 @@
     FILMS.forEach((film) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = film.id === appState.selectedFilmId ? 'primary' : 'secondary';
-      button.style.margin = '0 8px 8px 0';
+      button.className = 'film-button secondary';
+
+      if (film.id === appState.selectedFilmId) {
+        button.classList.add('is-selected');
+      }
+
+      if (!film.is_active) {
+        button.classList.add('is-inactive');
+      }
+
       button.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
 
       button.addEventListener('click', () => {
@@ -368,6 +385,7 @@
   }
 
   async function saveFilmDetails() {
+    setFilmSaveStatus('Saving...');
     const filmId = appState.selectedFilmId;
 
     if (!filmId) {
@@ -398,13 +416,13 @@
 
     if (error) {
       console.error('Failed to save film:', error);
-      alert(`Could not save film: ${error.message}`);
+      setFilmSaveStatus(`Could not save film: ${error.message}`, true);
       return;
     }
 
     clearFilmCaches();
     await refreshFilmManager(filmId);
-    alert('Film details saved.');
+    setFilmSaveStatus('Film details saved.');
   }
 
   async function createFilm() {
