@@ -39,6 +39,13 @@
 
   <div id="app-shell" style="display:none;">
     
+    <div class="desktop-admin-bar">
+      <button id="desktop-sign-out-button" class="desktop-sign-out-button" type="button">
+        <span aria-hidden="true">✕</span>
+        <strong>Sign Out</strong>
+      </button>
+    </div>
+
     <div class="top-dashboard-grid">
 
       <!-- A — Header / Status Bar -->
@@ -139,51 +146,59 @@
 
     </div>
 
-    <!-- F — Draft Showtimes Editor -->
-    <div class="panel">
-      <h2>Draft Showtimes</h2>
-      <div id="draft-showtimes-container"></div>
-      <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
-    </div>
+    <div class="admin-lower-grid">
 
-    <!-- G — Preview / Publish Section -->
-    <div class="panel">
-      <h2>Preview & Publish</h2>
-      <p id="publish-summary">Select a date to review publish readiness.</p>
-      <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
-      <button id="publish-button" class="accent" disabled>Publish</button>
-    </div>
+      <div class="admin-lower-left">
+        <!-- F — Draft Showtimes Editor -->
+        <div class="panel">
+          <h2>Draft Showtimes</h2>
+          <div id="draft-showtimes-container"></div>
+          <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
+        </div>
+      </div>
 
-    <!-- H — Secondary Tools -->
-    <div class="tool-button-row">
-      <a class="tool-link" href="./load-manager.html">
-        <button class="tool-button" type="button">
-          <span class="tool-icon">🎛️</span>
-          <span>
-            <strong>Manage Loads</strong>
-            <small>Edit reusable showtime templates</small>
-          </span>
-        </button>
-      </a>
+      <div class="admin-lower-right">
+        <!-- G — Preview / Publish Section -->
+        <div class="panel">
+          <h2>Preview & Publish</h2>
+          <p id="publish-summary">Select a date to review publish readiness.</p>
+          <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
+          <button id="publish-button" class="accent" disabled>Publish</button>
+        </div>
 
-      <a class="tool-link" href="./film-manager.html">
-        <button class="tool-button" type="button">
-          <span class="tool-icon">🎬</span>
-          <span>
-            <strong>Manage Films</strong>
-            <small>Edit posters, synopsis, advisories</small>
-          </span>
-        </button>
-      </a>
+        <!-- H — Secondary Tools -->
+        <div class="tool-button-row">
+          <a class="tool-link" href="./load-manager.html">
+            <button class="tool-button" type="button">
+              <span class="tool-icon">🎛️</span>
+              <span>
+                <strong>Manage Loads</strong>
+                <small>Edit reusable showtime templates</small>
+              </span>
+            </button>
+          </a>
 
-      <button class="tool-button" type="button">
-        <span class="tool-icon">❔</span>
-        <span>
-          <strong>Help</strong>
-          <small>Quick guide and support notes</small>
-        </span>
-      </button>
-    </div>
+          <a class="tool-link" href="./film-manager.html">
+            <button class="tool-button" type="button">
+              <span class="tool-icon">🎬</span>
+              <span>
+                <strong>Manage Films</strong>
+                <small>Edit posters, synopsis, advisories</small>
+              </span>
+            </button>
+          </a>
+
+          <button class="tool-button" type="button">
+            <span class="tool-icon">❔</span>
+            <span>
+              <strong>Help</strong>
+              <small>Quick guide and support notes</small>
+            </span>
+          </button>
+        </div>
+      </div>
+
+    </div>    
 
   </div>
 
@@ -242,6 +257,7 @@
     signInButton: document.getElementById('sign-in-button'),
     authMessage: document.getElementById('auth-message'),
     signOutButton: document.getElementById('sign-out-button'),
+    desktopSignOutButton: document.getElementById('desktop-sign-out-button'),
     filmSelect: document.getElementById('film-select'),
     filmTitle: document.getElementById('film-title'),
     filmSynopsis: document.getElementById('film-synopsis'),
@@ -1784,6 +1800,11 @@
     if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
       ui.signOutButton.addEventListener('click', handleSignOut);
       ui.signOutButton.dataset.bound = 'true';
+    }
+
+    if (ui.desktopSignOutButton && !ui.desktopSignOutButton.dataset.bound) {
+      ui.desktopSignOutButton.addEventListener('click', handleSignOut);
+      ui.desktopSignOutButton.dataset.bound = 'true';
     }
 
     if (ui.prevMonthButton && !ui.prevMonthButton.dataset.bound) {
