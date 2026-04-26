@@ -8,168 +8,174 @@
 </head>
 <body>
 
-<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
-  <h2>Sign In</h2>
-  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
-    <input id="email-input" type="email" autocomplete="username">
-  </label>
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
-    <input id="password-input" type="password" autocomplete="current-password">
-  </label>
-  <button id="sign-in-button" class="primary" style="width:100%; margin-bottom:10px;">Sign In</button>
-  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
-</div>
-
-<div id="app-shell" style="display:none;">
-
-  <!-- A — Header / Status Bar -->
-  <div class="panel header">
-    <div>
-      <h1>4D Showtimes Admin</h1>
-      <p id="session-text">Signed in as: Admin User</p>
-    </div>
-    <div id="status-pill" class="status-pill">No date loaded</div>
-    <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+  <div id="boot-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+    <h2>Loading 4D Showtimes Admin...</h2>
+    <p style="color:var(--text-soft);">Preparing your session and schedule data.</p>
   </div>
 
-  <!-- B — Calendar / Date Picker -->
-  <div class="panel">
-    <h2>Calendar</h2>
-    <p style="color:var(--text-soft);">Tap a date to load it as your working day.</p>
-
-    <div class="calendar-toolbar">
-      <button id="prev-month-button" class="secondary" type="button">‹ Previous</button>
-      <strong id="calendar-month-label">Month</strong>
-      <button id="next-month-button" class="secondary" type="button">Next ›</button>
-    </div>
-
-    <div class="calendar-weekdays">
-      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-    </div>
-
-    <div class="calendar-grid" id="calendar-grid"></div>
-  </div>
-  <!-- C — Day Summary Panel -->
-  <div id="day-summary-panel" class="panel">
-    <h2>Day Summary</h2>
-    <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
-    <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
-    <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
-    <p><strong>Film:</strong> <span id="summary-film">—</span></p>
-    <p><strong>Load:</strong> <span id="summary-load">—</span></p>
-    <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
-    <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
-    <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
-    <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
-  </div>
-
-  <!-- C2 — Batch Editor Panel -->
-  <div id="batch-editor-panel" class="panel batch-panel" hidden>
-    <!-- <div id="batch-mode-hint" class="batch-mode-hint" hidden>Batch Mode Activated</div> -->
-    <h2>Batch Editor</h2>
-    <p id="batch-summary-text">No dates selected.</p>
-
+  <div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+    <h2>Sign In</h2>
+    <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
     <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Apply Load to Selected Dates</span>
-      <select id="batch-load-select">
-        <option value="">Choose a load...</option>
-      </select>
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+      <input id="email-input" type="email" autocomplete="username">
     </label>
-
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
-      <button id="batch-cancel-button" class="secondary" type="button">Cancel Batch Mode</button>
-    </div>
+    <label style="display:block; margin-bottom:12px;">
+      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+      <input id="password-input" type="password" autocomplete="current-password">
+    </label>
+    <button id="sign-in-button" class="primary" style="width:100%; margin-bottom:10px;">Sign In</button>
+    <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
   </div>
 
-  <!-- D — Film Assignment Panel -->
-  <div class="panel">
-    <h2>Film Assignment</h2>
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
-      <select id="film-select"></select>
-    </label>
+  <div id="app-shell" style="display:none;">
 
-    <div class="film-preview">
-      <img
-        id="film-poster-image"
-        src="./film-posters/web/na4d_poster_md.jpg"
-        alt="Film poster preview"
-        class="poster-image"
-        loading="eager"
-        decoding="async"
-      >
-      <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+    <!-- A — Header / Status Bar -->
+    <div class="panel header">
       <div>
-        <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
-        <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
-        <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-        <button class="secondary">Manage Films</button>
+        <h1>4D Showtimes Admin</h1>
+        <p id="session-text">Signed in as: Admin User</p>
+      </div>
+      <div id="status-pill" class="status-pill">No date loaded</div>
+      <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+    </div>
+
+    <!-- B — Calendar / Date Picker -->
+    <div class="panel">
+      <h2>Calendar</h2>
+      <p style="color:var(--text-soft);">Tap a date to load it as your working day.</p>
+
+      <div class="calendar-toolbar">
+        <button id="prev-month-button" class="secondary" type="button">‹ Previous</button>
+        <strong id="calendar-month-label">Month</strong>
+        <button id="next-month-button" class="secondary" type="button">Next ›</button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <!-- C — Day Summary Panel -->
+    <div id="day-summary-panel" class="panel">
+      <h2>Day Summary</h2>
+      <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
+      <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
+      <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+      <p><strong>Film:</strong> <span id="summary-film">—</span></p>
+      <p><strong>Load:</strong> <span id="summary-load">—</span></p>
+      <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
+      <p><strong>Manual Edits:</strong> <span id="summary-manual-edits">No</span></p>
+      <p><strong>Last Updated:</strong> <span id="summary-updated">—</span></p>
+      <p><strong>Last Published:</strong> <span id="summary-published">—</span></p>
+    </div>
+
+    <!-- C2 — Batch Editor Panel -->
+    <div id="batch-editor-panel" class="panel batch-panel" hidden>
+      <!-- <div id="batch-mode-hint" class="batch-mode-hint" hidden>Batch Mode Activated</div> -->
+      <h2>Batch Editor</h2>
+      <p id="batch-summary-text">No dates selected.</p>
+
+      <label style="display:block; margin-bottom:12px;">
+        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Apply Load to Selected Dates</span>
+        <select id="batch-load-select">
+          <option value="">Choose a load...</option>
+        </select>
+      </label>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
+        <button id="batch-cancel-button" class="secondary" type="button">Cancel Batch Mode</button>
       </div>
     </div>
-  </div>
 
-  <!-- E — Load Assignment Panel -->
-  <div class="panel">
-    <h2>Load Assignment</h2>
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
-      <select id="load-select"></select>
-    </label>
-    <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
-    <button id="apply-load-button" class="primary">Apply Load to Draft</button>
-  </div>
+    <!-- D — Film Assignment Panel -->
+    <div class="panel">
+      <h2>Film Assignment</h2>
+      <label style="display:block; margin-bottom:12px;">
+        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Featured Film</span>
+        <select id="film-select"></select>
+      </label>
 
-  <!-- F — Draft Showtimes Editor -->
-  <div class="panel">
-    <h2>Draft Showtimes</h2>
-    <div id="draft-showtimes-container"></div>
-    <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
-  </div>
+      <div class="film-preview">
+        <img
+          id="film-poster-image"
+          src="./film-posters/web/na4d_poster_md.jpg"
+          alt="Film poster preview"
+          class="poster-image"
+          loading="eager"
+          decoding="async"
+        >
+        <div id="film-poster-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+        <div>
+          <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
+          <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
+          <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+          <button class="secondary">Manage Films</button>
+        </div>
+      </div>
+    </div>
 
-  <!-- G — Preview / Publish Section -->
-  <div class="panel">
-    <h2>Preview & Publish</h2>
-    <p id="publish-summary">Select a date to review publish readiness.</p>
-    <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
-    <button id="publish-button" class="accent" disabled>Publish</button>
-  </div>
+    <!-- E — Load Assignment Panel -->
+    <div class="panel">
+      <h2>Load Assignment</h2>
+      <label style="display:block; margin-bottom:12px;">
+        <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
+        <select id="load-select"></select>
+      </label>
+      <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
+      <button id="apply-load-button" class="primary">Apply Load to Draft</button>
+    </div>
 
-  <!-- H — Secondary Tools -->
-  <div class="tool-button-row">
-    <a class="tool-link" href="./load-manager.html">
+    <!-- F — Draft Showtimes Editor -->
+    <div class="panel">
+      <h2>Draft Showtimes</h2>
+      <div id="draft-showtimes-container"></div>
+      <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
+    </div>
+
+    <!-- G — Preview / Publish Section -->
+    <div class="panel">
+      <h2>Preview & Publish</h2>
+      <p id="publish-summary">Select a date to review publish readiness.</p>
+      <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
+      <button id="publish-button" class="accent" disabled>Publish</button>
+    </div>
+
+    <!-- H — Secondary Tools -->
+    <div class="tool-button-row">
+      <a class="tool-link" href="./load-manager.html">
+        <button class="tool-button" type="button">
+          <span class="tool-icon">🎛️</span>
+          <span>
+            <strong>Manage Loads</strong>
+            <small>Edit reusable showtime templates</small>
+          </span>
+        </button>
+      </a>
+
+      <a class="tool-link" href="./film-manager.html">
+        <button class="tool-button" type="button">
+          <span class="tool-icon">🎬</span>
+          <span>
+            <strong>Manage Films</strong>
+            <small>Edit posters, synopsis, advisories</small>
+          </span>
+        </button>
+      </a>
+
       <button class="tool-button" type="button">
-        <span class="tool-icon">🎛️</span>
+        <span class="tool-icon">❔</span>
         <span>
-          <strong>Manage Loads</strong>
-          <small>Edit reusable showtime templates</small>
+          <strong>Help</strong>
+          <small>Quick guide and support notes</small>
         </span>
       </button>
-    </a>
+    </div>
 
-    <a class="tool-link" href="./film-manager.html">
-      <button class="tool-button" type="button">
-        <span class="tool-icon">🎬</span>
-        <span>
-          <strong>Manage Films</strong>
-          <small>Edit posters, synopsis, advisories</small>
-        </span>
-      </button>
-    </a>
-
-    <button class="tool-button" type="button">
-      <span class="tool-icon">❔</span>
-      <span>
-        <strong>Help</strong>
-        <small>Quick guide and support notes</small>
-      </span>
-    </button>
   </div>
-
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -218,6 +224,7 @@
   let LOAD_TEMPLATE_TIMES = [];
 
   const ui = {
+    bootPanel: document.getElementById('boot-panel'),
     authPanel: document.getElementById('auth-panel'),
     appShell: document.getElementById('app-shell'),
     emailInput: document.getElementById('email-input'),
@@ -1597,6 +1604,12 @@
     }
   }
 
+  function setBootUi(isBooting) {
+    if (!ui.bootPanel) return;
+
+    ui.bootPanel.style.display = isBooting ? 'block' : 'none';
+  }
+
   function setAuthenticatedUi(session) {
     const isAuthed = !!session;
     ui.authPanel.style.display = isAuthed ? 'none' : 'block';
@@ -1631,6 +1644,7 @@
     }
 
     ui.authMessage.textContent = 'Sign-in successful.';
+    await initializeAdminApp();
   }
 
   async function handleSignOut() {
@@ -1650,20 +1664,34 @@
     appState.liveShowtimes = [];
     ui.passwordInput.value = '';
     ui.authMessage.textContent = 'Signed out.';
+    setBootUi(false);
     setAuthenticatedUi(null);
   }
 
   async function initializeAdminApp() {
-    const { data, error } = await supabaseClient.auth.getSession();
-    const session = data?.session || null;
+    setBootUi(true);
 
-    if (error) {
-      console.error('Session check failed:', error);
-      setAuthenticatedUi(null);
-      return;
+    let session = null;
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        setBootUi(false);
+        setAuthenticatedUi(null);
+        return;
+      }
+
+      session = data?.session || null;
+
+      if (session) break;
+
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
 
     if (!session) {
+      setBootUi(false);
       setAuthenticatedUi(null);
       return;
     }
@@ -1678,62 +1706,8 @@
     populateLoadSelect();
     populateBatchLoadSelect();
 
-    if (ui.batchLoadSelect && !ui.batchLoadSelect.dataset.bound) {
-      ui.batchLoadSelect.addEventListener('change', applyBatchLoadToDrafts);
-      ui.batchLoadSelect.dataset.bound = 'true';
-    }
-
-    if (ui.batchPublishButton && !ui.batchPublishButton.dataset.bound) {
-      ui.batchPublishButton.addEventListener('click', publishBatchDates);
-      ui.batchPublishButton.dataset.bound = 'true';
-    }
-
-    if (ui.batchCancelButton && !ui.batchCancelButton.dataset.bound) {
-      ui.batchCancelButton.addEventListener('click', cancelBatchMode);
-      ui.batchCancelButton.dataset.bound = 'true';
-    }
-
     renderFilmPreview(FILMS[0]?.id || '');
     renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
-
-    if (!ui.filmSelect.dataset.bound) {
-      ui.filmSelect.addEventListener('change', (event) => {
-        renderFilmPreview(event.target.value);
-      });
-      ui.filmSelect.dataset.bound = 'true';
-    }
-
-    if (!ui.loadSelect.dataset.bound) {
-      ui.loadSelect.addEventListener('change', (event) => {
-        renderLoadPreview(event.target.value);
-      });
-      ui.loadSelect.dataset.bound = 'true';
-    }
-
-    if (!ui.applyLoadButton.dataset.bound) {
-      ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
-      ui.applyLoadButton.dataset.bound = 'true';
-    }
-
-    if (ui.publishButton && !ui.publishButton.dataset.bound) {
-      ui.publishButton.addEventListener('click', publishSelectedDate);
-      ui.publishButton.dataset.bound = 'true';
-    }
-
-    if (ui.addShowtimeButton && !ui.addShowtimeButton.dataset.bound) {
-      ui.addShowtimeButton.addEventListener('click', addDraftShowtime);
-      ui.addShowtimeButton.dataset.bound = 'true';
-    }
-
-    if (!ui.filmPosterImage.dataset.bound) {
-      ui.filmPosterImage.addEventListener('error', handleFilmPosterError);
-      ui.filmPosterImage.dataset.bound = 'true';
-    }
-
-    if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
-      ui.signOutButton.addEventListener('click', handleSignOut);
-      ui.signOutButton.dataset.bound = 'true';
-    }
 
     await loadSelectedDateState();
 
@@ -1741,6 +1715,8 @@
       ui.loadSelect.value = LOAD_TEMPLATES[0].id;
       renderLoadPreview(LOAD_TEMPLATES[0].id);
     }
+
+    setBootUi(false);
   }
 
   async function initializePage() {
