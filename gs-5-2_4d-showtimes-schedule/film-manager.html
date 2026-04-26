@@ -30,108 +30,106 @@
 
 <div id="app-shell" style="display:none;">
 
-  <!-- A — Header -->
-  <div class="panel header">
-    <div>
-      <h1>4D Film Manager</h1>
-      <p id="session-text">Signed in as: Admin User</p>
-    </div>
+  <div class="film-manager-top-grid">
 
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a href="./admin.html">
-        <button class="secondary" type="button">← Back to Calendar</button>
-      </a>
-      <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
-    </div>
-  </div>
-
-  <!-- B — Film List -->
-  <div class="panel">
-    <h2>Films</h2>
-    <p style="color:var(--text-soft);">Select a film to review or edit its guest-facing details.</p>
-
-    <div id="film-list">
-      <p style="color:var(--text-soft);">Loading films...</p>
-    </div>
-
-    <button id="create-film-button" class="primary" type="button">+ Create New Film</button>
-  </div>
-
-  <!-- C — Film Details -->
-  <div class="panel">
-    <h2>Film Details</h2>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Film Title</span>
-      <input id="film-title-input" type="text" placeholder="Example: BBC Earth: North America 4D Experience">
-    </label>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Synopsis</span>
-      <textarea id="film-synopsis-input" rows="5" placeholder="Guest-facing synopsis text"></textarea>
-    </label>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
-      <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
-    </label>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Testimonial</span>
-      <textarea id="film-testimonial-input" rows="3" placeholder="Optional short quote or guest-facing testimonial"></textarea>
-    </label>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
-      <textarea id="film-accessibility-input" rows="3" placeholder="Accessibility notes or accommodations"></textarea>
-    </label>
-
-    <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-      <input id="film-active-checkbox" type="checkbox" checked>
-      <span>Active / available in scheduler</span>
-    </label>
-
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button id="save-film-button" class="primary" type="button">Save Film Details</button>
-      <button id="cancel-film-edit-button" class="secondary" type="button">Cancel</button>
-    </div>
-    <p id="film-save-status" style="margin-top:10px; color:var(--text-soft);"></p>
-  </div>
-
-  <!-- D — Poster Assets -->
-  <div class="panel">
-    <h2>Poster Assets</h2>
-    <p style="color:var(--text-soft);">Use relative paths to files hosted in this module folder.</p>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Poster URL / Primary Image</span>
-      <input id="film-poster-url-input" type="text" placeholder="./film-posters/web/na4d_poster_md.jpg">
-    </label>
-
-    <div class="film-preview">
-      <img
-        id="poster-preview-image"
-        class="poster-image"
-        alt="Poster preview"
-        src=""
-      >
-      <div id="poster-preview-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+    <!-- A — Header -->
+    <div class="panel header">
       <div>
-        <h3 id="poster-preview-title">No film selected</h3>
-        <p id="poster-preview-text" style="color:var(--text-soft);">Poster preview will appear here.</p>
+        <h1>4D Film Manager</h1>
+        <p id="session-text">Signed in as: Admin User</p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="./admin.html">
+          <button class="secondary" type="button">← Back to Calendar</button>
+        </a>
+        <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
       </div>
     </div>
-  </div>
 
-  <!-- E — Actions -->
-  <div class="panel">
-    <h2>Actions</h2>
-
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button id="duplicate-film-button" class="secondary" type="button">Duplicate Film</button>
-      <button id="delete-film-button" class="accent" type="button">Delete Film</button>
+    <!-- B — Film List -->
+    <div class="panel">
+      <h2>Films</h2>
+      <p style="color:var(--text-soft);">Select a film to review or edit its guest-facing details.</p>
+      <div id="film-list">
+        <p style="color:var(--text-soft);">Loading films...</p>
+      </div>
+      <button id="create-film-button" class="primary" type="button">+ Create New Film</button>
     </div>
   </div>
+
+  <div class="film-manager-lower-grid">
+
+    <div class="film-manager-lower-left">
+      <!-- C — Film Details -->
+      <div class="panel">
+        <h2>Film Details</h2>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Film Title</span>
+          <input id="film-title-input" type="text" placeholder="Example: BBC Earth: North America 4D Experience">
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Synopsis</span>
+          <textarea id="film-synopsis-input" rows="5" placeholder="Guest-facing synopsis text"></textarea>
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
+          <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Testimonial</span>
+          <textarea id="film-testimonial-input" rows="3" placeholder="Optional short quote or guest-facing testimonial"></textarea>
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
+          <textarea id="film-accessibility-input" rows="3" placeholder="Accessibility notes or accommodations"></textarea>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <input id="film-active-checkbox" type="checkbox" checked>
+          <span>Active / available in scheduler</span>
+        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="save-film-button" class="primary" type="button">Save Film Details</button>
+          <button id="cancel-film-edit-button" class="secondary" type="button">Cancel</button>
+        </div>
+        <p id="film-save-status" style="margin-top:10px; color:var(--text-soft);"></p>
+      </div>
+    </div>
+
+    <div class="film-manager-lower-right">
+      <!-- D — Poster Assets -->
+      <div class="panel">
+        <h2>Poster Assets</h2>
+        <p style="color:var(--text-soft);">Use relative paths to files hosted in this module folder.</p>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Poster URL / Primary Image</span>
+          <input id="film-poster-url-input" type="text" placeholder="./film-posters/web/na4d_poster_md.jpg">
+        </label>
+        <div class="film-preview">
+          <img
+            id="poster-preview-image"
+            class="poster-image"
+            alt="Poster preview"
+            src=""
+          >
+          <div id="poster-preview-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
+          <div>
+            <h3 id="poster-preview-title">No film selected</h3>
+            <p id="poster-preview-text" style="color:var(--text-soft);">Poster preview will appear here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- E — Actions -->
+      <div class="panel">
+        <h2>Actions</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="duplicate-film-button" class="secondary" type="button">Duplicate Film</button>
+          <button id="delete-film-button" class="accent" type="button">Delete Film</button>
+        </div>
+      </div>
+    </div>
+
+  </div>  
 
 </div>
 
