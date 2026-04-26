@@ -128,7 +128,15 @@
             <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
             <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
             <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-            <button class="secondary">Manage Films</button>
+            <a class="compact-tool-link" href="./film-manager.html">
+              <button class="compact-tool-button" type="button">
+                <span class="tool-icon">🎬</span>
+                <span>
+                  <strong>Manage Films</strong>
+                  <small>Edit film details</small>
+                </span>
+              </button>
+            </a>
           </div>
         </div>
       </div>
@@ -207,7 +215,14 @@
   const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
 
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'vaq_4d_admin_auth'
+    }
+  });
 
   const CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -1652,6 +1667,25 @@
       : 'Signed in as: Admin User';
   }
 
+  async function waitForSession(maxAttempts = 12, delayMs = 250) {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        return null;
+      }
+
+      if (data?.session) {
+        return data.session;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    return null;
+  }
+
   async function handleSignIn() {
     const email = ui.emailInput.value.trim();
     const password = ui.passwordInput.value;
@@ -1713,23 +1747,7 @@
     setBootUi(true);
 
     try {
-      let session = null;
-
-      for (let attempt = 0; attempt < 10; attempt += 1) {
-        const { data, error } = await supabaseClient.auth.getSession();
-
-        if (error) {
-          console.error('Session check failed:', error);
-          setAuthenticatedUi(null);
-          return;
-        }
-
-        session = data?.session || null;
-
-        if (session) break;
-
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
+      const session = await waitForSession();
 
       if (!session) {
         setAuthenticatedUi(null);
@@ -1827,7 +1845,6 @@
       ui.nextMonthButton.dataset.bound = 'true';
     }
 
-    await initializeAdminApp();
   }
 
   document.addEventListener('DOMContentLoaded', initializePage);

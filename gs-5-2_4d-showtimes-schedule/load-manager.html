@@ -121,7 +121,14 @@
   const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
 
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'vaq_4d_admin_auth'
+    }
+  });
 
   const CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -196,6 +203,25 @@
     if (session) {
       ui.sessionText.textContent = `Signed in as: ${session.user.email}`;
     }
+  }
+
+  async function waitForSession(maxAttempts = 12, delayMs = 250) {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        return null;
+      }
+
+      if (data?.session) {
+        return data.session;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    return null;
   }
 
   async function handleSignIn() {
@@ -815,23 +841,7 @@
   }
 
   async function initializeLoadManager() {
-    let session = null;
-
-    for (let attempt = 0; attempt < 10; attempt += 1) {
-      const { data, error } = await supabaseClient.auth.getSession();
-
-      if (error) {
-        console.error('Session check failed:', error);
-        setAuthenticatedUi(null);
-        return;
-      }
-
-      session = data?.session || null;
-
-      if (session) break;
-
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    }
+    const session = await waitForSession();
 
     if (!session) {
       setAuthenticatedUi(null);
@@ -886,7 +896,6 @@
       setAuthenticatedUi(session);
     });
 
-    await initializeLoadManager();
   }
 
   document.addEventListener('DOMContentLoaded', initializePage);
