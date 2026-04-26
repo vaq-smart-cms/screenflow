@@ -29,89 +29,90 @@
 
 <div id="app-shell" style="display:none;">
 
-  <!-- A — Header -->
-  <div class="panel header">
-    <div>
-      <h1>4D Load Manager</h1>
-      <p id="session-text">Signed in as: Admin User</p>
-    </div>
+  <div class="load-manager-top-grid">
 
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a href="./admin.html">
-        <button class="secondary" type="button">← Back to Calendar</button>
-      </a>
-      <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
-    </div>
-  </div>
-
-  <!-- B — Load List -->
-  <div class="panel">
-    <h2>Loads</h2>
-    <p style="color:var(--text-soft);">Select a load template to review or edit its showtimes.</p>
-
-    <div id="load-list">
-      <p style="color:var(--text-soft);">Loading loads...</p>
-    </div>
-
-    <button id="create-load-button" class="primary" type="button">+ Create New Load</button>
-  </div>
-
-  <!-- C — Load Details -->
-  <div class="panel">
-    <h2>Load Details</h2>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Name</span>
-      <input id="load-name-input" type="text" placeholder="Example: Green Load">
-    </label>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Type</span>
-      <select id="load-kind-select">
-        <option value="green">Green</option>
-        <option value="yellow">Yellow</option>
-        <option value="red">Red</option>
-        <option value="custom">Custom</option>
-      </select>
-    </label>
-
-    <label style="display:block; margin-bottom:12px;">
-      <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Display Colour</span>
-      <div class="color-row">
-        <input id="load-color-input" type="color" value="#7d9b2d">
-        <span id="load-color-preview" class="color-preview">#7d9b2d</span>
+    <!-- A — Header -->
+    <div class="panel header">
+      <div>
+        <h1>4D Load Manager</h1>
+        <p id="session-text">Signed in as: Admin User</p>
       </div>
-    </label>
-
-    <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-      <input id="load-active-checkbox" type="checkbox" checked>
-      <span>Active / available in scheduler</span>
-    </label>
-
-    <button id="save-load-button" class="primary" type="button">Save Load Details</button>
-  </div>
-
-  <!-- D — Template Showtime Editor -->
-  <div class="panel">
-    <h2>Template Showtimes</h2>
-    <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
-
-    <div id="load-times-container">
-      <p style="color:var(--text-soft);">Select a load to edit showtimes.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="./admin.html">
+          <button class="secondary" type="button">← Back to Calendar</button>
+        </a>
+        <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+      </div>
     </div>
 
-    <button id="add-load-time-button" class="secondary" type="button">+ Add Showtime</button>
-  </div>
-
-  <!-- E — Actions -->
-  <div class="panel">
-    <h2>Actions</h2>
-
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button id="duplicate-load-button" class="secondary" type="button">Duplicate Load</button>
-      <button id="delete-load-button" class="accent" type="button">Delete Load</button>
+    <!-- B — Load List -->
+    <div class="panel">
+      <h2>Loads</h2>
+      <p style="color:var(--text-soft);">Select a load template to review or edit its showtimes.</p>
+      <div id="load-list">
+        <p style="color:var(--text-soft);">Loading loads...</p>
+      </div>
+      <button id="create-load-button" class="primary" type="button">+ Create New Load</button>
     </div>
+
   </div>
+
+  <div class="load-manager-lower-grid">
+
+    <div class="load-manager-lower-left">
+      <!-- C — Load Details -->
+      <div class="panel">
+        <h2>Load Details</h2>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Name</span>
+          <input id="load-name-input" type="text" placeholder="Example: Green Load">
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Type</span>
+          <select id="load-kind-select">
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="red">Red</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Display Colour</span>
+          <div class="color-row">
+            <input id="load-color-input" type="color" value="#7d9b2d">
+            <span id="load-color-preview" class="color-preview">#7d9b2d</span>
+          </div>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <input id="load-active-checkbox" type="checkbox" checked>
+          <span>Active / available in scheduler</span>
+        </label>
+        <button id="save-load-button" class="primary" type="button">Save Load Details</button>
+      </div>
+    </div>
+
+    <div class="load-manager-lower-right">
+      <!-- D — Template Showtime Editor -->
+      <div class="panel">
+        <h2>Template Showtimes</h2>
+        <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
+        <div id="load-times-container">
+          <p style="color:var(--text-soft);">Select a load to edit showtimes.</p>
+        </div>
+        <button id="add-load-time-button" class="secondary" type="button">+ Add Showtime</button>
+      </div>
+
+      <!-- E — Actions -->
+      <div class="panel">
+        <h2>Actions</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="duplicate-load-button" class="secondary" type="button">Duplicate Load</button>
+          <button id="delete-load-button" class="accent" type="button">Delete Load</button>
+        </div>
+      </div>
+    </div>
+
+  </div>  
 
 </div>
 
@@ -460,13 +461,6 @@
       return;
     }
 
-    if (timeRow.is_after_hours) {
-      const badge = document.createElement('span');
-      badge.className = 'showtime-badge';
-      badge.textContent = 'After-hours';
-      leftWrap.appendChild(badge);
-    }
-
     LOAD_TEMPLATE_TIMES.forEach((timeRow) => {
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
@@ -516,6 +510,13 @@
       leftWrap.appendChild(minuteSelect);
       leftWrap.appendChild(ampmSelect);
       leftWrap.appendChild(previewText);
+
+      if (timeRow.is_after_hours) {
+        const badge = document.createElement('span');
+        badge.className = 'showtime-badge';
+        badge.textContent = 'After-hours';
+        leftWrap.appendChild(badge);
+      }
 
       const actionsWrap = document.createElement('div');
       actionsWrap.style.display = 'flex';
