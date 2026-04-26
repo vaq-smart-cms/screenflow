@@ -246,7 +246,6 @@
     }
 
     ui.authMessage.textContent = 'Sign-in successful.';
-
     await initializeLoadManager();
   }
 
@@ -895,7 +894,7 @@
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
     });
-
+    await initializeLoadManager();
   }
 
   document.addEventListener('DOMContentLoaded', initializePage);

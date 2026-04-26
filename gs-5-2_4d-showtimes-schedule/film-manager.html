@@ -669,7 +669,7 @@
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
     });
-
+    await initializeFilmManager();
   }
 
   document.addEventListener('DOMContentLoaded', initializePage);
