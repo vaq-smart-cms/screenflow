@@ -1938,6 +1938,22 @@
       ui.prevMonthButton.dataset.bound = 'true';
     }
 
+    // Batch controls
+    if (ui.batchCancelButton && !ui.batchCancelButton.dataset.bound) {
+      ui.batchCancelButton.addEventListener('click', cancelBatchMode);
+      ui.batchCancelButton.dataset.bound = 'true';
+    }
+
+    if (ui.batchPublishButton && !ui.batchPublishButton.dataset.bound) {
+      ui.batchPublishButton.addEventListener('click', publishBatchDates);
+      ui.batchPublishButton.dataset.bound = 'true';
+    }
+
+    if (ui.batchLoadSelect && !ui.batchLoadSelect.dataset.bound) {
+      ui.batchLoadSelect.addEventListener('change', applyBatchLoadToDrafts);
+      ui.batchLoadSelect.dataset.bound = 'true';
+    }
+
     if (ui.nextMonthButton && !ui.nextMonthButton.dataset.bound) {
       ui.nextMonthButton.addEventListener('click', async () => {
         appState.visibleCalendarDate.setMonth(appState.visibleCalendarDate.getMonth() + 1);
