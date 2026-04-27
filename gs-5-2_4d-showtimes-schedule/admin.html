@@ -596,7 +596,7 @@
     const selectedFilmId = ui.filmSelect?.value || '';
 
     const targetDates =
-      appState.isBatchEditing && appState.batchSelectedDates?.length
+      appState.isBatchMode && appState.batchSelectedDates?.length
         ? appState.batchSelectedDates
         : appState.selectedDate
           ? [appState.selectedDate]
@@ -644,7 +644,15 @@
       }
 
       clearLoadCaches();
-      await loadSelectedDateState();
+
+      await fetchScheduleStateForDate(appState.selectedDate);
+      await fetchCalendarDayStates();
+
+      renderDraftShowtimes();
+      updateCalendarIndicators();
+      updateHeaderAndSummary();
+      updatePublishState();
+      updateBatchUi();
     } catch (err) {
       console.error('Failed to apply load to draft:', err);
       alert(`Could not apply load to draft: ${err.message || err}`);
@@ -991,6 +999,13 @@
     appState.batchAnchorDate = null;
     appState.batchSelectedDates = [];
     appState.batchReturnDate = null;
+
+    appState.longPressTimer = null;
+    appState.longPressTriggered = false;
+
+    appState.pendingNewShowtimeId = null;
+    appState.pendingNewShowtimeIsUnsaved = false;
+
     appState.selectedDate = returnDate;
 
     updateBatchUi();
@@ -1202,6 +1217,11 @@
   }
 
   async function deleteDraftShowtime(showtimeId) {
+    if (appState.batchMode) {
+      alert('Use Save and Close before editing individual showtimes.');
+      return;
+    }
+
     if (!showtimeId) return;
 
     const confirmed = window.confirm('Delete this draft showtime?');
@@ -1263,6 +1283,11 @@
   }
 
   async function addDraftShowtime() {
+    if (appState.batchMode) {
+      alert('Use Save and Close before editing individual showtimes.');
+      return;
+    }
+
     if (!appState.selectedDate) {
       alert('Select a date first.');
       return;
@@ -1502,6 +1527,11 @@
   }
 
   async function editDraftShowtime(showtimeId, updatedShowAt) {
+    if (appState.batchMode) {
+      alert('Use Save and Close before editing individual showtimes.');
+      return;
+    }
+
     if (!showtimeId || !updatedShowAt) return;
 
     const { error } = await supabaseClient
@@ -1703,6 +1733,13 @@
       appState.batchAnchorDate = null;
       appState.batchSelectedDates = [];
       appState.batchReturnDate = null;
+
+      appState.longPressTimer = null;
+      appState.longPressTriggered = false;
+
+      appState.pendingNewShowtimeId = null;
+      appState.pendingNewShowtimeIsUnsaved = false;
+
       appState.selectedDate = returnDate;
 
       updateBatchUi();
@@ -1839,15 +1876,8 @@
 
       if (!ui.filmSelect.dataset.bound) {
         ui.filmSelect.addEventListener('change', async () => {
-          const filmId = ui.filmSelect.value || null;
+          const filmId = ui.filmSelect.value || '';
 
-          appState.draftSchedule = {
-            ...appState.draftSchedule,
-            film_id: filmId
-          };
-
-          setDirtyState(true);
-          renderSelectedDateState();
           renderFilmPreview(filmId);
 
           await saveDraftFilmAssignment(filmId);
@@ -1874,7 +1904,14 @@
   }
 
   async function saveDraftFilmAssignment(filmId) {
-    if (!appState.selectedDate) return;
+    if (!appState.selectedDate) {
+      alert('Select a date first.');
+      return;
+    }
+
+    if (!filmId) {
+      return;
+    }
 
     const payload = {
       schedule_date: appState.selectedDate,
