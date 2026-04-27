@@ -85,7 +85,7 @@
         </label>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
-          <button id="batch-cancel-button" class="secondary" type="button">Cancel Batch Mode</button>
+          <button id="batch-cancel-button" class="secondary" type="button">Save and Close</button>
         </div>
       </div>
 
@@ -631,8 +631,6 @@
 
     try {
       for (const dateString of targetDates) {
-        await ensureDraftScheduleExists(dateString, selectedFilmId);
-
         const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
           p_schedule_date: dateString,
           p_film_id: selectedFilmId,
@@ -1612,7 +1610,7 @@
 
   async function applyBatchLoadToDrafts() {
     const selectedLoadId = ui.batchLoadSelect?.value || '';
-    const selectedFilmId = ui.filmSelect?.value || appState.draftSchedule?.film_id || '';
+    const selectedFilmId = ui.filmSelect?.value || '';
 
     if (!selectedLoadId) return;
 
@@ -1629,7 +1627,7 @@
     }
 
     const confirmed = window.confirm(
-      `Apply this load to ${appState.batchSelectedDates.length} selected date(s)? Existing drafts on those days will be replaced.`
+      `Apply this load and save drafts for ${appState.batchSelectedDates.length} selected date(s)? Existing draft showtimes on those days will be replaced.`
     );
 
     if (!confirmed) {
@@ -1654,8 +1652,19 @@
     clearLoadCaches();
 
     await fetchCalendarDayStates();
+
+    if (appState.selectedDate) {
+      await fetchScheduleStateForDate(appState.selectedDate);
+    }
+
+    renderDraftShowtimes();
     updateCalendarIndicators();
-    ui.batchSummaryText.textContent = `Drafts created for ${appState.batchSelectedDates.length} selected date(s).`;
+    updateHeaderAndSummary();
+    updatePublishState();
+    updateBatchUi();
+
+    ui.batchSummaryText.textContent =
+      `Drafts saved for ${appState.batchSelectedDates.length} selected date(s). You can publish now, or choose Save and Close to return later.`;
   }
 
   async function publishBatchDates() {
