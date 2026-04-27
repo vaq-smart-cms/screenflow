@@ -1928,6 +1928,30 @@
       ui.desktopSignOutButton.dataset.bound = 'true';
     }
 
+    // Main schedule controls
+    if (ui.applyLoadButton && !ui.applyLoadButton.dataset.bound) {
+      ui.applyLoadButton.addEventListener('click', applySelectedLoadToDraft);
+      ui.applyLoadButton.dataset.bound = 'true';
+    }
+
+    if (ui.publishButton && !ui.publishButton.dataset.bound) {
+      ui.publishButton.addEventListener('click', publishSelectedDate);
+      ui.publishButton.dataset.bound = 'true';
+    }
+
+    if (ui.addShowtimeButton && !ui.addShowtimeButton.dataset.bound) {
+      ui.addShowtimeButton.addEventListener('click', addDraftShowtime);
+      ui.addShowtimeButton.dataset.bound = 'true';
+    }
+
+    if (ui.loadSelect && !ui.loadSelect.dataset.bound) {
+      ui.loadSelect.addEventListener('change', () => {
+        renderLoadPreview(ui.loadSelect.value || '');
+      });
+
+      ui.loadSelect.dataset.bound = 'true';
+    }
+
     if (ui.prevMonthButton && !ui.prevMonthButton.dataset.bound) {
       ui.prevMonthButton.addEventListener('click', async () => {
         appState.visibleCalendarDate.setMonth(appState.visibleCalendarDate.getMonth() - 1);
