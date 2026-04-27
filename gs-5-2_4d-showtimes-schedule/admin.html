@@ -349,6 +349,11 @@
 
     ui.filmSelect.disabled = false;
 
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choose a film...';
+    ui.filmSelect.appendChild(placeholder);
+
     FILMS.forEach((film) => {
       const option = document.createElement('option');
       option.value = film.id;
@@ -363,7 +368,7 @@
   }
 
   function renderFilmPreview(filmId) {
-    const film = FILMS.find((item) => item.id === filmId) || FILMS[0];
+    const film = FILMS.find((item) => item.id === filmId) || null;
 
     if (!film) {
       ui.filmTitle.textContent = 'No active film selected';
@@ -1532,17 +1537,6 @@
       fetchCalendarDayStates()
     ]);
 
-    if (appState.draftSchedule?.film_id) {
-      ui.filmSelect.value = appState.draftSchedule.film_id;
-      renderFilmPreview(appState.draftSchedule.film_id);
-    } else if (appState.liveSchedule?.film_id) {
-      ui.filmSelect.value = appState.liveSchedule.film_id;
-      renderFilmPreview(appState.liveSchedule.film_id);
-    } else if (FILMS.length) {
-      ui.filmSelect.value = FILMS[0].id;
-      renderFilmPreview(FILMS[0].id);
-    }
-
     const activeFilmId =
       appState.draftSchedule?.film_id ||
       '';
@@ -1668,28 +1662,39 @@
   }
 
   async function publishBatchDates() {
-    if (!appState.batchSelectedDates.length) {
+    const selectedDates = appState.batchSelectedDates || [];
+
+    if (!selectedDates.length) {
       alert('No batch dates selected.');
       return;
     }
 
     const confirmed = window.confirm(
-      `Publish ${appState.batchSelectedDates.length} selected date(s) live?`
+      `Publish ${selectedDates.length} selected date(s) live? Drafts must already have a film and active showtimes.`
     );
 
     if (!confirmed) return;
 
     ui.batchPublishButton.disabled = true;
 
+    const failedDates = [];
+
     try {
-      for (const dateStr of appState.batchSelectedDates) {
+      for (const dateStr of selectedDates) {
         const { error } = await supabaseClient.rpc('publish_daily_schedule', {
           p_schedule_date: dateStr
         });
 
         if (error) {
-          throw new Error(`${dateStr}: ${error.message}`);
+          failedDates.push(`${dateStr}: ${error.message}`);
         }
+      }
+
+      if (failedDates.length) {
+        alert(
+          `Some dates could not be published:\n\n${failedDates.join('\n')}`
+        );
+        return;
       }
 
       const returnDate = appState.batchReturnDate || appState.selectedDate;
@@ -1702,11 +1707,14 @@
 
       updateBatchUi();
       await loadSelectedDateState();
+
+      alert(`Published ${selectedDates.length} selected date(s) live.`);
     } catch (err) {
       console.error('Failed to publish batch dates:', err);
       alert(`Could not publish batch: ${err.message || err}`);
     } finally {
       ui.batchPublishButton.disabled = false;
+      updateBatchUi();
     }
   }
 
@@ -1890,6 +1898,12 @@
     }
 
     appState.draftSchedule = data;
+
+    await fetchScheduleStateForDate(appState.selectedDate);
+    renderDraftShowtimes();
+    updateHeaderAndSummary();
+    updatePublishState();
+    updateCalendarIndicators();
     setDirtyState(false);
   }
 
