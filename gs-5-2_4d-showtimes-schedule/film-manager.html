@@ -459,11 +459,16 @@
 
     const payload = {
       title: ui.filmTitleInput.value.trim(),
-      synopsis: ui.filmSynopsisInput.value.trim(),
-      advisory_text: ui.filmAdvisoryInput.value.trim(),
-      testimonial: ui.filmTestimonialInput.value.trim(),
-      accessibility_text: ui.filmAccessibilityInput.value.trim(),
+      slug: ui.filmTitleInput.value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, ''),
       poster_url: ui.filmPosterUrlInput.value.trim(),
+      synopsis: ui.filmSynopsisInput.value.trim(),
+      testimonial: ui.filmTestimonialInput.value.trim(),
+      advisory_text: ui.filmAdvisoryInput.value.trim(),
+      accessibility_text: ui.filmAccessibilityInput.value.trim(),
       is_active: ui.filmActiveCheckbox.checked,
       updated_at: new Date().toISOString()
     };
@@ -480,7 +485,16 @@
 
     if (error) {
       console.error('Failed to save film:', error);
-      setFilmSaveStatus(`Could not save film: ${error.message}`, true);
+
+      if (error.code === '42501') {
+        setFilmSaveStatus('Permission issue: this account cannot update films yet. Check RLS policies for the films table.', true);
+      } else if (error.code === '23505') {
+        setFilmSaveStatus('A film with this title/slug may already exist. Try a more specific title.', true);
+      } else {
+        setFilmSaveStatus(`Could not save film: ${error.message}`, true);
+      }
+
+      ui.saveFilmButton.disabled = false;
       return;
     }
 
@@ -498,19 +512,33 @@
       .from('films')
       .insert({
         title: title.trim(),
+        slug: title
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
+        poster_url: '',
         synopsis: '',
         testimonial: '',
         advisory_text: '',
         accessibility_text: '',
-        poster_url: '',
-        is_active: true
+        is_active: true,
+        sort_order: FILMS.length + 1
       })
       .select('id')
       .single();
 
     if (error) {
       console.error('Failed to create film:', error);
-      setFilmSaveStatus(`Could not create film: ${error.message}`, true);
+
+      if (error.code === '42501') {
+        setFilmSaveStatus('Permission issue: this account cannot create films yet. Check RLS policies for the films table.', true);
+      } else if (error.code === '23505') {
+        setFilmSaveStatus('A film with this title/slug may already exist. Try a more specific title.', true);
+      } else {
+        setFilmSaveStatus(`Could not create film: ${error.message}`, true);
+      }
+
       return;
     }
 
