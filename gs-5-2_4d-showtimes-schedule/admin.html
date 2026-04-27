@@ -224,6 +224,8 @@
     }
   });
 
+  console.log('Auth storage check:', localStorage.getItem('vaq_4d_admin_auth'));
+  
   const CACHE_TTL_MS = 10 * 60 * 1000;
 
   function readCache(key) {
