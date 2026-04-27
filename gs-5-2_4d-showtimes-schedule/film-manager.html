@@ -645,13 +645,19 @@
     ui.duplicateFilmButton.addEventListener('click', duplicateFilm);
     ui.deleteFilmButton.addEventListener('click', deleteFilm);
     ui.cancelFilmEditButton.addEventListener('click', cancelFilmEdit);
-
-    [
-      ui.filmTitleInput,
-      ui.filmPosterUrlInput
-    ].forEach((input) => {
-      input.addEventListener('input', renderPosterPreview);
+    ui.posterPreviewImage.addEventListener('error', () => {
+      ui.posterPreviewImage.style.display = 'none';
+      ui.posterPreviewFallback.style.display = 'grid';
     });
+
+    if (ui.filmTitleInput) {
+      ui.filmTitleInput.addEventListener('input', renderPosterPreview);
+    }
+
+    if (ui.filmPosterUrlInput) {
+      ui.filmPosterUrlInput.addEventListener('change', renderPosterPreview);
+      ui.filmPosterUrlInput.addEventListener('blur', renderPosterPreview);
+    }
 
     [
       ui.filmTitleInput,

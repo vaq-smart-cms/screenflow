@@ -554,6 +554,38 @@
     return data;
   }
 
+  async function assignSelectedFilmToDraft() {
+    const selectedFilmId = ui.filmSelect?.value || '';
+
+    if (!appState.selectedDate) {
+      alert('Select a date first.');
+      return;
+    }
+
+    if (!selectedFilmId) {
+      alert('Select a film first.');
+      return;
+    }
+
+    try {
+      await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
+
+      await supabaseClient
+        .from('daily_schedules')
+        .update({
+          film_id: selectedFilmId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', appState.draftSchedule.id)
+        .eq('status', 'draft');
+
+      await loadSelectedDateState();
+    } catch (err) {
+      console.error('Failed to assign film to draft:', err);
+      alert(`Could not assign film: ${err.message || err}`);
+    }
+  }
+
   async function applySelectedLoadToDraft() {
     const selectedLoadId = ui.loadSelect?.value || '';
     const selectedFilmId = ui.filmSelect?.value || '';
@@ -1765,6 +1797,15 @@
       populateFilmSelect();
       populateLoadSelect();
       populateBatchLoadSelect();
+
+      if (!ui.filmSelect.dataset.bound) {
+        ui.filmSelect.addEventListener('change', async (event) => {
+          renderFilmPreview(event.target.value);
+          await assignSelectedFilmToDraft();
+        });
+
+        ui.filmSelect.dataset.bound = 'true';
+      }
 
       renderFilmPreview(FILMS[0]?.id || '');
       renderLoadPreview(LOAD_TEMPLATES[0]?.id || '');
