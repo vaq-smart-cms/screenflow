@@ -590,7 +590,14 @@
     const selectedLoadId = ui.loadSelect?.value || '';
     const selectedFilmId = ui.filmSelect?.value || '';
 
-    if (!appState.selectedDate) {
+    const targetDates =
+      appState.isBatchEditing && appState.batchSelectedDates?.length
+        ? appState.batchSelectedDates
+        : appState.selectedDate
+          ? [appState.selectedDate]
+          : [];
+
+    if (!targetDates.length) {
       alert('Select a date first.');
       return;
     }
@@ -605,30 +612,35 @@
       return;
     }
 
-    const existingActiveShowtimes = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
-    if (existingActiveShowtimes > 0) {
-      const confirmed = window.confirm('Applying a load will replace the existing draft showtimes for this date. Continue?');
+    if (!appState.isBatchEditing) {
+      const existingActiveShowtimes = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
+
+      if (existingActiveShowtimes > 0) {
+        const confirmed = window.confirm('Applying a load will replace the existing draft showtimes for this date. Continue?');
+        if (!confirmed) return;
+      }
+    } else {
+      const confirmed = window.confirm(
+        `Applying a load will create or replace draft showtimes for ${targetDates.length} selected date(s). Continue?`
+      );
+
       if (!confirmed) return;
     }
 
     ui.applyLoadButton.disabled = true;
 
-    if (error) throw error;
-
-    clearLoadCaches();
-    await loadSelectedDateState();
-
     try {
-      const draft = await ensureDraftScheduleExists(appState.selectedDate, selectedFilmId);
+      for (const dateString of targetDates) {
+        await ensureDraftScheduleExists(dateString, selectedFilmId);
 
-      const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
-        p_schedule_date: appState.selectedDate,
-        p_film_id: selectedFilmId,
-        p_load_template_id: selectedLoadId
-      });
+        const { error } = await supabaseClient.rpc('generate_draft_schedule_from_load', {
+          p_schedule_date: dateString,
+          p_film_id: selectedFilmId,
+          p_load_template_id: selectedLoadId
+        });
+      }
 
-      if (error) throw error;
-
+      clearLoadCaches();
       await loadSelectedDateState();
     } catch (err) {
       console.error('Failed to apply load to draft:', err);
@@ -1533,6 +1545,16 @@
       renderFilmPreview(FILMS[0].id);
     }
 
+    const activeFilmId =
+      appState.draftSchedule?.film_id ||
+      '';
+
+    if (ui.filmSelect) {
+      ui.filmSelect.value = activeFilmId;
+    }
+
+    renderFilmPreview(activeFilmId);
+
     const activeLoadId =
       appState.draftSchedule?.applied_load_template_id ||
       appState.liveSchedule?.applied_load_template_id ||
@@ -1799,9 +1821,19 @@
       populateBatchLoadSelect();
 
       if (!ui.filmSelect.dataset.bound) {
-        ui.filmSelect.addEventListener('change', async (event) => {
-          renderFilmPreview(event.target.value);
-          await assignSelectedFilmToDraft();
+        ui.filmSelect.addEventListener('change', async () => {
+          const filmId = ui.filmSelect.value || null;
+
+          appState.draftSchedule = {
+            ...appState.draftSchedule,
+            film_id: filmId
+          };
+
+          setDirtyState(true);
+          renderSelectedDateState();
+          renderFilmPreview(filmId);
+
+          await saveDraftFilmAssignment(filmId);
         });
 
         ui.filmSelect.dataset.bound = 'true';
@@ -1822,6 +1854,34 @@
     } finally {
       setBootUi(false);
     }
+  }
+
+  async function saveDraftFilmAssignment(filmId) {
+    if (!appState.selectedDate) return;
+
+    const payload = {
+      schedule_date: appState.selectedDate,
+      status: 'draft',
+      film_id: filmId,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabaseClient
+      .from('daily_schedules')
+      .upsert(payload, {
+        onConflict: 'schedule_date,status'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to save film assignment:', error);
+      showAdminMessage('Unable to save film assignment.', 'error');
+      return;
+    }
+
+    appState.draftSchedule = data;
+    setDirtyState(false);
   }
 
   async function initializePage() {
