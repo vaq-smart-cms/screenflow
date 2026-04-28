@@ -128,15 +128,6 @@
             <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
             <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
             <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
-            <a class="compact-tool-link" href="./film-manager.html">
-              <button class="compact-tool-button" type="button">
-                <span class="tool-icon">🎬</span>
-                <span>
-                  <strong>Manage Films</strong>
-                  <small>Edit film details</small>
-                </span>
-              </button>
-            </a>
           </div>
         </div>
       </div>
@@ -150,6 +141,15 @@
         </label>
         <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
         <button id="apply-load-button" class="primary">Apply Load to Draft</button>
+        <a class="compact-tool-link" href="./load-manager.html">
+          <button class="compact-tool-button" type="button">
+            <span class="tool-icon">⏱️</span>
+            <span>
+              <strong>Manage Loads</strong>
+              <small>Edit load templates</small>
+            </span>
+          </button>
+        </a>
       </div>
 
     </div>
@@ -1173,9 +1173,18 @@
     const loadName = appState.draftSchedule?.load_templates?.name || appState.liveSchedule?.load_templates?.name || '—';
     const draftCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
 
-    ui.statusPill.textContent = activeSchedule
-      ? (appState.liveSchedule ? 'Live exists' : 'Draft only')
-      : 'No schedule loaded';
+    ui.statusPill.classList.remove('status-empty', 'status-draft', 'status-live');
+
+    if (appState.liveSchedule) {
+      ui.statusPill.textContent = '● Live';
+      ui.statusPill.classList.add('status-live');
+    } else if (appState.draftSchedule) {
+      ui.statusPill.textContent = '✦ Draft';
+      ui.statusPill.classList.add('status-draft');
+    } else {
+      ui.statusPill.textContent = '○ No Schedule';
+      ui.statusPill.classList.add('status-empty');
+    }
 
     ui.summaryDate.textContent = formatFriendlyDate(appState.selectedDate);
     ui.summaryDraftStatus.textContent = appState.draftSchedule ? 'Draft exists' : 'No draft schedule';

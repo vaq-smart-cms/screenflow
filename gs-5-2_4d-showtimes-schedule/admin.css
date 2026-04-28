@@ -167,10 +167,44 @@ input[type="color"] {
 }
 
 .status-pill {
-  background: #eef6fa;
+  align-items: center;
   border-radius: 999px;
-  font-weight: 700;
-  padding: 6px 10px;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 800;
+  gap: 6px;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  min-height: 34px;
+  padding: 9px 14px;
+  text-transform: uppercase;
+}
+
+.status-pill.status-empty {
+  background: rgba(100, 110, 120, 0.18);
+  border: 1px solid rgba(100, 110, 120, 0.35);
+  color: var(--text-soft);
+}
+
+.status-pill.status-draft {
+  background: linear-gradient(135deg, rgba(100, 165, 195, 0.22), rgba(100, 165, 195, 0.42));
+  border: 1px solid rgba(100, 165, 195, 0.75);
+  box-shadow: 0 0 14px rgba(100, 165, 195, 0.25);
+  color: #d8f3ff;
+  text-shadow: 0 0 8px rgba(100, 165, 195, 0.55);
+}
+
+.status-pill.status-live {
+  background: linear-gradient(135deg, rgba(125, 155, 45, 0.95), rgba(36, 105, 64, 0.95));
+  border: 1px solid rgba(209, 238, 124, 0.65);
+  box-shadow:
+    0 0 16px rgba(125, 155, 45, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  color: #f4ffe0;
+  text-shadow:
+    0 0 8px rgba(244, 255, 224, 0.45),
+    0 1px 1px rgba(0, 0, 0, 0.35);
 }
 
 /* B — Calendar */
@@ -645,6 +679,20 @@ input[type="color"] {
     margin-bottom: 16px;
   }
 
+  .status-pill {
+    align-self: center;
+    font-size: 0.95rem;
+    justify-self: center;
+    min-width: 180px;
+    padding: 12px 20px;
+    position: relative;
+    text-align: center;
+  }
+
+  .status-pill.status-live {
+    animation: liveStatusPulse 3.5s ease-in-out infinite;
+  }
+
   .top-dashboard-grid {
     align-items: stretch;
     display: grid;
@@ -681,5 +729,21 @@ input[type="color"] {
     text-align: center;
     white-space: normal;
     width: 100%;
+  }
+}
+
+@keyframes liveStatusPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 16px rgba(125, 155, 45, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow:
+      0 0 24px rgba(125, 155, 45, 0.52),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    transform: scale(1.025);
   }
 }
