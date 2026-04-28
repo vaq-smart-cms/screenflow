@@ -1176,13 +1176,13 @@
     ui.statusPill.classList.remove('status-empty', 'status-draft', 'status-live');
 
     if (appState.liveSchedule) {
-      ui.statusPill.textContent = '● Live';
+      ui.statusPill.textContent = 'Live';
       ui.statusPill.classList.add('status-live');
     } else if (appState.draftSchedule) {
-      ui.statusPill.textContent = '✦ Draft';
+      ui.statusPill.textContent = 'Draft';
       ui.statusPill.classList.add('status-draft');
     } else {
-      ui.statusPill.textContent = '○ No Schedule';
+      ui.statusPill.textContent = 'No Schedule';
       ui.statusPill.classList.add('status-empty');
     }
 
