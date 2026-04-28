@@ -69,7 +69,7 @@
         </label>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Synopsis</span>
-          <textarea id="film-synopsis-input" rows="5" placeholder="Guest-facing synopsis text"></textarea>
+          <textarea id="film-synopsis-input" rows="7" placeholder="Guest-facing synopsis text"></textarea>
         </label>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
@@ -77,11 +77,11 @@
         </label>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Testimonial</span>
-          <textarea id="film-testimonial-input" rows="3" placeholder="Optional short quote or guest-facing testimonial"></textarea>
+          <textarea id="film-testimonial-input" rows="4" placeholder="Optional short quote or guest-facing testimonial"></textarea>
         </label>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
-          <textarea id="film-accessibility-input" rows="3" placeholder="Accessibility notes or accommodations"></textarea>
+          <textarea id="film-accessibility-input" rows="4" placeholder="Accessibility notes or accommodations"></textarea>
         </label>
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
           <input id="film-active-checkbox" type="checkbox" checked>
@@ -328,6 +328,18 @@
     setAuthenticatedUi(null);
   }
 
+  function stripWrappingQuotes(value) {
+    return String(value || '')
+      .trim()
+      .replace(/^["“”]+|["“”]+$/g, '');
+  }
+
+  function formatTestimonialForDisplay(value) {
+    const cleanValue = stripWrappingQuotes(value);
+
+    return cleanValue ? `"${cleanValue}"` : '';
+  }
+
   async function fetchFilms() {
     const cachedFilms = readCache('vaq_4d_films_all');
     if (cachedFilms) {
@@ -454,7 +466,7 @@
     ui.filmTitleInput.value = film.title || '';
     ui.filmSynopsisInput.value = film.synopsis || '';
     ui.filmAdvisoryInput.value = film.advisory_text || '';
-    ui.filmTestimonialInput.value = film.testimonial || '';
+    ui.filmTestimonialInput.value = formatTestimonialForDisplay(film.testimonial || '');
     ui.filmAccessibilityInput.value = film.accessibility_text || '';
     ui.filmActiveCheckbox.checked = !!film.is_active;
     ui.filmPosterUrlInput.value = getPosterFilenameFromUrl(film.poster_url || '');
@@ -517,7 +529,7 @@
         .replace(/^-|-$/g, ''),
       poster_url: buildPosterUrlFromFilename(posterFilename),
       synopsis: ui.filmSynopsisInput.value.trim(),
-      testimonial: ui.filmTestimonialInput.value.trim(),
+      testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
       advisory_text: ui.filmAdvisoryInput.value.trim(),
       accessibility_text: ui.filmAccessibilityInput.value.trim(),
       is_active: ui.filmActiveCheckbox.checked,

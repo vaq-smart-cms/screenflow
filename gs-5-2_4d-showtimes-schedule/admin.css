@@ -367,6 +367,36 @@ input[type="color"] {
   opacity: 1;
 }
 
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
+  min-height: 96px;
+  padding: 10px 12px;
+  resize: vertical;
+  width: 100%;
+}
+
+textarea:focus,
+input:focus,
+select:focus {
+  border-color: var(--vaq-blue);
+  box-shadow: 0 0 0 3px rgba(100, 165, 195, 0.18);
+  outline: none;
+}
+
+#film-synopsis-input {
+  min-height: 160px;
+}
+
+#film-testimonial-input,
+#film-accessibility-input {
+  min-height: 112px;
+}
+
 /* F — Showtime */
 
 .showtime {
