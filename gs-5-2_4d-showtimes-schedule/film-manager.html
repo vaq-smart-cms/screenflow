@@ -71,10 +71,37 @@
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Synopsis</span>
           <textarea id="film-synopsis-input" rows="7" placeholder="Guest-facing synopsis text"></textarea>
         </label>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
-          <textarea id="film-accessibility-input" rows="4" placeholder="Accessibility notes or accommodations"></textarea>
-        </label>
+        <div class="accessibility-editor">
+          <span class="field-label">Accessibility Info</span>
+          <p class="field-help">
+            Check the accessibility features that apply to this film.
+          </p>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-1-check" type="checkbox">
+            <input id="film-accessibility-1-text" type="text" value="Wheelchair accessible seating">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-2-check" type="checkbox">
+            <input id="film-accessibility-2-text" type="text" value="Assistive listening available">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-3-check" type="checkbox">
+            <input id="film-accessibility-3-text" type="text" value="Service animals welcome">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-4-check" type="checkbox" disabled>
+            <input id="film-accessibility-4-text" type="text" placeholder="Optional accessibility item">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-5-check" type="checkbox" disabled>
+            <input id="film-accessibility-5-text" type="text" placeholder="Optional accessibility item">
+          </label>
+        </div>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
           <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
@@ -188,6 +215,72 @@
       .replace(/[^a-z0-9_-]/g, '');
   }
 
+  function getAccessibilityItemsFromEditor() {
+    return ui.filmAccessibilityTexts
+      .map((textInput, index) => {
+        const text = textInput?.value.trim() || '';
+        const isActive = !!ui.filmAccessibilityChecks[index]?.checked;
+
+        return {
+          text,
+          is_active: isActive && !!text
+        };
+      });
+  }
+
+  function getActiveAccessibilityTextFromEditor() {
+    return getAccessibilityItemsFromEditor()
+      .filter((item) => item.is_active)
+      .map((item) => item.text)
+      .join(' | ');
+  }
+
+  function setAccessibilityEditorFromText(value) {
+    const defaultItems = [
+      'Wheelchair accessible seating',
+      'Assistive listening available',
+      'Service animals welcome',
+      '',
+      ''
+    ];
+
+    const existingItems = String(value || '')
+      .split('|')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    ui.filmAccessibilityTexts.forEach((textInput, index) => {
+      if (!textInput) return;
+
+      const fallbackText = defaultItems[index] || '';
+      const savedText = existingItems[index] || '';
+      const displayText = savedText || fallbackText;
+
+      textInput.value = displayText;
+
+      const checkbox = ui.filmAccessibilityChecks[index];
+      if (!checkbox) return;
+
+      checkbox.checked = existingItems.includes(displayText);
+      checkbox.disabled = !displayText;
+    });
+  }
+
+  function refreshAccessibilityCheckboxStates() {
+    ui.filmAccessibilityTexts.forEach((textInput, index) => {
+      const checkbox = ui.filmAccessibilityChecks[index];
+      const hasText = !!textInput?.value.trim();
+
+      if (!checkbox) return;
+
+      checkbox.disabled = !hasText;
+
+      if (!hasText) {
+        checkbox.checked = false;
+      }
+    });
+  }
+
   function getPosterCodeFromStoredValue(value) {
     const cleanValue = String(value || '').trim();
 
@@ -234,7 +327,20 @@
     filmSynopsisInput: document.getElementById('film-synopsis-input'),
     filmAdvisoryInput: document.getElementById('film-advisory-input'),
     filmTestimonialInput: document.getElementById('film-testimonial-input'),
-    filmAccessibilityInput: document.getElementById('film-accessibility-input'),
+    filmAccessibilityChecks: [
+      document.getElementById('film-accessibility-1-check'),
+      document.getElementById('film-accessibility-2-check'),
+      document.getElementById('film-accessibility-3-check'),
+      document.getElementById('film-accessibility-4-check'),
+      document.getElementById('film-accessibility-5-check')
+    ],
+    filmAccessibilityTexts: [
+      document.getElementById('film-accessibility-1-text'),
+      document.getElementById('film-accessibility-2-text'),
+      document.getElementById('film-accessibility-3-text'),
+      document.getElementById('film-accessibility-4-text'),
+      document.getElementById('film-accessibility-5-text')
+    ],
     filmActiveCheckbox: document.getElementById('film-active-checkbox'),
     saveFilmButton: document.getElementById('save-film-button'),
     cancelFilmEditButton: document.getElementById('cancel-film-edit-button'),
@@ -477,7 +583,7 @@
       ui.filmSynopsisInput.value = '';
       ui.filmAdvisoryInput.value = '';
       ui.filmTestimonialInput.value = '';
-      ui.filmAccessibilityInput.value = '';
+      setAccessibilityEditorFromText('');
       ui.filmActiveCheckbox.checked = true;
       ui.filmPosterUrlInput.value = '';
       return;
@@ -487,7 +593,7 @@
     ui.filmSynopsisInput.value = film.synopsis || '';
     ui.filmAdvisoryInput.value = film.advisory_text || '';
     ui.filmTestimonialInput.value = formatTestimonialForDisplay(film.testimonial || '');
-    ui.filmAccessibilityInput.value = film.accessibility_text || '';
+    setAccessibilityEditorFromText(film.accessibility_text || '');
     ui.filmActiveCheckbox.checked = !!film.is_active;
     ui.filmPosterUrlInput.value = getPosterCodeFromStoredValue(film.poster_url || '');
   }
@@ -555,7 +661,7 @@
       synopsis: ui.filmSynopsisInput.value.trim(),
       testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
       advisory_text: ui.filmAdvisoryInput.value.trim(),
-      accessibility_text: ui.filmAccessibilityInput.value.trim(),
+      accessibility_text: getActiveAccessibilityTextFromEditor(),
       is_active: ui.filmActiveCheckbox.checked,
       updated_at: new Date().toISOString()
     };
@@ -762,9 +868,10 @@
       ui.filmSynopsisInput,
       ui.filmAdvisoryInput,
       ui.filmTestimonialInput,
-      ui.filmAccessibilityInput,
       ui.filmPosterUrlInput,
-      ui.filmActiveCheckbox
+      ui.filmActiveCheckbox,
+      ...ui.filmAccessibilityChecks,
+      ...ui.filmAccessibilityTexts
     ].forEach((input) => {
       if (!input) return;
 
@@ -775,6 +882,13 @@
       input.addEventListener('change', () => {
         setFilmDirtyState(true);
       });
+    });
+
+    ui.filmAccessibilityTexts.forEach((textInput) => {
+      if (!textInput) return;
+
+      textInput.addEventListener('input', refreshAccessibilityCheckboxStates);
+      textInput.addEventListener('change', refreshAccessibilityCheckboxStates);
     });
 
     ui.passwordInput.addEventListener('keydown', (event) => {

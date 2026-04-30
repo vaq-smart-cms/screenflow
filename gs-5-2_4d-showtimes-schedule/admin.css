@@ -322,6 +322,36 @@ input[type="color"] {
 
 /* D — Film */
 
+.accessibility-editor {
+  margin-bottom: 12px;
+}
+
+.accessibility-row {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr);
+  margin-bottom: 8px;
+}
+
+.accessibility-row input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.field-help {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
+
+.field-label {
+  color: var(--text-soft);
+  display: block;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
 .film-preview {
   align-items: flex-start;
   display: flex;
