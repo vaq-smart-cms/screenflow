@@ -261,6 +261,47 @@
     localStorage.removeItem('vaq_4d_load_template_times');
   }
 
+  const POSTER_BASE_PATH = './film-posters/web/';
+
+  function normalizePosterCode(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '');
+  }
+
+  function getPosterCodeFromStoredValue(value) {
+    const cleanValue = String(value || '').trim();
+
+    if (!cleanValue) return '';
+
+    const filename = cleanValue.split('/').pop() || cleanValue;
+
+    return filename
+      .replace(/_poster_(sm|md|lg)\.jpe?g$/i, '')
+      .toLowerCase();
+  }
+
+  function buildPosterUrlFromCode(code, size) {
+    const cleanCode = normalizePosterCode(code);
+
+    if (!cleanCode) return '';
+
+    return `${POSTER_BASE_PATH}${cleanCode}_poster_${size}.jpg`;
+  }
+
+  function buildPosterSrcsetFromCode(code) {
+    const cleanCode = normalizePosterCode(code);
+
+    if (!cleanCode) return '';
+
+    return [
+      `${buildPosterUrlFromCode(cleanCode, 'sm')} 300w`,
+      `${buildPosterUrlFromCode(cleanCode, 'md')} 600w`,
+      `${buildPosterUrlFromCode(cleanCode, 'lg')} 900w`
+    ].join(', ');
+  }
+
   let FILMS = [];
   let LOAD_TEMPLATES = [];
   let LOAD_TEMPLATE_TIMES = [];
@@ -387,8 +428,6 @@
     ui.filmPosterImage.style.display = 'block';
     ui.filmPosterImage.alt = `${film.title} poster`;
     ui.filmPosterImage.src = film.poster_url || '';
-    ui.filmPosterImage.srcset = film.poster_srcset || '';
-    ui.filmPosterImage.sizes = film.poster_sizes || '';
 
     if (!film.poster_url) {
       handleFilmPosterError();
@@ -724,9 +763,8 @@
     FILMS = (data || []).map((film) => ({
       id: film.id,
       title: film.title,
-      poster_url: film.poster_url || '',
-      poster_srcset: film.poster_url || '',
-      poster_sizes: '(max-width: 700px) 80px, 120px',
+      poster_code: getPosterCodeFromStoredValue(film.poster_url || ''),
+      poster_url: buildPosterUrlFromCode(film.poster_url || '', 'lg'),
       synopsis: film.synopsis || '',
       advisory_text: film.advisory_text || ''
     }));
