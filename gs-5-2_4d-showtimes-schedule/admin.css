@@ -349,6 +349,52 @@ input[type="color"] {
   text-align: center;
 }
 
+.poster-set-preview {
+  align-items: end;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.poster-preview-card {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.poster-preview-card span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.poster-preview-image {
+  background: #d7e0e5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 5px 14px rgba(44, 60, 73, 0.12);
+  display: block;
+  object-fit: cover;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.poster-preview-card-sm .poster-preview-image {
+  height: 72px;
+  width: 50px;
+}
+
+.poster-preview-card-md .poster-preview-image {
+  height: 104px;
+  width: 72px;
+}
+
+.poster-preview-card-lg .poster-preview-image {
+  height: 136px;
+  width: 94px;
+}
+
 .film-button {
   margin: 0 8px 8px 0;
   transition: opacity 120ms ease, transform 120ms ease;

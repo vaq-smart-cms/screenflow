@@ -72,16 +72,16 @@
           <textarea id="film-synopsis-input" rows="7" placeholder="Guest-facing synopsis text"></textarea>
         </label>
         <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
+          <textarea id="film-accessibility-input" rows="4" placeholder="Accessibility notes or accommodations"></textarea>
+        </label>
+        <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
           <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
         </label>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Testimonial</span>
           <textarea id="film-testimonial-input" rows="4" placeholder="Optional short quote or guest-facing testimonial"></textarea>
-        </label>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Accessibility Info</span>
-          <textarea id="film-accessibility-input" rows="4" placeholder="Accessibility notes or accommodations"></textarea>
         </label>
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
           <input id="film-active-checkbox" type="checkbox" checked>
@@ -96,39 +96,47 @@
     </div>
 
     <div class="film-manager-lower-right">
-      <!-- D — Poster Assets -->
+      <!-- D — Poster Code -->
       <div class="panel">
-        <h2>Poster Assets</h2>
+        <h2>Poster Code</h2>
         <p style="color:var(--text-soft);">
-          Enter the poster filename only. Files are expected in /film-posters/web/.
+          Enter the one-word movie code to retrieve all poster sizes (-sm, -md, -lg).
         </p>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">
-            Poster filename
+            Poster code
           </span>
 
           <input
             id="film-poster-url-input"
             type="text"
-            placeholder="na4d_poster_lg.jpg"
+            placeholder="na4d"
           >
 
           <small style="color:var(--text-soft); display:block; margin-top:4px;">
-            Enter the large poster filename only (stored in /film-posters/web/).
+            Enter the film code only. Poster files are automatically matched from /film-posters/web/.
           </small>
         </label>
-        <div class="film-preview">
-          <img
-            id="poster-preview-image"
-            class="poster-image"
-            alt="Poster preview"
-            src=""
-          >
-          <div id="poster-preview-fallback" class="poster poster-fallback" style="display:none;">Poster<br>unavailable</div>
-          <div>
-            <h3 id="poster-preview-title">No film selected</h3>
-            <p id="poster-preview-text" style="color:var(--text-soft);">Poster preview will appear here.</p>
+        <div class="poster-set-preview">
+          <div class="poster-preview-card poster-preview-card-sm">
+            <img id="poster-preview-sm" class="poster-preview-image" alt="Small poster preview" src="">
+            <span>Small</span>
           </div>
+
+          <div class="poster-preview-card poster-preview-card-md">
+            <img id="poster-preview-md" class="poster-preview-image" alt="Medium poster preview" src="">
+            <span>Medium</span>
+          </div>
+
+          <div class="poster-preview-card poster-preview-card-lg">
+            <img id="poster-preview-lg" class="poster-preview-image" alt="Large poster preview" src="">
+            <span>Large</span>
+          </div>
+        </div>
+
+        <p id="poster-preview-text" style="color:var(--text-soft); margin-top:10px;">
+          Poster preview will appear here.
+        </p>
         </div>
       </div>
 
@@ -173,27 +181,39 @@
 
   const POSTER_BASE_PATH = './film-posters/web/';
 
-  function getPosterFilenameFromUrl(value) {
-    if (!value) return '';
-
-    return String(value)
+  function normalizePosterCode(value) {
+    return String(value || '')
       .trim()
-      .split('/')
-      .pop();
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '');
   }
 
-  function buildPosterUrlFromFilename(filename) {
-    const cleanFilename = String(filename || '').trim();
+  function getPosterCodeFromStoredValue(value) {
+    const cleanValue = String(value || '').trim();
 
-    if (!cleanFilename) return '';
+    if (!cleanValue) return '';
 
-    return `${POSTER_BASE_PATH}${cleanFilename}`;
+    const filename = cleanValue.split('/').pop() || cleanValue;
+
+    return filename
+      .replace(/_poster_(sm|md|lg)\.jpe?g$/i, '')
+      .toLowerCase();
   }
 
-  function isLargePosterFilename(filename) {
-    const cleanFilename = String(filename || '').trim();
+  function buildPosterFilenameFromCode(code, size) {
+    const cleanCode = normalizePosterCode(code);
 
-    return cleanFilename === '' || /_poster_lg\.jpe?g$/i.test(cleanFilename);
+    if (!cleanCode) return '';
+
+    return `${cleanCode}_poster_${size}.jpg`;
+  }
+
+  function buildPosterUrlFromCode(code, size) {
+    const filename = buildPosterFilenameFromCode(code, size);
+
+    if (!filename) return '';
+
+    return `${POSTER_BASE_PATH}${filename}`;
   }
 
   const ui = {
@@ -220,9 +240,9 @@
     cancelFilmEditButton: document.getElementById('cancel-film-edit-button'),
 
     filmPosterUrlInput: document.getElementById('film-poster-url-input'),
-    posterPreviewImage: document.getElementById('poster-preview-image'),
-    posterPreviewFallback: document.getElementById('poster-preview-fallback'),
-    posterPreviewTitle: document.getElementById('poster-preview-title'),
+    posterPreviewSm: document.getElementById('poster-preview-sm'),
+    posterPreviewMd: document.getElementById('poster-preview-md'),
+    posterPreviewLg: document.getElementById('poster-preview-lg'),
     posterPreviewText: document.getElementById('poster-preview-text'),
 
     duplicateFilmButton: document.getElementById('duplicate-film-button'),
@@ -469,31 +489,31 @@
     ui.filmTestimonialInput.value = formatTestimonialForDisplay(film.testimonial || '');
     ui.filmAccessibilityInput.value = film.accessibility_text || '';
     ui.filmActiveCheckbox.checked = !!film.is_active;
-    ui.filmPosterUrlInput.value = getPosterFilenameFromUrl(film.poster_url || '');
+    ui.filmPosterUrlInput.value = getPosterCodeFromStoredValue(film.poster_url || '');
   }
 
   function renderPosterPreview() {
-    const film = FILMS.find((item) => item.id === appState.selectedFilmId);
+    const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
 
-    const title = ui.filmTitleInput.value.trim() || film?.title || 'No film selected';
-    const posterFilename = ui.filmPosterUrlInput.value.trim();
-    const posterUrl = buildPosterUrlFromFilename(posterFilename);
+    const previewMap = [
+      { element: ui.posterPreviewSm, size: 'sm' },
+      { element: ui.posterPreviewMd, size: 'md' },
+      { element: ui.posterPreviewLg, size: 'lg' }
+    ];
 
-    ui.posterPreviewTitle.textContent = title;
-    ui.posterPreviewText.textContent = posterFilename
-      ? posterUrl
-      : 'Poster preview will appear here.';
+    previewMap.forEach(({ element, size }) => {
+      if (!element) return;
 
-    if (!posterUrl) {
-      ui.posterPreviewImage.style.display = 'none';
-      ui.posterPreviewFallback.style.display = 'grid';
-      return;
-    }
+      element.src = posterCode
+        ? buildPosterUrlFromCode(posterCode, size)
+        : '';
 
-    ui.posterPreviewFallback.style.display = 'none';
-    ui.posterPreviewImage.style.display = 'block';
-    ui.posterPreviewImage.src = posterUrl;
-    ui.posterPreviewImage.alt = `${title} poster`;
+      element.style.opacity = posterCode ? '1' : '0.28';
+    });
+
+    ui.posterPreviewText.textContent = posterCode
+      ? `Expected files: ${posterCode}_poster_sm.jpg, ${posterCode}_poster_md.jpg, ${posterCode}_poster_lg.jpg`
+      : 'Enter a poster code to preview the expected poster set.';
   }
 
   async function saveFilmDetails() {
@@ -506,11 +526,15 @@
       return;
     }
 
-    const posterFilename = ui.filmPosterUrlInput.value.trim();
+    const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
 
-    if (!isLargePosterFilename(posterFilename)) {
+    if (ui.filmPosterUrlInput.value.trim() !== posterCode) {
+      ui.filmPosterUrlInput.value = posterCode;
+    }
+
+    if (!posterCode) {
       const confirmed = window.confirm(
-        'Recommended: use the large poster file (*_poster_lg.jpg). Continue anyway?'
+        'No poster code has been entered. Save this film without poster assets?'
       );
 
       if (!confirmed) {
@@ -527,7 +551,7 @@
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, ''),
-      poster_url: buildPosterUrlFromFilename(posterFilename),
+      poster_url: posterCode,
       synopsis: ui.filmSynopsisInput.value.trim(),
       testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
       advisory_text: ui.filmAdvisoryInput.value.trim(),
@@ -708,9 +732,20 @@
     ui.duplicateFilmButton.addEventListener('click', duplicateFilm);
     ui.deleteFilmButton.addEventListener('click', deleteFilm);
     ui.cancelFilmEditButton.addEventListener('click', cancelFilmEdit);
-    ui.posterPreviewImage.addEventListener('error', () => {
-      ui.posterPreviewImage.style.display = 'none';
-      ui.posterPreviewFallback.style.display = 'grid';
+    [
+      ui.posterPreviewSm,
+      ui.posterPreviewMd,
+      ui.posterPreviewLg
+    ].forEach((image) => {
+      if (!image) return;
+
+      image.addEventListener('error', () => {
+        image.style.opacity = '0.22';
+      });
+
+      image.addEventListener('load', () => {
+        image.style.opacity = '1';
+      });
     });
 
     if (ui.filmTitleInput) {
