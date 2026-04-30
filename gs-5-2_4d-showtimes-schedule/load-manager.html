@@ -160,6 +160,22 @@
     }
   }
 
+  function clearLoadCaches(loadId = '') {
+    localStorage.removeItem('vaq_4d_load_templates');
+
+    if (loadId) {
+      localStorage.removeItem(`vaq_4d_load_template_times_${loadId}`);
+    }
+  }
+
+  function updateLoadColorPreview() {
+    if (!ui.loadColorPreview || !ui.loadColorInput) return;
+
+    ui.loadColorPreview.textContent = ui.loadColorInput.value;
+    ui.loadColorPreview.style.background = ui.loadColorInput.value;
+    ui.loadColorPreview.style.color = '#ffffff';
+  }
+
   let LOAD_TEMPLATES = [];
   let LOAD_TEMPLATE_TIMES = [];
 
@@ -326,6 +342,16 @@
     return load.display_color || '#646e78';
   }
 
+  function getFixedLoadColorByKind(loadKind) {
+    const colorByKind = {
+      green: '#7d9b2d',
+      red: '#e6782d',
+      yellow: '#f3bc43'
+    };
+
+    return colorByKind[loadKind] || '';
+  }
+
   function renderLoadList() {
     ui.loadList.innerHTML = '';
 
@@ -369,8 +395,11 @@
     if (!load) {
       ui.loadNameInput.value = '';
       ui.loadKindSelect.value = 'custom';
-      ui.loadColorInput.value = '#7d9b2d';
+      ui.loadColorInput.value = '#646e78';
+      ui.loadColorInput.disabled = false;
       ui.loadActiveCheckbox.checked = true;
+
+      updateLoadColorPreview();
       return;
     }
 
@@ -378,8 +407,13 @@
     ui.loadKindSelect.value = ['green', 'yellow', 'red', 'custom'].includes(load.load_kind)
       ? load.load_kind
       : 'custom';
-    ui.loadColorInput.value = load.display_color || '#7d9b2d';
+    const fixedColor = getFixedLoadColorByKind(ui.loadKindSelect.value);
+
+    ui.loadColorInput.value = fixedColor || load.display_color || '#646e78';
+    ui.loadColorInput.disabled = !!fixedColor;
     ui.loadActiveCheckbox.checked = !!load.is_active;
+
+    updateLoadColorPreview();
   }
 
   function getTimePartsFromTimeString(timeString) {
@@ -594,7 +628,7 @@
     const payload = {
       name: ui.loadNameInput.value.trim(),
       load_kind: ui.loadKindSelect.value,
-      display_color: ui.loadColorInput.value,
+      display_color: getFixedLoadColorByKind(ui.loadKindSelect.value) || ui.loadColorInput.value,
       is_active: ui.loadActiveCheckbox.checked,
       updated_at: new Date().toISOString()
     };
@@ -615,6 +649,7 @@
       return;
     }
 
+    clearLoadCaches(loadId);
     await refreshLoadManager(loadId);
     alert('Load details saved.');
   }
@@ -734,6 +769,7 @@
       return;
     }
 
+    clearLoadCaches();
     await refreshLoadManager(data.id);
   }
 
@@ -765,11 +801,16 @@
       return;
     }
 
-    const copiedTimes = LOAD_TEMPLATE_TIMES.map((row) => ({
-      load_template_id: data.id,
-      show_time: row.show_time,
-      sort_order: row.sort_order
-    }));
+    const copiedTimes = LOAD_TEMPLATE_TIMES.map((row) => {
+      const showTime = row.show_time || '10:30:00';
+
+      return {
+        load_template_id: data.id,
+        show_time: showTime,
+        sort_order: row.sort_order,
+        is_after_hours: row.is_after_hours ?? showTime >= '17:00:00'
+      };
+    });
 
     if (copiedTimes.length) {
       const timesResult = await supabaseClient
@@ -782,6 +823,8 @@
       }
     }
 
+    clearLoadCaches(data.id);
+    clearLoadCaches(appState.selectedLoadId);
     await refreshLoadManager(data.id);
   }
 
@@ -800,10 +843,16 @@
     const confirmed = window.confirm(`Delete ${load.name}? This cannot be undone.`);
     if (!confirmed) return;
 
-    await supabaseClient
+    const timesResult = await supabaseClient
       .from('load_template_times')
       .delete()
       .eq('load_template_id', load.id);
+
+    if (timesResult.error) {
+      console.error('Failed to delete load times:', timesResult.error);
+      alert(`Could not delete load times: ${timesResult.error.message}`);
+      return;
+    }
 
     const { error } = await supabaseClient
       .from('load_templates')
@@ -816,6 +865,7 @@
       return;
     }
 
+    clearLoadCaches(load.id);
     await refreshLoadManager(null);
   }
 
@@ -875,21 +925,35 @@
     });
 
     ui.loadKindSelect.addEventListener('change', () => {
-      const colourByKind = {
-        green: '#7d9b2d',
-        yellow: '#f3bc43',
-        red: '#e6782d',
-        custom: '#646e78'
+      const fixedColor = getFixedLoadColorByKind(ui.loadKindSelect.value);
+
+      if (fixedColor) {
+        ui.loadColorInput.value = fixedColor;
+        ui.loadColorInput.disabled = true;
+      } else {
+        ui.loadColorInput.disabled = false;
+      }
+
+      updateLoadColorPreview();
+
+      const suggestedNameByKind = {
+        green: 'Green Load',
+        red: 'Red Load',
+        yellow: 'Yellow Load'
       };
 
-      ui.loadColorInput.value = colourByKind[ui.loadKindSelect.value] || '#646e78';
+      const currentName = ui.loadNameInput.value.trim();
+      const previousSuggestedNames = Object.values(suggestedNameByKind);
+
+      if (
+        suggestedNameByKind[ui.loadKindSelect.value] &&
+        (!currentName || previousSuggestedNames.includes(currentName))
+      ) {
+        ui.loadNameInput.value = suggestedNameByKind[ui.loadKindSelect.value];
+      }
     });
 
-    ui.loadColorInput.addEventListener('input', () => {
-      ui.loadColorPreview.textContent = ui.loadColorInput.value;
-      ui.loadColorPreview.style.background = ui.loadColorInput.value;
-      ui.loadColorPreview.style.color = '#ffffff';
-    });
+    ui.loadColorInput.addEventListener('input', updateLoadColorPreview);
 
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
