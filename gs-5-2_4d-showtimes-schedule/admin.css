@@ -479,18 +479,43 @@ select:focus {
   align-items: center;
   border: 1px solid var(--line);
   border-radius: 10px;
-  display: flex;
+  display: grid;
   flex-wrap: wrap;
   gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
   justify-content: space-between;
   margin-bottom: 8px;
   padding: 10px;
+}
+
+.showtime-time-controls {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 64px 64px 72px minmax(72px, auto);
+}
+
+.showtime-time-controls select {
+  min-height: 44px;
+  min-width: 0;
+  text-align: center;
 }
 
 .showtime select {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 6px 8px;
+}
+
+.showtime-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.showtime-actions button {
+  min-height: 44px;
+  padding: 8px 10px;
 }
 
 .showtime-badge {
@@ -720,6 +745,20 @@ select:disabled {
 
 .desktop-admin-bar {
   display: none;
+}
+
+@media (max-width: 520px) {
+  .showtime {
+    grid-template-columns: 1fr;
+  }
+
+  .showtime-time-controls {
+    grid-template-columns: 58px 58px 66px minmax(64px, auto);
+  }
+
+  .showtime-actions {
+    justify-content: flex-end;
+  }
 }
 
 @media (min-width: 1275px) {

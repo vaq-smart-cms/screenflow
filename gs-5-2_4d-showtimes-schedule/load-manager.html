@@ -610,10 +610,7 @@
       const timeParts = getTimePartsFromTimeString(timeRow.show_time);
 
       const leftWrap = document.createElement('div');
-      leftWrap.style.display = 'flex';
-      leftWrap.style.alignItems = 'center';
-      leftWrap.style.flexWrap = 'wrap';
-      leftWrap.style.gap = '8px';
+      leftWrap.className = 'showtime-time-controls';
 
       const hourSelect = document.createElement('select');
       hourSelect.appendChild(createHourOptions(timeParts.hour12));
@@ -661,9 +658,7 @@
       }
 
       const actionsWrap = document.createElement('div');
-      actionsWrap.style.display = 'flex';
-      actionsWrap.style.flexWrap = 'wrap';
-      actionsWrap.style.gap = '8px';
+      actionsWrap.className = 'showtime-actions';
 
       const saveButton = document.createElement('button');
       saveButton.className = 'neutral';
