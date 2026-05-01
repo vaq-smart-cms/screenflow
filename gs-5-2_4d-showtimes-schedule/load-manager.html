@@ -63,6 +63,9 @@
       <!-- C — Load Details -->
       <div class="panel">
         <h2>Load Details</h2>
+        <p id="default-lock-note" class="default-lock-note" hidden>
+          🔒 This is a default load. Duplicate it for safer changes, or check “Edit Default” to intentionally modify it.
+        </p>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Name</span>
           <input id="load-name-input" type="text" placeholder="Example: Green Load">
@@ -211,6 +214,7 @@
 
     loadNameInput: document.getElementById('load-name-input'),
     loadKindSelect: document.getElementById('load-kind-select'),
+    defaultLockNote: document.getElementById('default-lock-note'),
     editDefaultCheckbox: document.getElementById('edit-default-checkbox'),
     loadDefaultLockIcon: document.getElementById('load-default-lock-icon'),
     loadColorInput: document.getElementById('load-color-input'),
@@ -362,30 +366,50 @@
     return LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId) || null;
   }
 
+  function canModifySelectedLoad() {
+    const load = getSelectedLoad();
+
+    if (!load) return false;
+    if (!load.is_system_default) return true;
+
+    return appState.editDefaultLoad;
+  }
+
+  function warnLockedDefaultLoad() {
+    alert('This default load is locked. Check “Edit Default” first, or duplicate the load for safer changes.');
+  }
+
   function updateDefaultLoadLockState() {
     const load = getSelectedLoad();
     const isDefaultLoad = !!load?.is_system_default;
-    const canEditDefault = !isDefaultLoad || appState.editDefaultLoad;
+    const canEditLoad = !isDefaultLoad || appState.editDefaultLoad;
+    const fixedColor = getFixedLoadColorByKind(ui.loadKindSelect.value);
 
     if (ui.editDefaultCheckbox) {
       ui.editDefaultCheckbox.checked = appState.editDefaultLoad;
       ui.editDefaultCheckbox.disabled = !isDefaultLoad;
     }
 
+    if (ui.defaultLockNote) {
+      ui.defaultLockNote.hidden = !isDefaultLoad || appState.editDefaultLoad;
+    }
+
     if (ui.loadDefaultLockIcon) {
       ui.loadDefaultLockIcon.hidden = !isDefaultLoad;
-      ui.loadDefaultLockIcon.textContent = canEditDefault ? '🔓' : '🔒';
-      ui.loadDefaultLockIcon.title = canEditDefault
+      ui.loadDefaultLockIcon.textContent = canEditLoad ? '🔓' : '🔒';
+      ui.loadDefaultLockIcon.title = canEditLoad
         ? 'Default load editing is unlocked'
         : 'Default load is locked';
     }
 
-    ui.loadNameInput.disabled = !canEditDefault;
-    ui.loadKindSelect.disabled = !canEditDefault;
-    ui.loadColorInput.disabled = !canEditDefault || !!getFixedLoadColorByKind(ui.loadKindSelect.value);
-    ui.loadActiveCheckbox.disabled = !canEditDefault;
-    ui.saveLoadButton.disabled = !canEditDefault;
-    ui.addLoadTimeButton.disabled = !canEditDefault;
+    ui.loadNameInput.disabled = !canEditLoad;
+    ui.loadKindSelect.disabled = !canEditLoad;
+    ui.loadColorInput.disabled = !canEditLoad || !!fixedColor;
+    ui.loadActiveCheckbox.disabled = !canEditLoad;
+    ui.saveLoadButton.disabled = !canEditLoad;
+
+    ui.addLoadTimeTopButton.disabled = !canEditLoad;
+    ui.addLoadTimeButton.disabled = !canEditLoad;
   }
 
   function getFixedLoadColorByKind(loadKind) {
@@ -415,7 +439,11 @@
       const buttonColor = getLoadButtonColor(load);
       const isSelected = load.id === appState.selectedLoadId;
 
-      button.className = 'load-button';
+      button.className = [
+        'load-button',
+        load.is_system_default ? 'is-system-default' : '',
+        isSelected && load.is_system_default ? 'is-selected-default' : ''
+      ].filter(Boolean).join(' ');
       button.style.background = buttonColor;
       button.style.color = '#ffffff';
       button.style.margin = '0 8px 8px 0';
@@ -425,6 +453,7 @@
 
       button.addEventListener('click', async () => {
         appState.selectedLoadId = load.id;
+        appState.editDefaultLoad = false;
         await fetchLoadTimes(load.id);
         renderLoadList();
         renderLoadDetails();
@@ -462,6 +491,7 @@
     ui.loadActiveCheckbox.checked = !!load.is_active;
 
     updateLoadColorPreview();
+    updateDefaultLoadLockState();
   }
 
   function getTimePartsFromTimeString(timeString) {
@@ -673,6 +703,11 @@
       return;
     }
 
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return;
+    }
+
     const payload = {
       name: ui.loadNameInput.value.trim(),
       load_kind: ui.loadKindSelect.value,
@@ -705,6 +740,11 @@
   async function updateLoadTime(timeId, showTime) {
     if (!timeId || !showTime) return;
 
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return;
+    }
+
     const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
     const isAfterHours = normalizedTime >= '17:00:00';
 
@@ -729,6 +769,11 @@
   async function deleteLoadTime(timeId) {
     if (!timeId) return;
 
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return;
+    }
+
     const confirmed = window.confirm('Delete this showtime from the load?');
     if (!confirmed) return;
 
@@ -750,6 +795,11 @@
   async function addLoadTime() {
     if (!appState.selectedLoadId) {
       alert('Select a load first.');
+      return;
+    }
+
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
       return;
     }
 
@@ -793,6 +843,19 @@
 
     localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
     await refreshLoadManager(appState.selectedLoadId);
+
+    requestAnimationFrame(() => {
+      const rows = ui.loadTimesContainer.querySelectorAll('.showtime');
+      const newestRow = rows[rows.length - 1];
+
+      if (!newestRow) return;
+
+      newestRow.classList.add('showtime-new');
+      newestRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const firstSelect = newestRow.querySelector('select');
+      if (firstSelect) firstSelect.focus();
+    });
   }
 
   async function createLoad() {
@@ -930,6 +993,7 @@
       renderLoadList();
       renderLoadDetails();
       renderLoadTimes();
+      updateDefaultLoadLockState();
 
     } catch (err) {
       console.error('refreshLoadManager() failed:', err);
