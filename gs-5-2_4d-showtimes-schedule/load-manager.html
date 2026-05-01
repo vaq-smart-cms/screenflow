@@ -68,13 +68,20 @@
           <input id="load-name-input" type="text" placeholder="Example: Green Load">
         </label>
         <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Type</span>
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">
+            Load Type <span id="load-default-lock-icon" title="Default load is locked">🔒</span>
+          </span>
+
           <select id="load-kind-select">
             <option value="green">Green</option>
             <option value="yellow">Yellow</option>
             <option value="red">Red</option>
             <option value="custom">Custom</option>
           </select>
+        </label>
+        <label class="default-edit-row">
+          <input id="edit-default-checkbox" type="checkbox">
+          <span>Edit Default</span>
         </label>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Display Colour</span>
@@ -96,10 +103,15 @@
       <div class="panel">
         <h2>Template Showtimes</h2>
         <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
+        <button id="add-load-time-top-button" class="secondary" type="button">
+          + Add Showtime
+        </button>
         <div id="load-times-container">
           <p style="color:var(--text-soft);">Select a load to edit showtimes.</p>
         </div>
-        <button id="add-load-time-button" class="secondary" type="button">+ Add Showtime</button>
+        <button id="add-load-time-button" class="secondary" type="button">
+          + Add Showtime
+        </button>
       </div>
 
       <!-- E — Actions -->
@@ -180,7 +192,8 @@
   let LOAD_TEMPLATE_TIMES = [];
 
   const appState = {
-    selectedLoadId: null
+    selectedLoadId: null,
+    editDefaultLoad: false
   };
 
   const ui = {
@@ -198,12 +211,15 @@
 
     loadNameInput: document.getElementById('load-name-input'),
     loadKindSelect: document.getElementById('load-kind-select'),
+    editDefaultCheckbox: document.getElementById('edit-default-checkbox'),
+    loadDefaultLockIcon: document.getElementById('load-default-lock-icon'),
     loadColorInput: document.getElementById('load-color-input'),
     loadColorPreview: document.getElementById('load-color-preview'),
     loadActiveCheckbox: document.getElementById('load-active-checkbox'),
     saveLoadButton: document.getElementById('save-load-button'),
 
     loadTimesContainer: document.getElementById('load-times-container'),
+    addLoadTimeTopButton: document.getElementById('add-load-time-top-button'),
     addLoadTimeButton: document.getElementById('add-load-time-button'),
 
     duplicateLoadButton: document.getElementById('duplicate-load-button'),
@@ -342,6 +358,36 @@
     return load.display_color || '#646e78';
   }
 
+  function getSelectedLoad() {
+    return LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId) || null;
+  }
+
+  function updateDefaultLoadLockState() {
+    const load = getSelectedLoad();
+    const isDefaultLoad = !!load?.is_system_default;
+    const canEditDefault = !isDefaultLoad || appState.editDefaultLoad;
+
+    if (ui.editDefaultCheckbox) {
+      ui.editDefaultCheckbox.checked = appState.editDefaultLoad;
+      ui.editDefaultCheckbox.disabled = !isDefaultLoad;
+    }
+
+    if (ui.loadDefaultLockIcon) {
+      ui.loadDefaultLockIcon.hidden = !isDefaultLoad;
+      ui.loadDefaultLockIcon.textContent = canEditDefault ? '🔓' : '🔒';
+      ui.loadDefaultLockIcon.title = canEditDefault
+        ? 'Default load editing is unlocked'
+        : 'Default load is locked';
+    }
+
+    ui.loadNameInput.disabled = !canEditDefault;
+    ui.loadKindSelect.disabled = !canEditDefault;
+    ui.loadColorInput.disabled = !canEditDefault || !!getFixedLoadColorByKind(ui.loadKindSelect.value);
+    ui.loadActiveCheckbox.disabled = !canEditDefault;
+    ui.saveLoadButton.disabled = !canEditDefault;
+    ui.addLoadTimeButton.disabled = !canEditDefault;
+  }
+
   function getFixedLoadColorByKind(loadKind) {
     const colorByKind = {
       green: '#7d9b2d',
@@ -400,6 +446,8 @@
       ui.loadActiveCheckbox.checked = true;
 
       updateLoadColorPreview();
+      appState.editDefaultLoad = false;
+      updateDefaultLoadLockState();
       return;
     }
 
@@ -905,6 +953,7 @@
     ui.signInButton.addEventListener('click', handleSignIn);
     ui.signOutButton.addEventListener('click', handleSignOut);
     ui.saveLoadButton.addEventListener('click', saveLoadDetails);
+    ui.addLoadTimeTopButton.addEventListener('click', addLoadTime);
     ui.addLoadTimeButton.addEventListener('click', addLoadTime);
     ui.createLoadButton.addEventListener('click', createLoad);
     ui.duplicateLoadButton.addEventListener('click', duplicateLoad);
@@ -951,6 +1000,11 @@
       ) {
         ui.loadNameInput.value = suggestedNameByKind[ui.loadKindSelect.value];
       }
+    });
+
+    ui.editDefaultCheckbox.addEventListener('change', () => {
+      appState.editDefaultLoad = ui.editDefaultCheckbox.checked;
+      updateDefaultLoadLockState();
     });
 
     ui.loadColorInput.addEventListener('input', updateLoadColorPreview);
