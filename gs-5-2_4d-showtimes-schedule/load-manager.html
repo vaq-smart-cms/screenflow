@@ -39,9 +39,8 @@
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <a href="./admin.html">
-          <button class="secondary" type="button">← Back to Calendar</button>
+          <button class="neutral" type="button">← Back to Calendar</button>
         </a>
-        <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
       </div>
     </div>
 
@@ -52,7 +51,7 @@
       <div id="load-list">
         <p style="color:var(--text-soft);">Loading loads...</p>
       </div>
-      <button id="create-load-button" class="primary" type="button">+ Create New Load</button>
+      <button id="create-load-button" class="purple" type="button">+ Create New Load</button>
     </div>
 
   </div>
@@ -97,7 +96,12 @@
           <input id="load-active-checkbox" type="checkbox" checked>
           <span>Active / available in scheduler</span>
         </label>
-        <button id="save-load-button" class="primary" type="button">Save Load Details</button>
+        <button id="save-load-button" class="neutral" type="button">
+          Save Load
+        </button>
+        <button id="duplicate-load-inline-button" class="neutral mobile-inline-action" type="button">
+          Duplicate Load
+        </button>
       </div>
     </div>
 
@@ -106,13 +110,13 @@
       <div class="panel">
         <h2>Template Showtimes</h2>
         <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
-        <button id="add-load-time-top-button" class="secondary" type="button">
+        <button id="add-load-time-top-button" class="neutral" type="button">
           + Add Showtime
         </button>
         <div id="load-times-container">
           <p style="color:var(--text-soft);">Select a load to edit showtimes.</p>
         </div>
-        <button id="add-load-time-button" class="secondary" type="button">
+        <button id="add-load-time-button" class="neutral" type="button">
           + Add Showtime
         </button>
       </div>
@@ -121,8 +125,8 @@
       <div class="panel">
         <h2>Actions</h2>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="duplicate-load-button" class="secondary" type="button">Duplicate Load</button>
-          <button id="delete-load-button" class="accent" type="button">Delete Load</button>
+          <button id="duplicate-load-button" class="neutral" type="button">Duplicate Load</button>
+          <button id="delete-load-button" class="danger" type="button">Delete Load</button>
         </div>
       </div>
     </div>
@@ -205,7 +209,7 @@
     emailInput: document.getElementById('email-input'),
     passwordInput: document.getElementById('password-input'),
     signInButton: document.getElementById('sign-in-button'),
-    signOutButton: document.getElementById('sign-out-button'),
+    /* signOutButton: document.getElementById('sign-out-button'), */
     authMessage: document.getElementById('auth-message'),
     sessionText: document.getElementById('session-text'),
 
@@ -227,6 +231,7 @@
     addLoadTimeButton: document.getElementById('add-load-time-button'),
 
     duplicateLoadButton: document.getElementById('duplicate-load-button'),
+    duplicateLoadInlineButton: document.getElementById('duplicate-load-inline-button'),
     deleteLoadButton: document.getElementById('delete-load-button')
   };
 
@@ -357,7 +362,7 @@
   function getLoadButtonColor(load) {
     if (load.load_kind === 'green') return '#7d9b2d';
     if (load.load_kind === 'yellow') return '#f3bc43';
-    if (load.load_kind === 'red') return '#e6782d';
+    if (load.load_kind === 'red') return '#c73232';
 
     return load.display_color || '#646e78';
   }
@@ -415,7 +420,7 @@
   function getFixedLoadColorByKind(loadKind) {
     const colorByKind = {
       green: '#7d9b2d',
-      red: '#e6782d',
+      red: '#c73232',
       yellow: '#f3bc43'
     };
 
@@ -661,6 +666,7 @@
       actionsWrap.style.gap = '8px';
 
       const saveButton = document.createElement('button');
+      saveButton.className = 'neutral';
       saveButton.type = 'button';
       saveButton.textContent = 'Save';
       saveButton.addEventListener('click', async () => {
@@ -679,6 +685,7 @@
       });
 
       const deleteButton = document.createElement('button');
+      deleteButton.className = 'danger';
       deleteButton.type = 'button';
       deleteButton.textContent = 'Delete';
       deleteButton.addEventListener('click', async () => {
@@ -867,7 +874,7 @@
       .insert({
         name: name.trim(),
         load_kind: 'custom',
-        display_color: '#646e78',
+        display_color: '#7b5bbd',
         is_active: true,
         is_system_default: false
       })
@@ -1015,12 +1022,13 @@
 
   async function initializePage() {
     ui.signInButton.addEventListener('click', handleSignIn);
-    ui.signOutButton.addEventListener('click', handleSignOut);
+    /* ui.signOutButton.addEventListener('click', handleSignOut); */
     ui.saveLoadButton.addEventListener('click', saveLoadDetails);
     ui.addLoadTimeTopButton.addEventListener('click', addLoadTime);
     ui.addLoadTimeButton.addEventListener('click', addLoadTime);
     ui.createLoadButton.addEventListener('click', createLoad);
     ui.duplicateLoadButton.addEventListener('click', duplicateLoad);
+    ui.duplicateLoadInlineButton.addEventListener('click', duplicateLoad);
     ui.deleteLoadButton.addEventListener('click', deleteLoad);
 
     ui.passwordInput.addEventListener('keydown', (event) => {

@@ -559,6 +559,17 @@ select:focus {
 
 /* G — Load Manager */
 
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+#add-load-time-top-button {
+  margin-bottom: 12px;
+}
+
 .color-row {
   align-items: center;
   display: flex;
@@ -581,6 +592,11 @@ select:focus {
   font-weight: 700;
   min-width: 110px;
   padding: 8px 12px;
+}
+
+.danger {
+  background: #9f1f1f;
+  color: #ffffff;
 }
 
 .default-edit-row {
@@ -619,13 +635,6 @@ select:focus {
     0 0 0 2px rgba(243, 188, 67, 0.85) !important;
 }
 
-button:disabled,
-input:disabled,
-select:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
-}
-
 .load-button {
   transition: opacity 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
@@ -633,6 +642,20 @@ select:disabled {
 .load-button:hover {
   opacity: 1 !important;
   transform: translateY(-1px);
+}
+
+.mobile-inline-action {
+  margin-left: 8px;
+}
+
+.neutral {
+  background: #646e78;
+  color: #ffffff;
+}
+
+.purple {
+  background: #7b5bbd;
+  color: #ffffff;
 }
 
 /* H - Tools in Footer */
@@ -824,6 +847,10 @@ select:disabled {
   .load-manager-lower-left .panel,
   .load-manager-lower-right .panel {
     margin-bottom: 16px;
+  }
+
+  .mobile-inline-action {
+    display: none;
   }
 
   .top-dashboard-grid {
