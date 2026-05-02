@@ -109,6 +109,9 @@
       <!-- D — Template Showtime Editor -->
       <div class="panel">
         <h2>Template Showtimes</h2>
+        <button id="save-load-times-button" class="neutral" type="button">
+          Save All Showtimes
+        </button>
         <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
         <button id="add-load-time-top-button" class="neutral" type="button">
           + Add Showtime
@@ -225,6 +228,7 @@
     loadColorPreview: document.getElementById('load-color-preview'),
     loadActiveCheckbox: document.getElementById('load-active-checkbox'),
     saveLoadButton: document.getElementById('save-load-button'),
+    saveLoadTimesButton: document.getElementById('save-load-times-button'),
 
     loadTimesContainer: document.getElementById('load-times-container'),
     addLoadTimeTopButton: document.getElementById('add-load-time-top-button'),
@@ -637,6 +641,7 @@
     LOAD_TEMPLATE_TIMES.forEach((timeRow) => {
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
+      rowEl.dataset.timeId = timeRow.id;
 
       const timeParts = getTimePartsFromTimeString(timeRow.show_time);
 
@@ -675,6 +680,56 @@
 
         previewText.textContent = builtTime ? formatTimeLabel(builtTime) : 'Invalid time';
         setShowtimeRowState(rowEl, builtTime ? 'unsaved' : 'error', builtTime ? '' : 'Invalid time');
+      }
+
+      async function saveAllShowtimes() {
+        const rows = ui.loadTimesContainer.querySelectorAll('.showtime');
+
+        if (!rows.length) return;
+
+        let savedCount = 0;
+        let errorCount = 0;
+
+        for (const rowEl of rows) {
+          const stateEl = rowEl.querySelector('.showtime-save-state');
+
+          if (!stateEl || !stateEl.classList.contains('is-unsaved')) {
+            continue;
+          }
+
+          const selects = rowEl.querySelectorAll('select');
+
+          const hour = selects[0]?.value;
+          const minute = selects[1]?.value;
+          const ampm = selects[2]?.value;
+
+          const builtTime = buildTimeFrom12HourParts(hour, minute, ampm);
+
+          if (!builtTime) {
+            setShowtimeRowState(rowEl, 'error', 'Invalid time');
+            errorCount++;
+            continue;
+          }
+
+          setShowtimeRowState(rowEl, 'saving');
+
+          const timeId = rowEl.dataset.timeId;
+          const saved = await updateLoadTime(timeId, builtTime);
+
+          if (saved) {
+            setShowtimeRowState(rowEl, 'saved');
+            savedCount++;
+          } else {
+            setShowtimeRowState(rowEl, 'error');
+            errorCount++;
+          }
+        }
+
+        if (errorCount) {
+          alert(`Saved ${savedCount} showtimes. ${errorCount} could not be saved.`);
+        } else if (savedCount) {
+          alert('All showtimes saved.');
+        }
       }
 
       async function saveCurrentRow() {
@@ -900,14 +955,16 @@
       return Number.isFinite(value) ? Math.max(max, value) : max;
     }, 0) || 0) + 1;
 
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('load_template_times')
       .insert({
         load_template_id: appState.selectedLoadId,
         show_time: defaultTime,
         sort_order: nextSortOrder,
         is_after_hours: defaultTime >= '17:00:00'
-      });
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Failed to add load time:', error);
@@ -919,8 +976,9 @@
     await refreshLoadManager(appState.selectedLoadId);
 
     requestAnimationFrame(() => {
-      const rows = ui.loadTimesContainer.querySelectorAll('.showtime');
-      const newestRow = rows[rows.length - 1];
+      const newestRow = ui.loadTimesContainer.querySelector(
+        `.showtime[data-time-id="${data.id}"]`
+      );
 
       if (!newestRow) return;
 
@@ -929,6 +987,10 @@
 
       const firstSelect = newestRow.querySelector('select');
       if (firstSelect) firstSelect.focus();
+
+      window.setTimeout(() => {
+        newestRow.classList.remove('showtime-new');
+      }, 2200);
     });
   }
 
@@ -1091,6 +1153,7 @@
     ui.signInButton.addEventListener('click', handleSignIn);
     /* ui.signOutButton.addEventListener('click', handleSignOut); */
     ui.saveLoadButton.addEventListener('click', saveLoadDetails);
+    ui.saveLoadTimesButton.addEventListener('click', saveAllShowtimes);
     ui.addLoadTimeTopButton.addEventListener('click', addLoadTime);
     ui.addLoadTimeButton.addEventListener('click', addLoadTime);
     ui.createLoadButton.addEventListener('click', createLoad);
