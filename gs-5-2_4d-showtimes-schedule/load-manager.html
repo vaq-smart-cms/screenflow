@@ -784,6 +784,16 @@
     }
 
     const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
+
+    const duplicateTime = LOAD_TEMPLATE_TIMES.some((row) => {
+      return row.id !== timeId && row.show_time === normalizedTime;
+    });
+
+    if (duplicateTime) {
+      alert('That showtime already exists in this load. Please choose a different time.');
+      return false;
+    }
+
     const isAfterHours = normalizedTime >= '17:00:00';
 
     const { error } = await supabaseClient
@@ -796,7 +806,13 @@
 
     if (error) {
       console.error('Failed to update load time:', error);
-      alert(`Could not update time: ${error.message}`);
+
+      if (error.code === '23505') {
+        alert('That showtime already exists in this load. Please choose a different time.');
+      } else {
+        alert(`Could not update time: ${error.message}`);
+      }
+
       return false;
     }
 
