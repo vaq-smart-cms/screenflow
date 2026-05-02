@@ -606,6 +606,16 @@
     stateEl.textContent = labelByState[state] || '';
   }
 
+  function scheduleShowtimeAutoSave(rowEl, saveHandler) {
+    if (!rowEl || typeof saveHandler !== 'function') return;
+
+    window.clearTimeout(rowEl.autoSaveTimer);
+
+    rowEl.autoSaveTimer = window.setTimeout(() => {
+      saveHandler();
+    }, 650);
+  }
+
   function renderLoadTimes() {
     ui.loadTimesContainer.innerHTML = '';
 
@@ -668,9 +678,37 @@
         setShowtimeRowState(rowEl, builtTime ? 'unsaved' : 'error', builtTime ? '' : 'Invalid time');
       }
 
-      hourSelect.addEventListener('change', updatePreview);
-      minuteSelect.addEventListener('change', updatePreview);
-      ampmSelect.addEventListener('change', updatePreview);
+      async function saveCurrentRow() {
+        const builtTime = buildTimeFrom12HourParts(
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
+
+        if (!builtTime) {
+          setShowtimeRowState(rowEl, 'error', 'Invalid time');
+          return false;
+        }
+
+        setShowtimeRowState(rowEl, 'saving');
+
+        const saved = await updateLoadTime(timeRow.id, builtTime);
+
+        if (saved) {
+          setShowtimeRowState(rowEl, 'saved');
+          return true;
+        }
+
+        setShowtimeRowState(rowEl, 'error');
+        return false;
+      }
+
+      [hourSelect, minuteSelect, ampmSelect].forEach((selectEl) => {
+        selectEl.addEventListener('change', () => {
+          updatePreview();
+          scheduleShowtimeAutoSave(rowEl, saveCurrentRow);
+        });
+      });
 
       leftWrap.appendChild(hourSelect);
       leftWrap.appendChild(minuteSelect);
@@ -693,26 +731,8 @@
       saveButton.type = 'button';
       saveButton.textContent = 'Save';
       saveButton.addEventListener('click', async () => {
-        const builtTime = buildTimeFrom12HourParts(
-          hourSelect.value,
-          minuteSelect.value,
-          ampmSelect.value
-        );
-
-        if (!builtTime) {
-          alert('Please choose a valid time.');
-          return;
-        }
-
-        setShowtimeRowState(rowEl, 'saving');
-
-        const saved = await updateLoadTime(timeRow.id, builtTime);
-
-        if (saved) {
-          setShowtimeRowState(rowEl, 'saved');
-        } else {
-          setShowtimeRowState(rowEl, 'error');
-        }
+        window.clearTimeout(rowEl.autoSaveTimer);
+        await saveCurrentRow();
       });
 
       const deleteButton = document.createElement('button');
