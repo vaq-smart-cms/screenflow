@@ -152,6 +152,8 @@
     }
   });
 
+  const DEFAULT_SHOWTIME_INTERVAL_MINUTES = 20;
+
   const CACHE_TTL_MS = 10 * 60 * 1000;
 
   function readCache(key) {
@@ -1008,7 +1010,9 @@
 
       if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
         const tempDate = new Date(2000, 0, 1, hh, mm);
-        tempDate.setMinutes(tempDate.getMinutes() + 30);
+        tempDate.setMinutes(
+          tempDate.getMinutes() + DEFAULT_SHOWTIME_INTERVAL_MINUTES
+        );
 
         defaultTime = `${String(tempDate.getHours()).padStart(2, '0')}:${String(tempDate.getMinutes()).padStart(2, '0')}:00`;
       }
