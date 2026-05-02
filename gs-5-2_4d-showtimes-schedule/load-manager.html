@@ -109,10 +109,10 @@
       <!-- D — Template Showtime Editor -->
       <div class="panel">
         <h2>Template Showtimes</h2>
+        <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
         <button id="save-load-times-button" class="neutral" type="button">
           Save All Showtimes
         </button>
-        <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
         <button id="add-load-time-top-button" class="neutral" type="button">
           + Add Showtime
         </button>
@@ -361,6 +361,12 @@
 
     writeCache(cacheKey, LOAD_TEMPLATE_TIMES);
 
+  }
+
+  function sortLoadTemplateTimes() {
+    LOAD_TEMPLATE_TIMES.sort((a, b) => {
+      return String(a.show_time || '').localeCompare(String(b.show_time || ''));
+    });
   }
 
   function getLoadButtonColor(load) {
@@ -890,8 +896,36 @@
       return false;
     }
 
+    const updatedRow = LOAD_TEMPLATE_TIMES.find((row) => row.id === timeId);
+
+    if (updatedRow) {
+      updatedRow.show_time = normalizedTime;
+      updatedRow.is_after_hours = isAfterHours;
+    }
+
+    sortLoadTemplateTimes();
+
     localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
-    await refreshLoadManager(appState.selectedLoadId);
+    writeCache(`vaq_4d_load_template_times_${appState.selectedLoadId}`, LOAD_TEMPLATE_TIMES);
+
+    renderLoadTimes();
+
+    requestAnimationFrame(() => {
+      const movedRow = ui.loadTimesContainer.querySelector(
+        `.showtime[data-time-id="${timeId}"]`
+      );
+
+      if (!movedRow) return;
+
+      movedRow.classList.add('is-reordered');
+      movedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      window.setTimeout(() => {
+        movedRow.classList.remove('is-reordered');
+      }, 950);
+    });
+
+    return true;
   }
 
   async function deleteLoadTime(timeId) {
