@@ -584,6 +584,28 @@
     return `${parts.hour12}:${parts.minute} ${parts.ampm}`;
   }
 
+  function setShowtimeRowState(rowEl, state, message = '') {
+    if (!rowEl) return;
+
+    const stateEl = rowEl.querySelector('.showtime-save-state');
+    if (!stateEl) return;
+
+    rowEl.classList.remove('is-saved', 'is-unsaved', 'is-saving', 'is-error');
+    stateEl.classList.remove('is-saved', 'is-unsaved', 'is-saving', 'is-error');
+
+    rowEl.classList.add(`is-${state}`);
+    stateEl.classList.add(`is-${state}`);
+
+    const labelByState = {
+      saved: 'Saved',
+      unsaved: 'Unsaved',
+      saving: 'Saving…',
+      error: message || 'Could not save'
+    };
+
+    stateEl.textContent = labelByState[state] || '';
+  }
+
   function renderLoadTimes() {
     ui.loadTimesContainer.innerHTML = '';
 
@@ -631,6 +653,10 @@
       previewText.style.color = 'var(--text-soft)';
       previewText.textContent = formatTimeLabel(timeRow.show_time);
 
+      const saveStateText = document.createElement('span');
+      saveStateText.className = 'showtime-save-state is-saved';
+      saveStateText.textContent = 'Saved';
+
       function updatePreview() {
         const builtTime = buildTimeFrom12HourParts(
           hourSelect.value,
@@ -639,6 +665,7 @@
         );
 
         previewText.textContent = builtTime ? formatTimeLabel(builtTime) : 'Invalid time';
+        setShowtimeRowState(rowEl, builtTime ? 'unsaved' : 'error', builtTime ? '' : 'Invalid time');
       }
 
       hourSelect.addEventListener('change', updatePreview);
@@ -649,6 +676,7 @@
       leftWrap.appendChild(minuteSelect);
       leftWrap.appendChild(ampmSelect);
       leftWrap.appendChild(previewText);
+      leftWrap.appendChild(saveStateText);
 
       if (timeRow.is_after_hours) {
         const badge = document.createElement('span');
@@ -676,7 +704,15 @@
           return;
         }
 
-        await updateLoadTime(timeRow.id, builtTime);
+        setShowtimeRowState(rowEl, 'saving');
+
+        const saved = await updateLoadTime(timeRow.id, builtTime);
+
+        if (saved) {
+          setShowtimeRowState(rowEl, 'saved');
+        } else {
+          setShowtimeRowState(rowEl, 'error');
+        }
       });
 
       const deleteButton = document.createElement('button');
@@ -740,11 +776,11 @@
   }
 
   async function updateLoadTime(timeId, showTime) {
-    if (!timeId || !showTime) return;
+    if (!timeId || !showTime) return false;
 
     if (!canModifySelectedLoad()) {
       warnLockedDefaultLoad();
-      return;
+      return false;
     }
 
     const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
@@ -761,7 +797,7 @@
     if (error) {
       console.error('Failed to update load time:', error);
       alert(`Could not update time: ${error.message}`);
-      return;
+      return false;
     }
 
     localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
@@ -792,6 +828,7 @@
 
     localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
     await refreshLoadManager(appState.selectedLoadId);
+    return true;
   }
 
   async function addLoadTime() {

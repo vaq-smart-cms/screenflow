@@ -1,3 +1,7 @@
+/* =========================================================
+   01 — Foundations: Fonts, Tokens, Elements + Shared Utilities
+   ========================================================= */
+
 @font-face {
   font-display: swap;
   font-family: 'BlissPro';
@@ -60,6 +64,8 @@ input[type="color"] {
   width: auto;
 }
 
+/* Shared action/button utilities */
+
 .accent {
   background: var(--vaq-orange);
   color: #ffffff;
@@ -75,6 +81,8 @@ input[type="color"] {
   color: #ffffff;
 }
 
+/* Shared panels */
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -84,7 +92,9 @@ input[type="color"] {
   padding: 16px;
 }
 
-/* Boot Panel */
+/* =========================================================
+   02 — Boot Panel
+   ========================================================= */
 
 .boot-panel {
   align-items: center;
@@ -128,6 +138,8 @@ input[type="color"] {
   width: 22px;
 }
 
+/* Boot panel animations */
+
 @keyframes bootFadeIn {
   from {
     opacity: 0;
@@ -158,7 +170,9 @@ input[type="color"] {
   }
 }
 
-/* A — Header */
+/* =========================================================
+   03 — Header + Status
+   ========================================================= */
 
 .header {
   align-items: center;
@@ -205,7 +219,9 @@ input[type="color"] {
   color: #31450f;
 }
 
-/* B — Calendar */
+/* =========================================================
+   04 — Calendar + Batch Selection
+   ========================================================= */
 
 .calendar-toolbar {
   align-items: center;
@@ -306,6 +322,8 @@ input[type="color"] {
   width: 8px;
 }
 
+/* Calendar animations */
+
 @keyframes batchWiggle {
   0%, 100% {
     transform: rotate(0deg);
@@ -320,7 +338,9 @@ input[type="color"] {
   }
 }
 
-/* D — Film */
+/* =========================================================
+   05 — Film Manager
+   ========================================================= */
 
 .accessibility-editor {
   margin-bottom: 12px;
@@ -473,7 +493,9 @@ select:focus {
   min-height: 112px;
 }
 
-/* F — Showtime */
+/* =========================================================
+   06 — Showtime Editor + Compact Tools
+   ========================================================= */
 
 .showtime {
   align-items: center;
@@ -535,6 +557,48 @@ select:focus {
   box-shadow: inset 0 0 0 2px rgba(230, 120, 45, 0.18);
 }
 
+.showtime-save-state {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.showtime-save-state.is-saved {
+  background: rgba(125, 155, 45, 0.14);
+  color: #405414;
+}
+
+.showtime-save-state.is-unsaved {
+  background: rgba(243, 188, 67, 0.18);
+  color: #6b4c08;
+}
+
+.showtime-save-state.is-saving {
+  background: rgba(100, 165, 195, 0.18);
+  color: #1d536b;
+}
+
+.showtime-save-state.is-error {
+  background: rgba(159, 31, 31, 0.14);
+  color: #7f1717;
+}
+
+.showtime.is-unsaved {
+  border-color: #f3bc43;
+  box-shadow: inset 0 0 0 2px rgba(243, 188, 67, 0.18);
+}
+
+.showtime.is-saving {
+  opacity: 0.72;
+}
+
+.showtime.is-error {
+  border-color: #9f1f1f;
+  box-shadow: inset 0 0 0 2px rgba(159, 31, 31, 0.14);
+}
+
 .compact-tool-link {
   color: inherit;
   display: inline-block;
@@ -582,7 +646,9 @@ select:focus {
   margin-top: 1px;
 }
 
-/* G — Load Manager */
+/* =========================================================
+   07 — Load Manager
+   ========================================================= */
 
 button:disabled,
 input:disabled,
@@ -683,7 +749,9 @@ select:disabled {
   color: #ffffff;
 }
 
-/* H - Tools in Footer */
+/* =========================================================
+   08 — Tools + Footer Navigation
+   ========================================================= */
 
 .tool-button-row {
   display: grid;
@@ -747,6 +815,10 @@ select:disabled {
   display: none;
 }
 
+/* =========================================================
+   09 — Responsive Layout: Small Screens
+   ========================================================= */
+
 @media (max-width: 520px) {
   .showtime {
     grid-template-columns: 1fr;
@@ -761,6 +833,10 @@ select:disabled {
   }
 }
 
+/* =========================================================
+   10 — Responsive Layout: Desktop Admin
+   ========================================================= */
+
 @media (min-width: 1275px) {
   body {
     max-width: 1440px;
@@ -774,7 +850,9 @@ select:disabled {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .admin-three-column-grid .panel {
+  .admin-three-column-grid /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -786,7 +864,9 @@ select:disabled {
   }
 
   .admin-lower-left .panel,
-  .admin-lower-right .panel {
+  .admin-lower-right /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -837,7 +917,9 @@ select:disabled {
     grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
   }
 
-  .film-manager-top-grid .panel {
+  .film-manager-top-grid /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -855,7 +937,9 @@ select:disabled {
   }
 
   .film-manager-lower-left .panel,
-  .film-manager-lower-right .panel {
+  .film-manager-lower-right /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -866,7 +950,9 @@ select:disabled {
     grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
   }
 
-  .load-manager-top-grid .panel {
+  .load-manager-top-grid /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -884,7 +970,9 @@ select:disabled {
   }
 
   .load-manager-lower-left .panel,
-  .load-manager-lower-right .panel {
+  .load-manager-lower-right /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -899,7 +987,9 @@ select:disabled {
     grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
   }
 
-  .top-dashboard-grid .panel {
+  .top-dashboard-grid /* Shared panels */
+
+.panel {
     margin-bottom: 16px;
   }
 
@@ -922,6 +1012,10 @@ select:disabled {
     animation: liveStatusPulse 3.5s ease-in-out infinite;
   }
 }
+
+/* =========================================================
+   11 — Shared Animations
+   ========================================================= */
 
 @keyframes liveStatusPulse {
   0%, 100% {
