@@ -705,11 +705,19 @@
         const saved = await updateLoadTime(timeRow.id, builtTime);
 
         if (saved) {
-          setShowtimeRowState(rowEl, 'saved');
+          const refreshedRow = ui.loadTimesContainer.querySelector(
+            `.showtime[data-time-id="${timeRow.id}"]`
+          );
+
+          setShowtimeRowState(refreshedRow || rowEl, 'saved');
           return true;
         }
 
-        setShowtimeRowState(rowEl, 'error');
+        const refreshedRow = ui.loadTimesContainer.querySelector(
+          `.showtime[data-time-id="${timeRow.id}"]`
+        );
+
+        setShowtimeRowState(refreshedRow || rowEl, 'error');
         return false;
       }
 
@@ -750,7 +758,24 @@
       deleteButton.type = 'button';
       deleteButton.textContent = 'Delete';
       deleteButton.addEventListener('click', async () => {
-        await deleteLoadTime(timeRow.id);
+        const confirmed = window.confirm('Delete this showtime from the load?');
+        if (!confirmed) return;
+
+        rowEl.style.maxHeight = `${rowEl.scrollHeight}px`;
+
+        requestAnimationFrame(() => {
+          rowEl.classList.add('is-deleting');
+        });
+
+        window.setTimeout(async () => {
+          const deleted = await deleteLoadTime(timeRow.id, { skipConfirm: true });
+
+          if (!deleted) {
+            rowEl.classList.remove('is-deleting');
+            rowEl.style.maxHeight = '';
+            setShowtimeRowState(rowEl, 'error', 'Could not delete');
+          }
+        }, 230);
       });
 
       actionsWrap.appendChild(saveButton);
@@ -864,6 +889,7 @@
     }
 
     const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
+    const isAfterHours = normalizedTime >= '17:00:00';
 
     const duplicateTime = LOAD_TEMPLATE_TIMES.some((row) => {
       return row.id !== timeId && row.show_time === normalizedTime;
@@ -873,8 +899,6 @@
       alert('That showtime already exists in this load. Please choose a different time.');
       return false;
     }
-
-    const isAfterHours = normalizedTime >= '17:00:00';
 
     const { error } = await supabaseClient
       .from('load_template_times')
@@ -928,7 +952,7 @@
     return true;
   }
 
-  async function deleteLoadTime(timeId) {
+  async function deleteLoadTime(timeId, options = {}) {
     if (!timeId) return;
 
     if (!canModifySelectedLoad()) {
@@ -936,8 +960,10 @@
       return;
     }
 
-    const confirmed = window.confirm('Delete this showtime from the load?');
-    if (!confirmed) return;
+    if (!options.skipConfirm) {
+      const confirmed = window.confirm('Delete this showtime from the load?');
+      if (!confirmed) return false;
+    }
 
     const { error } = await supabaseClient
       .from('load_template_times')
@@ -947,11 +973,15 @@
     if (error) {
       console.error('Failed to delete load time:', error);
       alert(`Could not delete time: ${error.message}`);
-      return;
+      return false;
     }
 
+    LOAD_TEMPLATE_TIMES = LOAD_TEMPLATE_TIMES.filter((row) => row.id !== timeId);
+
     localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
-    await refreshLoadManager(appState.selectedLoadId);
+    writeCache(`vaq_4d_load_template_times_${appState.selectedLoadId}`, LOAD_TEMPLATE_TIMES);
+
+    renderLoadTimes();
     return true;
   }
 

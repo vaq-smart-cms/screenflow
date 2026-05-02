@@ -589,6 +589,22 @@ select:focus {
   color: #7f1717;
 }
 
+.showtime.is-deleting {
+  margin-bottom: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding-bottom: 0;
+  padding-top: 0;
+  transform: translateX(18px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    max-height 220ms ease,
+    margin-bottom 220ms ease,
+    padding 220ms ease;
+}
+
 .showtime.is-reordered {
   animation: showtimeReorderPulse 900ms ease both;
 }
