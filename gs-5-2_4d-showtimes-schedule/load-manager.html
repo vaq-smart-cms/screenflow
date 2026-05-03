@@ -109,9 +109,11 @@
       <!-- D — Template Showtime Editor -->
       <div class="panel">
         <h2>Template Showtimes</h2>
-        <p style="color:var(--text-soft);">These times are copied into a date when this load is applied.</p>
+        <p style="color:var(--text-soft);">
+          These template times are copied into a date when this load is applied. Changes save automatically after editing.
+        </p>
         <button id="save-load-times-button" class="neutral" type="button">
-          Save All Showtimes
+          Save Pending Showtimes
         </button>
         <button id="add-load-time-top-button" class="neutral" type="button">
           + Add Showtime
@@ -419,6 +421,15 @@
         : 'Default load is locked';
     }
 
+    if (!load) {
+      ui.addLoadTimeTopButton.disabled = true;
+      ui.addLoadTimeButton.disabled = true;
+      ui.saveLoadTimesButton.disabled = true;
+      return;
+    }
+
+    ui.saveLoadTimesButton.disabled = !canEditLoad;
+
     ui.loadNameInput.disabled = !canEditLoad;
     ui.loadKindSelect.disabled = !canEditLoad;
     ui.loadColorInput.disabled = !canEditLoad || !!fixedColor;
@@ -609,9 +620,9 @@
 
     const labelByState = {
       saved: 'Saved',
-      unsaved: 'Unsaved',
+      unsaved: 'Pending save',
       saving: 'Saving…',
-      error: message || 'Could not save'
+      error: message || 'Save failed'
     };
 
     stateEl.textContent = labelByState[state] || '';
@@ -633,15 +644,26 @@
     if (!appState.selectedLoadId) {
       const empty = document.createElement('p');
       empty.style.color = 'var(--text-soft)';
-      empty.textContent = 'Select a load to edit showtimes.';
+      empty.className = 'showtime-empty-state';
+      empty.textContent = 'Select a load to review or edit its template showtimes.';
       ui.loadTimesContainer.appendChild(empty);
       return;
+    }
+
+    const selectedLoad = getSelectedLoad();
+
+    if (selectedLoad?.is_system_default && !appState.editDefaultLoad) {
+      const locked = document.createElement('p');
+      locked.className = 'showtime-empty-state';
+      locked.textContent = 'Default load showtimes are locked. Check “Edit Default” in Load Details to make changes, or duplicate this load for safer edits.';
+      ui.loadTimesContainer.appendChild(locked);
     }
 
     if (!LOAD_TEMPLATE_TIMES.length) {
       const empty = document.createElement('p');
       empty.style.color = 'var(--text-soft)';
-      empty.textContent = 'This load has no showtimes yet.';
+      empty.className = 'showtime-empty-state';
+      empty.textContent = 'This load has no showtimes yet. Use “+ Add Showtime” to create the first one.';
       ui.loadTimesContainer.appendChild(empty);
       return;
     }
@@ -877,9 +899,11 @@
     }
 
     if (errorCount) {
-      alert(`Saved ${savedCount} showtimes. ${errorCount} could not be saved.`);
+      alert(`Saved ${savedCount} pending showtimes. ${errorCount} still need attention.`);
     } else if (savedCount) {
-      alert('All showtimes saved.');
+      alert('Pending showtimes saved.');
+    } else {
+      alert('There are no pending showtime changes to save.');
     }
   }
 
@@ -906,7 +930,7 @@
       return {
         ok: false,
         reason: 'duplicate',
-        message: 'Duplicate time'
+        message: 'Already exists'
       };
     }
 
@@ -929,7 +953,7 @@
         return {
           ok: false,
           reason: 'duplicate',
-          message: 'Duplicate time'
+          message: 'Already exists'
         };
       }
 
