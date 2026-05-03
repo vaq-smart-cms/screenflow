@@ -704,22 +704,23 @@
 
         setShowtimeRowState(rowEl, 'saving');
 
-        const saved = await updateLoadTime(timeRow.id, builtTime);
-
-        if (saved) {
-          const refreshedRow = ui.loadTimesContainer.querySelector(
-            `.showtime[data-time-id="${timeRow.id}"]`
-          );
-
-          setShowtimeRowState(refreshedRow || rowEl, 'saved');
-          return true;
-        }
+        const result = await updateLoadTime(timeRow.id, builtTime, { silent: true });
 
         const refreshedRow = ui.loadTimesContainer.querySelector(
           `.showtime[data-time-id="${timeRow.id}"]`
         );
 
-        setShowtimeRowState(refreshedRow || rowEl, 'error');
+        if (result?.ok) {
+          setShowtimeRowState(refreshedRow || rowEl, 'saved');
+          return true;
+        }
+
+        setShowtimeRowState(
+          refreshedRow || rowEl,
+          'error',
+          result?.message || 'Could not save'
+        );
+
         return false;
       }
 
@@ -747,9 +748,9 @@
       actionsWrap.className = 'showtime-actions';
 
       const saveButton = document.createElement('button');
-      saveButton.className = 'neutral';
+      saveButton.className = 'showtime-save-now-button';
       saveButton.type = 'button';
-      saveButton.textContent = 'Save';
+      saveButton.textContent = 'Save Now';
       saveButton.addEventListener('click', async () => {
         window.clearTimeout(rowEl.autoSaveTimer);
         await saveCurrentRow();
@@ -864,13 +865,13 @@
       setShowtimeRowState(rowEl, 'saving');
 
       const timeId = rowEl.dataset.timeId;
-      const saved = await updateLoadTime(timeId, builtTime);
+      const result = await updateLoadTime(timeId, builtTime, { silent: true });
 
-      if (saved) {
+      if (result?.ok) {
         setShowtimeRowState(rowEl, 'saved');
         savedCount++;
       } else {
-        setShowtimeRowState(rowEl, 'error');
+        setShowtimeRowState(rowEl, 'error', result?.message || 'Could not save');
         errorCount++;
       }
     }
@@ -882,7 +883,7 @@
     }
   }
 
-  async function updateLoadTime(timeId, showTime) {
+  async function updateLoadTime(timeId, showTime, options = {}) {
     if (!timeId || !showTime) return false;
 
     if (!canModifySelectedLoad()) {
@@ -898,8 +899,15 @@
     });
 
     if (duplicateTime) {
-      alert('That showtime already exists in this load. Please choose a different time.');
-      return false;
+      if (!options.silent) {
+        alert('That showtime already exists in this load. Please choose a different time.');
+      }
+
+      return {
+        ok: false,
+        reason: 'duplicate',
+        message: 'Duplicate time'
+      };
     }
 
     const { error } = await supabaseClient
@@ -914,12 +922,26 @@
       console.error('Failed to update load time:', error);
 
       if (error.code === '23505') {
-        alert('That showtime already exists in this load. Please choose a different time.');
-      } else {
+        if (!options.silent) {
+          alert('That showtime already exists in this load. Please choose a different time.');
+        }
+
+        return {
+          ok: false,
+          reason: 'duplicate',
+          message: 'Duplicate time'
+        };
+      }
+
+      if (!options.silent) {
         alert(`Could not update time: ${error.message}`);
       }
 
-      return false;
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'Could not save'
+      };
     }
 
     const updatedRow = LOAD_TEMPLATE_TIMES.find((row) => row.id === timeId);
@@ -951,7 +973,9 @@
       }, 950);
     });
 
-    return true;
+    return {
+      ok: true
+    };
   }
 
   async function deleteLoadTime(timeId, options = {}) {

@@ -514,6 +514,16 @@ select:focus {
   padding: 10px;
 }
 
+.showtime-save-now-button {
+  background: #eef3f6;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.showtime-save-now-button:hover {
+  background: #dfe8ed;
+}
+
 .showtime-time-controls {
   align-items: center;
   display: grid;
