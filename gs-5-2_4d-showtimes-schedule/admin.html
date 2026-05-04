@@ -1292,27 +1292,27 @@
     const draftActiveCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
     const liveActiveCount = appState.liveShowtimes.filter((row) => !row.is_cancelled).length;
 
-    // Draft status (more descriptive)
-    ui.summaryDraftStatus.innerHTML = appState.draftSchedule
-      ? draftActiveCount
-        ? `Draft exists with ${draftActiveCount} showtime${draftActiveCount === 1 ? '' : 's'}`
-        : '<span class="summary-badge summary-badge-warning">Draft exists, no showtimes yet</span>'
-      : '<span class="summary-badge summary-badge-empty">No draft schedule</span>';
+    if (ui.summaryDraftStatus) {
+      ui.summaryDraftStatus.innerHTML = appState.draftSchedule
+        ? draftActiveCount
+          ? `Draft exists with ${draftActiveCount} showtime${draftActiveCount === 1 ? '' : 's'}`
+          : '<span class="summary-badge summary-badge-warning">Draft exists, no showtimes yet</span>'
+        : '<span class="summary-badge summary-badge-empty">No draft schedule</span>';
+    }
 
-    // Live status (parallel logic)
-    ui.summaryLiveStatus.innerHTML = appState.liveSchedule
-      ? liveActiveCount
-        ? `Live with ${liveActiveCount} showtime${liveActiveCount === 1 ? '' : 's'}`
-        : '<span class="summary-badge summary-badge-warning">Live exists, no showtimes</span>'
-      : '<span class="summary-badge summary-badge-empty">No live schedule</span>';
+    if (ui.summaryLiveStatus) {
+      ui.summaryLiveStatus.innerHTML = appState.liveSchedule
+        ? liveActiveCount
+          ? `Live with ${liveActiveCount} showtime${liveActiveCount === 1 ? '' : 's'}`
+          : '<span class="summary-badge summary-badge-warning">Live exists, no showtimes</span>'
+        : '<span class="summary-badge summary-badge-empty">No live schedule</span>';
+    }
 
-    // Manual edits (clarified meaning)
-    ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits
-      ? 'Yes — manually modified'
-      : 'No — load-generated';
-    ui.summaryUpdated.textContent = formatTimestamp(appState.draftSchedule?.updated_at || activeSchedule?.updated_at || '');
-    ui.summaryPublished.textContent = formatTimestamp(appState.liveSchedule?.published_at || '');
-  }
+    if (ui.summaryManualEdits) {
+      ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits
+        ? 'Yes — manually modified'
+        : 'No — load-generated';
+    }
 
   function updatePublishState() {
     const hasDate = !!appState.selectedDate;
