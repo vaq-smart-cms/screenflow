@@ -690,6 +690,48 @@ select:focus {
   margin-top: 1px;
 }
 
+
+/* Admin calendar/dashboard refinements */
+
+.admin-action-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-showtime-preview {
+  color: var(--text-soft);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.compact-tool-row {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+#add-showtime-button {
+  margin-top: 10px;
+}
+
+#apply-load-button {
+  width: 100%;
+}
+
+#day-summary-panel p {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+#day-summary-panel span {
+  color: var(--text-soft);
+  text-align: right;
+}
+
 /* =========================================================
    07 — Load Manager
    ========================================================= */
@@ -894,9 +936,7 @@ select:disabled {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .admin-three-column-grid /* Shared panels */
-
-.panel {
+  .admin-three-column-grid .panel {
     margin-bottom: 16px;
   }
 
@@ -908,9 +948,7 @@ select:disabled {
   }
 
   .admin-lower-left .panel,
-  .admin-lower-right /* Shared panels */
-
-.panel {
+  .admin-lower-right .panel {
     margin-bottom: 16px;
   }
 
@@ -961,9 +999,7 @@ select:disabled {
     grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
   }
 
-  .film-manager-top-grid /* Shared panels */
-
-.panel {
+  .film-manager-top-grid .panel {
     margin-bottom: 16px;
   }
 
@@ -981,9 +1017,7 @@ select:disabled {
   }
 
   .film-manager-lower-left .panel,
-  .film-manager-lower-right /* Shared panels */
-
-.panel {
+  .film-manager-lower-right .panel {
     margin-bottom: 16px;
   }
 
@@ -994,9 +1028,7 @@ select:disabled {
     grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
   }
 
-  .load-manager-top-grid /* Shared panels */
-
-.panel {
+  .load-manager-top-grid .panel {
     margin-bottom: 16px;
   }
 
@@ -1014,9 +1046,7 @@ select:disabled {
   }
 
   .load-manager-lower-left .panel,
-  .load-manager-lower-right /* Shared panels */
-
-.panel {
+  .load-manager-lower-right .panel {
     margin-bottom: 16px;
   }
 
@@ -1031,9 +1061,7 @@ select:disabled {
     grid-template-columns: minmax(280px, 0.8fr) minmax(720px, 2fr);
   }
 
-  .top-dashboard-grid /* Shared panels */
-
-.panel {
+  .top-dashboard-grid .panel {
     margin-bottom: 16px;
   }
 

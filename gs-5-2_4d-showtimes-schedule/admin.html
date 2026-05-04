@@ -21,7 +21,7 @@
       <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
       <input id="password-input" type="password" autocomplete="current-password">
     </label>
-    <button id="sign-in-button" class="primary" style="width:100%; margin-bottom:10px;">Sign In</button>
+    <button id="sign-in-button" class="primary" type="button" style="width:100%; margin-bottom:10px;">Sign In</button>
     <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
   </div>
 
@@ -140,16 +140,18 @@
           <select id="load-select"></select>
         </label>
         <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
-        <button id="apply-load-button" class="primary">Apply Load to Draft</button>
-        <a class="compact-tool-link" href="./load-manager.html">
-          <button class="compact-tool-button" type="button">
-            <span class="tool-icon">⏱️</span>
-            <span>
-              <strong>Manage Loads</strong>
-              <small>Edit load templates</small>
-            </span>
-          </button>
-        </a>
+        <div class="compact-tool-row">
+          <button id="apply-load-button" class="primary" type="button">Apply Load to Draft</button>
+          <a class="compact-tool-link" href="./load-manager.html">
+            <button class="compact-tool-button" type="button">
+              <span class="tool-icon">⏱️</span>
+              <span>
+                <strong>Manage Loads</strong>
+                <small>Edit load templates</small>
+              </span>
+            </button>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -161,7 +163,7 @@
         <div class="panel">
           <h2>Draft Showtimes</h2>
           <div id="draft-showtimes-container"></div>
-          <button id="add-showtime-button" class="secondary" type="button">Add Showtime</button>
+          <button id="add-showtime-button" class="neutral" type="button">+ Add Showtime</button>
         </div>
       </div>
 
@@ -226,6 +228,8 @@
 
   console.log('Auth storage check:', localStorage.getItem('vaq_4d_admin_auth'));
   
+  const DEFAULT_SHOWTIME_INTERVAL_MINUTES = 20;
+
   const CACHE_TTL_MS = 10 * 60 * 1000;
 
   function readCache(key) {
@@ -1365,7 +1369,9 @@
       const lastDate = new Date(lastRow.show_at);
 
       if (!Number.isNaN(lastDate.getTime())) {
-        lastDate.setMinutes(lastDate.getMinutes() + 30);
+        lastDate.setMinutes(
+          lastDate.getMinutes() + DEFAULT_SHOWTIME_INTERVAL_MINUTES
+        );
         const hh = String(lastDate.getHours()).padStart(2, '0');
         const mm = String(lastDate.getMinutes()).padStart(2, '0');
         defaultIso = `${appState.selectedDate}T${hh}:${mm}:00`;
@@ -1418,7 +1424,7 @@
 
     if (!appState.draftSchedule) {
       const empty = document.createElement('p');
-      empty.style.color = 'var(--text-soft)';
+      empty.className = 'showtime-empty-state';
       empty.textContent = 'No draft schedule exists for this date yet.';
       ui.draftShowtimesContainer.appendChild(empty);
       return;
@@ -1431,7 +1437,7 @@
 
     if (!activeRows.length) {
       const empty = document.createElement('p');
-      empty.style.color = 'var(--text-soft)';
+      empty.className = 'showtime-empty-state';
       empty.textContent = 'This draft has no showtimes yet.';
       ui.draftShowtimesContainer.appendChild(empty);
       return;
@@ -1449,17 +1455,7 @@
       }
 
       const leftWrap = document.createElement('div');
-      leftWrap.style.display = 'flex';
-      leftWrap.style.alignItems = 'center';
-      leftWrap.style.gap = '8px';
-      leftWrap.style.flexWrap = 'wrap';
-
-      if (isPendingNewRow) {
-        const badge = document.createElement('span');
-        badge.className = 'showtime-badge';
-        badge.textContent = 'Unsaved';
-        leftWrap.appendChild(badge);
-      }
+      leftWrap.className = 'showtime-time-controls';
 
       const timeParts = getTimePartsFromIso(row.show_at);
 
@@ -1495,7 +1491,7 @@
       });
 
       const previewText = document.createElement('span');
-      previewText.style.color = 'var(--text-soft)';
+      previewText.className = 'admin-showtime-preview';
       previewText.textContent = formatShowAtTime(row.show_at);
 
       [hourSelect, minuteSelect, ampmSelect].forEach((control) => {
@@ -1518,12 +1514,18 @@
       leftWrap.appendChild(ampmSelect);
       leftWrap.appendChild(previewText);
 
+      if (isPendingNewRow) {
+        const badge = document.createElement('span');
+        badge.className = 'showtime-badge';
+        badge.textContent = 'Unsaved';
+        leftWrap.appendChild(badge);
+      }
+
       const actionsWrap = document.createElement('div');
-      actionsWrap.style.display = 'flex';
-      actionsWrap.style.gap = '8px';
-      actionsWrap.style.flexWrap = 'wrap';
+      actionsWrap.className = 'showtime-actions';
 
       const saveButton = document.createElement('button');
+      saveButton.className = 'showtime-save-now-button';
       saveButton.type = 'button';
       saveButton.textContent = 'Save';
       saveButton.addEventListener('click', async () => {
@@ -1551,6 +1553,7 @@
 
       if (isPendingNewRow) {
         const cancelButton = document.createElement('button');
+        cancelButton.className = 'showtime-save-now-button';
         cancelButton.type = 'button';
         cancelButton.textContent = 'Cancel';
         cancelButton.addEventListener('click', async () => {
@@ -1559,6 +1562,7 @@
         actionsWrap.appendChild(cancelButton);
       } else {
         const deleteButton = document.createElement('button');
+        deleteButton.className = 'danger';
         deleteButton.type = 'button';
         deleteButton.textContent = 'Delete';
         deleteButton.addEventListener('click', async () => {
