@@ -151,16 +151,20 @@
         </label>
         <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
         <div class="compact-tool-row">
-          <button id="apply-load-button" class="primary" type="button">Apply Load to Draft</button>
-          <a class="compact-tool-link" href="./load-manager.html">
-            <button class="compact-tool-button" type="button">
-              <span class="tool-icon">⏱️</span>
-              <span>
-                <strong>Manage Loads</strong>
-                <small>Edit load templates</small>
-              </span>
+          <div class="load-assignment-actions">
+            <button id="apply-load-button" class="primary load-assignment-apply-button" type="button">
+              Apply Load to Draft
             </button>
-          </a>
+            <a class="compact-tool-link" href="./load-manager.html">
+              <button class="compact-tool-button" type="button">
+                <span class="tool-icon">⏱️</span>
+                <span>
+                  <strong>Manage Loads</strong>
+                  <small>Edit load templates</small>
+                </span>
+              </button>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -521,7 +525,7 @@
       return;
     }
 
-    ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>${times.map((row) => row.show_time).join(' · ')}`;
+    ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>${times.map((row) => formatTemplateTimeLabel(row.show_time)).join(' · ')}`;
   }
 
   async function fetchActiveLoads() {
@@ -784,6 +788,20 @@
 
     writeCache('vaq_4d_active_films', FILMS);
 
+  }
+
+  function formatTemplateTimeLabel(timeString) {
+    if (!timeString) return '—';
+
+    const [hourRaw, minuteRaw] = String(timeString).slice(0, 5).split(':').map(Number);
+
+    if (Number.isNaN(hourRaw) || Number.isNaN(minuteRaw)) return '—';
+
+    const suffix = hourRaw >= 12 ? 'p.m.' : 'a.m.';
+    let hour12 = hourRaw % 12;
+    if (hour12 === 0) hour12 = 12;
+
+    return `${hour12}:${String(minuteRaw).padStart(2, '0')} ${suffix}`;
   }
 
   function formatFriendlyDate(ymd) {

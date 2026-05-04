@@ -623,78 +623,86 @@
   }
 
   async function saveFilmDetails() {
-    ui.saveFilmButton.disabled = true;
-    setFilmSaveStatus('Saving...');
     const filmId = appState.selectedFilmId;
 
-    if (!filmId) {
-      alert('Select a film first.');
-      return;
-    }
+    ui.saveFilmButton.disabled = true;
+    setFilmSaveStatus('Saving...');
 
-    const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
-
-    if (ui.filmPosterUrlInput.value.trim() !== posterCode) {
-      ui.filmPosterUrlInput.value = posterCode;
-    }
-
-    if (!posterCode) {
-      const confirmed = window.confirm(
-        'No poster code has been entered. Save this film without poster assets?'
-      );
-
-      if (!confirmed) {
-        ui.saveFilmButton.disabled = false;
+    try {
+      if (!filmId) {
+        alert('Select a film first.');
         setFilmSaveStatus('');
         return;
       }
-    }
-    
-    const payload = {
-      title: ui.filmTitleInput.value.trim(),
-      slug: ui.filmTitleInput.value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, ''),
-      poster_url: posterCode,
-      synopsis: ui.filmSynopsisInput.value.trim(),
-      testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
-      advisory_text: ui.filmAdvisoryInput.value.trim(),
-      accessibility_text: getActiveAccessibilityTextFromEditor(),
-      is_active: ui.filmActiveCheckbox.checked,
-      updated_at: new Date().toISOString()
-    };
 
-    if (!payload.title) {
-      alert('Film title is required.');
-      return;
-    }
+      const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
 
-    const { error } = await supabaseClient
-      .from('films')
-      .update(payload)
-      .eq('id', filmId);
-
-    if (error) {
-      console.error('Failed to save film:', error);
-
-      if (error.code === '42501') {
-        setFilmSaveStatus('Permission issue: this account cannot update films yet. Check RLS policies for the films table.', true);
-      } else if (error.code === '23505') {
-        setFilmSaveStatus('A film with this title/slug may already exist. Try a more specific title.', true);
-      } else {
-        setFilmSaveStatus(`Could not save film: ${error.message}`, true);
+      if (ui.filmPosterUrlInput.value.trim() !== posterCode) {
+        ui.filmPosterUrlInput.value = posterCode;
       }
 
-      ui.saveFilmButton.disabled = false;
-      return;
-    }
+      if (!posterCode) {
+        const confirmed = window.confirm(
+          'No poster code has been entered. Save this film without poster assets?'
+        );
 
-    clearFilmCaches();
-    await refreshFilmManager(filmId);
-    setFilmDirtyState(false);
-    setFilmSaveStatus('Film details saved.');
+        if (!confirmed) {
+          setFilmSaveStatus('');
+          return;
+        }
+      }
+
+      const payload = {
+        title: ui.filmTitleInput.value.trim(),
+        slug: ui.filmTitleInput.value
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
+        poster_url: posterCode,
+        synopsis: ui.filmSynopsisInput.value.trim(),
+        accessibility_text: getActiveAccessibilityTextFromEditor(),
+        advisory_text: ui.filmAdvisoryInput.value.trim(),
+        testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
+        is_active: ui.filmActiveCheckbox.checked,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!payload.title) {
+        alert('Film title is required.');
+        setFilmSaveStatus('');
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from('films')
+        .update(payload)
+        .eq('id', filmId);
+
+      if (error) {
+        console.error('Failed to save film:', error);
+
+        if (error.code === '42501') {
+          setFilmSaveStatus('Permission issue: this account cannot update films yet. Check RLS policies for the films table.', true);
+        } else if (error.code === '23505') {
+          setFilmSaveStatus('A film with this title/slug may already exist. Try a more specific title.', true);
+        } else {
+          setFilmSaveStatus(`Could not save film: ${error.message}`, true);
+        }
+
+        return;
+      }
+
+      clearFilmCaches();
+      await refreshFilmManager(filmId);
+      setFilmDirtyState(false);
+      setFilmSaveStatus('Film details saved.');
+    } catch (err) {
+      console.error('Unexpected save failure:', err);
+      setFilmSaveStatus(`Could not save film: ${err.message || err}`, true);
+    } finally {
+      ui.saveFilmButton.disabled = false;
+    }
   }
 
   async function createFilm() {
