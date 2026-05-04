@@ -1273,9 +1273,18 @@
 
   function updateHeaderAndSummary() {
     const activeSchedule = appState.draftSchedule || appState.liveSchedule;
-    const activeFilm = getFilmById(appState.draftSchedule?.film_id || appState.liveSchedule?.film_id || '');
-    const loadName = appState.draftSchedule?.load_templates?.name || appState.liveSchedule?.load_templates?.name || '—';
-    const draftCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
+    const activeFilm = getFilmById(
+      appState.draftSchedule?.film_id ||
+      appState.liveSchedule?.film_id ||
+      ''
+    );
+
+    const loadName =
+      appState.draftSchedule?.load_templates?.name ||
+      appState.liveSchedule?.load_templates?.name ||
+      '—';
+
+    const draftActiveCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
 
     const scheduleStatus = appState.liveSchedule
       ? 'live'
@@ -1288,31 +1297,28 @@
     ui.summaryDate.textContent = formatFriendlyDate(appState.selectedDate);
     ui.summaryFilm.textContent = activeFilm?.title || '—';
     ui.summaryLoad.textContent = loadName;
-    ui.summaryShowtimes.textContent = String(draftCount);
-    const draftActiveCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
-    const liveActiveCount = appState.liveShowtimes.filter((row) => !row.is_cancelled).length;
 
-    if (ui.summaryDraftStatus) {
-      ui.summaryDraftStatus.innerHTML = appState.draftSchedule
-        ? draftActiveCount
-          ? `Draft exists with ${draftActiveCount} showtime${draftActiveCount === 1 ? '' : 's'}`
-          : '<span class="summary-badge summary-badge-warning">Draft exists, no showtimes yet</span>'
-        : '<span class="summary-badge summary-badge-empty">No draft schedule</span>';
-    }
+    ui.summaryShowtimes.innerHTML = draftActiveCount
+      ? String(draftActiveCount)
+      : appState.draftSchedule
+        ? '<span class="summary-badge summary-badge-warning">No showtimes yet</span>'
+        : '0';
 
-    if (ui.summaryLiveStatus) {
-      ui.summaryLiveStatus.innerHTML = appState.liveSchedule
-        ? liveActiveCount
-          ? `Live with ${liveActiveCount} showtime${liveActiveCount === 1 ? '' : 's'}`
-          : '<span class="summary-badge summary-badge-warning">Live exists, no showtimes</span>'
-        : '<span class="summary-badge summary-badge-empty">No live schedule</span>';
-    }
+    ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits
+      ? 'Yes — manually modified'
+      : 'No — load-generated';
 
-    if (ui.summaryManualEdits) {
-      ui.summaryManualEdits.textContent = appState.draftSchedule?.has_manual_edits
-        ? 'Yes — manually modified'
-        : 'No — load-generated';
-    }
+    ui.summaryUpdated.textContent = formatTimestamp(
+      appState.draftSchedule?.updated_at ||
+      activeSchedule?.updated_at ||
+      ''
+    );
+
+    ui.summaryPublished.textContent = formatTimestamp(
+      appState.liveSchedule?.published_at ||
+      ''
+    );
+  }
 
   function updatePublishState() {
     const hasDate = !!appState.selectedDate;
