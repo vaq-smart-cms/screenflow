@@ -54,7 +54,11 @@
           <h1>4D Showtimes Admin</h1>
           <p id="session-text">Signed in as: Admin User</p>
         </div>
-        <div id="status-pill" class="status-pill">No date loaded</div>
+        <div id="status-meter" class="schedule-status-meter header-status-meter" aria-label="Schedule status">
+          <span class="status-segment status-segment-empty" data-status="empty">No Draft</span>
+          <span class="status-segment status-segment-draft" data-status="draft">Draft</span>
+          <span class="status-segment status-segment-live" data-status="live">Live</span>
+        </div>
         <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
       </div>
 
@@ -97,8 +101,14 @@
       <div id="day-summary-panel" class="panel">
         <h2>Day Summary</h2>
         <p><strong>Selected Date:</strong> <span id="summary-date">—</span></p>
-        <p><strong>Draft Status:</strong> <span id="summary-draft-status">No draft loaded</span></p>
-        <p><strong>Live Status:</strong> <span id="summary-live-status">No live schedule</span></p>
+        <div class="summary-status-row">
+          <strong>Schedule Status:</strong>
+          <div id="summary-status-meter" class="schedule-status-meter summary-status-meter" aria-label="Schedule status">
+            <span class="status-segment status-segment-empty" data-status="empty">No Draft</span>
+            <span class="status-segment status-segment-draft" data-status="draft">Draft</span>
+            <span class="status-segment status-segment-live" data-status="live">Live</span>
+          </div>
+        </div>
         <p><strong>Film:</strong> <span id="summary-film">—</span></p>
         <p><strong>Load:</strong> <span id="summary-load">—</span></p>
         <p><strong>Showtimes:</strong> <span id="summary-showtimes">0</span></p>
@@ -326,11 +336,10 @@
     filmAdvisory: document.getElementById('film-advisory'),
     filmPosterImage: document.getElementById('film-poster-image'),
     filmPosterFallback: document.getElementById('film-poster-fallback'),
-    statusPill: document.getElementById('status-pill'),
+    statusMeter: document.getElementById('status-meter'),
     sessionText: document.getElementById('session-text'),
     summaryDate: document.getElementById('summary-date'),
-    summaryDraftStatus: document.getElementById('summary-draft-status'),
-    summaryLiveStatus: document.getElementById('summary-live-status'),
+    summaryStatusMeter: document.getElementById('summary-status-meter'),
     summaryFilm: document.getElementById('summary-film'),
     summaryLoad: document.getElementById('summary-load'),
     summaryShowtimes: document.getElementById('summary-showtimes'),
@@ -1209,28 +1218,40 @@
     }
   }
 
+  function updateScheduleStatusMeters(activeStatus) {
+    const meters = [ui.statusMeter, ui.summaryStatusMeter].filter(Boolean);
+    const validStatus = ['empty', 'draft', 'live'].includes(activeStatus)
+      ? activeStatus
+      : 'empty';
+
+    meters.forEach((meter) => {
+      meter.dataset.activeStatus = validStatus;
+      meter.classList.remove('is-empty', 'is-draft', 'is-live');
+      meter.classList.add(`is-${validStatus}`);
+
+      meter.querySelectorAll('.status-segment').forEach((segment) => {
+        const isActive = segment.dataset.status === validStatus;
+        segment.classList.toggle('is-active', isActive);
+        segment.setAttribute('aria-current', isActive ? 'true' : 'false');
+      });
+    });
+  }
+
   function updateHeaderAndSummary() {
     const activeSchedule = appState.draftSchedule || appState.liveSchedule;
     const activeFilm = getFilmById(appState.draftSchedule?.film_id || appState.liveSchedule?.film_id || '');
     const loadName = appState.draftSchedule?.load_templates?.name || appState.liveSchedule?.load_templates?.name || '—';
     const draftCount = appState.draftShowtimes.filter((row) => !row.is_cancelled).length;
 
-    ui.statusPill.classList.remove('status-empty', 'status-draft', 'status-live');
+    const scheduleStatus = appState.liveSchedule
+      ? 'live'
+      : appState.draftSchedule
+        ? 'draft'
+        : 'empty';
 
-    if (appState.liveSchedule) {
-      ui.statusPill.textContent = 'Live';
-      ui.statusPill.classList.add('status-live');
-    } else if (appState.draftSchedule) {
-      ui.statusPill.textContent = 'Draft';
-      ui.statusPill.classList.add('status-draft');
-    } else {
-      ui.statusPill.textContent = 'No Schedule';
-      ui.statusPill.classList.add('status-empty');
-    }
+    updateScheduleStatusMeters(scheduleStatus);
 
     ui.summaryDate.textContent = formatFriendlyDate(appState.selectedDate);
-    ui.summaryDraftStatus.textContent = appState.draftSchedule ? 'Draft exists' : 'No draft schedule';
-    ui.summaryLiveStatus.textContent = appState.liveSchedule ? 'Live exists' : 'No live schedule';
     ui.summaryFilm.textContent = activeFilm?.title || '—';
     ui.summaryLoad.textContent = loadName;
     ui.summaryShowtimes.textContent = String(draftCount);
