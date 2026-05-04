@@ -147,7 +147,10 @@
         <h2>Load Assignment</h2>
         <label style="display:block; margin-bottom:12px;">
           <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Assigned Load</span>
-          <select id="load-select"></select>
+          <div class="load-select-wrap">
+            <span id="selected-load-dot" class="selected-load-dot" aria-hidden="true"></span>
+            <select id="load-select"></select>
+          </div>
         </label>
         <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
         <div class="compact-tool-row">
@@ -364,7 +367,7 @@
     batchLoadSelect: document.getElementById('batch-load-select'),
     batchPublishButton: document.getElementById('batch-publish-button'),
     batchCancelButton: document.getElementById('batch-cancel-button'),
-    /* batchModeHint: document.getElementById('batch-mode-hint'), */
+    selectedLoadDot: document.getElementById('selected-load-dot'),
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
     applyLoadButton: document.getElementById('apply-load-button'),
@@ -510,6 +513,9 @@
   }
 
   function renderLoadPreview(loadId) {
+
+    updateSelectedLoadDot(loadId);
+
     const selectedLoad = LOAD_TEMPLATES.find((load) => load.id === loadId) || null;
     const times = LOAD_TEMPLATE_TIMES
       .filter((row) => row.load_template_id === loadId)
@@ -531,9 +537,7 @@
     }));
 
     ui.loadPreview.innerHTML = `
-      <strong class="load-preview-title" style="--load-preview-accent:${selectedLoad.display_color || '#646e78'};">
-        ${selectedLoad.name}
-      </strong>
+      <strong>${selectedLoad.name}</strong>
       <div class="load-preview-times-grid">
         ${formattedTimes.map((time) => `
           <div class="time-cell ${time.isAfterHours ? 'is-after-hours' : ''}">
@@ -1039,6 +1043,14 @@
     }
 
     ui.calendarDays = Array.from(document.querySelectorAll('.day[data-date]'));
+  }
+
+  function updateSelectedLoadDot(loadId) {
+    if (!ui.selectedLoadDot) return;
+
+    const selectedLoad = LOAD_TEMPLATES.find((load) => load.id === loadId) || null;
+    ui.selectedLoadDot.style.background = selectedLoad?.display_color || '#646e78';
+    ui.selectedLoadDot.title = selectedLoad?.name || 'Selected load';
   }
 
   function updateBatchUi() {
@@ -2138,8 +2150,9 @@
 
     if (ui.loadSelect && !ui.loadSelect.dataset.bound) {
       ui.loadSelect.addEventListener('change', () => {
-        renderLoadPreview(ui.loadSelect.value || '');
-      });
+      renderLoadPreview(ui.loadSelect.value || '');
+      updateSelectedLoadDot(ui.loadSelect.value || '');
+    });
 
       ui.loadSelect.dataset.bound = 'true';
     }
