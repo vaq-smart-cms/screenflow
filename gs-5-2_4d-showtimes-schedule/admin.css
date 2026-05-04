@@ -843,6 +843,27 @@ select:focus {
   margin-top: 12px;
 }
 
+.summary-badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.summary-badge-empty {
+  background: rgba(100, 110, 120, 0.12);
+  color: #465461;
+}
+
+.summary-badge-warning {
+  background: rgba(243, 188, 67, 0.18);
+  border: 1px solid rgba(243, 188, 67, 0.48);
+  color: #6b4c08;
+}
+
 #add-showtime-button {
   margin-top: 10px;
 }
