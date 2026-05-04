@@ -525,7 +525,23 @@
       return;
     }
 
-    ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>${times.map((row) => formatTemplateTimeLabel(row.show_time)).join(' · ')}`;
+    const formattedTimes = times.map((row) => ({
+      label: formatTemplateTimeLabel(row.show_time),
+      isAfterHours: String(row.show_time || '') >= '17:00:00'
+    }));
+
+    ui.loadPreview.innerHTML = `
+      <strong class="load-preview-title" style="--load-preview-accent:${selectedLoad.display_color || '#646e78'};">
+        ${selectedLoad.name}
+      </strong>
+      <div class="load-preview-times-grid">
+        ${formattedTimes.map((time) => `
+          <div class="time-cell ${time.isAfterHours ? 'is-after-hours' : ''}">
+            ${time.label}
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   async function fetchActiveLoads() {

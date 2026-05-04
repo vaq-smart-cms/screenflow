@@ -420,6 +420,38 @@ input[type="color"] {
   width: 8px;
 }
 
+.load-preview-times-grid {
+  column-count: 3;
+  column-gap: 18px;
+  margin-top: 6px;
+}
+
+.load-preview-title {
+  border-left: 5px solid var(--load-preview-accent, var(--vaq-grey));
+  display: block;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  padding-left: 10px;
+}
+
+.time-cell {
+  break-inside: avoid;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.time-cell.is-after-hours {
+  background: rgba(230, 120, 45, 0.14);
+  border: 1px solid rgba(230, 120, 45, 0.32);
+  border-radius: 999px;
+  color: #a14f17;
+  display: inline-block;
+  font-weight: 800;
+  margin-bottom: 5px;
+  padding: 3px 8px;
+}
+
 /* Calendar animations */
 
 @keyframes batchWiggle {
