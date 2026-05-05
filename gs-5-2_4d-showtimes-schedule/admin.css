@@ -1226,6 +1226,11 @@ select:disabled {
     margin: 0 auto;
   }
 
+  film-theme-button {
+    min-height: 8.5rem;
+    padding: 1.15rem;
+  }
+
   .admin-three-column-grid {
     align-items: stretch;
     display: grid;
@@ -1318,6 +1323,31 @@ select:disabled {
     margin-bottom: 16px;
   }
 
+  .film-theme-button::before {
+    background-image: var(--film-poster-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 185%;
+    content: "";
+    inset: 0;
+    opacity: 0.11;
+    pointer-events: none;
+    position: absolute;
+    transform: scale(1.08);
+  }
+
+  .film-theme-button::after {
+    background:
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.2), transparent 36%),
+      linear-gradient(135deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.36));
+  }
+
+  .film-theme-button-label {
+    align-self: flex-end;
+    font-size: 1.05rem;
+    line-height: 1.15;
+  }
+
   .load-assignment-actions {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -1390,6 +1420,12 @@ select:disabled {
   .top-dashboard-grid .header-status-meter.is-live .status-segment-live {
     animation: liveStatusPulse 3.5s ease-in-out infinite;
   }
+
+  #film-list {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  }  
 }
 
 /* =========================================================

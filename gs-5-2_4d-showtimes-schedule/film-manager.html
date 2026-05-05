@@ -749,6 +749,13 @@
         normalizeThemeColor(film.theme_color_secondary, '#2f3a40')
       );
 
+      button.style.setProperty(
+        '--film-poster-image',
+        film.poster_url
+          ? `url("${buildPosterUrlFromCode(getPosterCodeFromStoredValue(film.poster_url), 'sm')}")`
+          : 'none'
+      );
+
       const label = document.createElement('span');
       label.className = 'film-theme-button-label';
       label.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
