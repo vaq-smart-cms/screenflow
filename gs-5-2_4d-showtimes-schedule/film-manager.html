@@ -10,22 +10,22 @@
 
 <body>
 
-<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+<div id="auth-panel" class="panel auth-panel">
   <h2>Sign In</h2>
-  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
+  <p class="panel-description">Use your authorised 4D Showtimes admin login.</p>
 
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+  <label class="field">
+    <span class="field-label">Email</span>
     <input id="email-input" type="email" autocomplete="username">
   </label>
 
-  <label style="display:block; margin-bottom:12px;">
-    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+  <label class="field">
+    <span class="field-label">Password</span>
     <input id="password-input" type="password" autocomplete="current-password">
   </label>
 
-  <button id="sign-in-button" class="primary" type="button" style="width:100%; margin-bottom:10px;">Sign In</button>
-  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
+  <button id="sign-in-button" class="primary full-width" type="button">Sign In</button>
+  <p id="auth-message" class="status-message">Please sign in.</p>
 </div>
 
 <div id="app-shell" style="display:none;">
@@ -38,8 +38,8 @@
         <h1>4D Film Manager</h1>
         <p id="session-text">Signed in as: Admin User</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <a href="./admin.html">
+      <div class="inline-action-row">
+        <a class="button-link" href="./admin.html">
           <button class="secondary" type="button">← Back to Calendar</button>
         </a>
         <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
@@ -49,9 +49,9 @@
     <!-- B — Film List -->
     <div class="panel">
       <h2>Films</h2>
-      <p style="color:var(--text-soft);">Select a film to review or edit its guest-facing details.</p>
+      <p class="panel-description">Select a film to review or edit its guest-facing details.</p>
       <div id="film-list">
-        <p style="color:var(--text-soft);">Loading films...</p>
+        <p class="panel-description">Loading films...</p>
       </div>
       <button id="create-film-button" class="primary" type="button">+ Create New Film</button>
     </div>
@@ -63,12 +63,12 @@
       <!-- C — Film Details -->
       <div class="panel">
         <h2>Film Details</h2>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Film Title</span>
+        <label class="field">
+          <span class="field-label">Film Title</span>
           <input id="film-title-input" type="text" placeholder="Example: BBC Earth: North America 4D Experience">
         </label>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Synopsis</span>
+        <label class="field">
+          <span class="field-label">Synopsis</span>
           <textarea id="film-synopsis-input" rows="7" placeholder="Guest-facing synopsis text"></textarea>
         </label>
         <div class="accessibility-editor">
@@ -102,23 +102,23 @@
             <input id="film-accessibility-5-text" type="text" placeholder="Optional accessibility item">
           </label>
         </div>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Advisory Text</span>
+        <label class="field">
+          <span class="field-label">Advisory Text</span>
           <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
         </label>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Testimonial</span>
+        <label class="field">
+          <span class="field-label">Testimonial</span>
           <textarea id="film-testimonial-input" rows="4" placeholder="Optional short quote or guest-facing testimonial"></textarea>
         </label>
-        <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <label class="checkbox-row">
           <input id="film-active-checkbox" type="checkbox" checked>
           <span>Active / available in scheduler</span>
         </label>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div class="inline-action-row">
           <button id="save-film-button" class="primary" type="button">Save Film Details</button>
           <button id="cancel-film-edit-button" class="secondary" type="button">Cancel</button>
         </div>
-        <p id="film-save-status" style="margin-top:10px; color:var(--text-soft);"></p>
+        <p id="film-save-status" class="status-message has-top-margin"></p>
       </div>
     </div>
 
@@ -126,11 +126,11 @@
       <!-- D — Poster Code -->
       <div class="panel">
         <h2>Poster Code</h2>
-        <p style="color:var(--text-soft);">
+        <p class="panel-description">
           Enter the one-word movie code to retrieve all poster sizes (-sm, -md, -lg).
         </p>
-        <label style="display:block; margin-bottom:12px;">
-          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">
+        <label class="field">
+          <span class="field-label">
             Poster code
           </span>
 
@@ -140,7 +140,7 @@
             placeholder="na4d"
           >
 
-          <small style="color:var(--text-soft); display:block; margin-top:4px;">
+          <small class="field-note">
             Enter the film code only. Poster files are automatically matched from /film-posters/web/.
           </small>
         </label>
@@ -161,16 +161,15 @@
           </div>
         </div>
 
-        <p id="poster-preview-text" style="color:var(--text-soft); margin-top:10px;">
+        <p id="poster-preview-text" class="status-message has-top-margin">
           Poster preview will appear here.
         </p>
-        </div>
       </div>
 
       <!-- E — Actions -->
       <div class="panel">
         <h2>Actions</h2>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div class="inline-action-row">
           <button id="duplicate-film-button" class="secondary" type="button">Duplicate Film</button>
           <button id="delete-film-button" class="accent" type="button">Delete Film</button>
         </div>
