@@ -166,7 +166,31 @@
         </p>
       </div>
 
-      <!-- E — Actions -->
+      <!-- E — Film Theme -->
+      <div class="panel">
+        <h2>Film Theme</h2>
+        <p class="panel-description">
+          Set poster-inspired colours for Film Manager buttons and future signage styling.
+        </p>
+
+        <div class="theme-colour-grid">
+          <label class="field">
+            <span class="field-label">Primary colour</span>
+            <input id="film-theme-primary-input" type="color" value="#646e78">
+          </label>
+
+          <label class="field">
+            <span class="field-label">Secondary colour</span>
+            <input id="film-theme-secondary-input" type="color" value="#2f3a40">
+          </label>
+        </div>
+
+        <p id="film-theme-source-text" class="status-message has-top-margin">
+          Theme source: manual
+        </p>
+      </div>
+
+      <!-- F — Actions -->
       <div class="panel">
         <h2>Actions</h2>
         <div class="inline-action-row">
@@ -212,6 +236,27 @@
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9_-]/g, '');
+  }
+
+  function normalizeThemeColor(value, fallback = '#646e78') {
+    const cleanValue = String(value || '').trim();
+
+    return /^#[0-9a-f]{6}$/i.test(cleanValue)
+      ? cleanValue.toLowerCase()
+      : fallback;
+  }
+
+  function setThemeEditorFromFilm(film) {
+    const primary = normalizeThemeColor(film?.theme_color_primary, '#646e78');
+    const secondary = normalizeThemeColor(film?.theme_color_secondary, '#2f3a40');
+    const source = film?.theme_color_source || 'manual';
+
+    ui.filmThemePrimaryInput.value = primary;
+    ui.filmThemeSecondaryInput.value = secondary;
+
+    if (ui.filmThemeSourceText) {
+      ui.filmThemeSourceText.textContent = `Theme source: ${source}`;
+    }
   }
 
   function getAccessibilityItemsFromEditor() {
@@ -350,6 +395,10 @@
     posterPreviewLg: document.getElementById('poster-preview-lg'),
     posterPreviewText: document.getElementById('poster-preview-text'),
 
+    filmThemePrimaryInput: document.getElementById('film-theme-primary-input'),
+    filmThemeSecondaryInput: document.getElementById('film-theme-secondary-input'),
+    filmThemeSourceText: document.getElementById('film-theme-source-text'),
+
     duplicateFilmButton: document.getElementById('duplicate-film-button'),
     deleteFilmButton: document.getElementById('delete-film-button')
   };
@@ -473,7 +522,7 @@
 
     const { data, error } = await supabaseClient
       .from('films')
-      .select('id, title, poster_url, synopsis, advisory_text, accessibility_text, is_active, sort_order, created_at, updated_at')
+      .select('id, title, poster_url, synopsis, advisory_text, accessibility_text, testimonial, is_active, sort_order, theme_color_primary, theme_color_secondary, theme_color_source, created_at, updated_at')
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('title', { ascending: true });
 
@@ -484,7 +533,12 @@
       return;
     }
 
-    FILMS = data || [];
+    FILMS = (data || []).map((film) => ({
+      ...film,
+      theme_color_primary: film.theme_color_primary || '#646e78',
+      theme_color_secondary: film.theme_color_secondary || '#2f3a40',
+      theme_color_source: film.theme_color_source || 'manual'
+    }));
     writeCache('vaq_4d_films_all', FILMS);
   }
 
@@ -585,6 +639,7 @@
       setAccessibilityEditorFromText('');
       ui.filmActiveCheckbox.checked = true;
       ui.filmPosterUrlInput.value = '';
+      setThemeEditorFromFilm(null);
       return;
     }
 
@@ -595,6 +650,7 @@
     setAccessibilityEditorFromText(film.accessibility_text || '');
     ui.filmActiveCheckbox.checked = !!film.is_active;
     ui.filmPosterUrlInput.value = getPosterCodeFromStoredValue(film.poster_url || '');
+    setThemeEditorFromFilm(film);
   }
 
   function renderPosterPreview() {
@@ -664,6 +720,9 @@
         advisory_text: ui.filmAdvisoryInput.value.trim(),
         testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
         is_active: ui.filmActiveCheckbox.checked,
+        theme_color_primary: normalizeThemeColor(ui.filmThemePrimaryInput.value, '#646e78'),
+        theme_color_secondary: normalizeThemeColor(ui.filmThemeSecondaryInput.value, '#2f3a40'),
+        theme_color_source: 'manual',
         updated_at: new Date().toISOString()
       };
 
@@ -722,6 +781,9 @@
         testimonial: '',
         advisory_text: '',
         accessibility_text: '',
+        theme_color_primary: '#646e78',
+        theme_color_secondary: '#2f3a40',
+        theme_color_source: 'manual',
         is_active: true,
         sort_order: FILMS.length + 1
       })
@@ -767,6 +829,9 @@
         advisory_text: source.advisory_text || '',
         accessibility_text: source.accessibility_text || '',
         poster_url: source.poster_url || '',
+        theme_color_primary: source.theme_color_primary || '#646e78',
+        theme_color_secondary: source.theme_color_secondary || '#2f3a40',
+        theme_color_source: source.theme_color_source || 'manual',
         is_active: true
       })
       .select('id')
@@ -876,6 +941,8 @@
       ui.filmAdvisoryInput,
       ui.filmTestimonialInput,
       ui.filmPosterUrlInput,
+      ui.filmThemePrimaryInput,
+      ui.filmThemeSecondaryInput,
       ui.filmActiveCheckbox,
       ...ui.filmAccessibilityChecks,
       ...ui.filmAccessibilityTexts

@@ -291,6 +291,24 @@
       .replace(/[^a-z0-9_-]/g, '');
   }
 
+  function getUserSessionKey(session, suffix) {
+    const userKey = session?.user?.id || session?.user?.email || 'unknown-user';
+    return `vaq_4d_admin_${userKey}_${suffix}`;
+  }
+
+  function getTodayYmd() {
+    return toYmd(new Date());
+  }
+
+  function readLastSelectedDate(session) {
+    return localStorage.getItem(getUserSessionKey(session, 'last_selected_date'));
+  }
+
+  function writeLastSelectedDate(session, dateYmd) {
+    if (!session || !dateYmd) return;
+    localStorage.setItem(getUserSessionKey(session, 'last_selected_date'), dateYmd);
+  }
+
   function getPosterCodeFromStoredValue(value) {
     const cleanValue = String(value || '').trim();
 
@@ -390,7 +408,8 @@
     longPressTimer: null,
     longPressTriggered: false,
     pendingNewShowtimeId: null,
-    pendingNewShowtimeIsUnsaved: false
+    pendingNewShowtimeIsUnsaved: false,
+    currentSession: null
   };
 
   function populateFilmSelect() {
@@ -1104,6 +1123,7 @@
     appState.pendingNewShowtimeIsUnsaved = false;
 
     appState.selectedDate = returnDate;
+    writeLastSelectedDate(appState.currentSession, returnDate);
 
     updateBatchUi();
     loadSelectedDateState();
@@ -1767,6 +1787,7 @@
 
     try {
       appState.selectedDate = nextDate;
+      writeLastSelectedDate(appState.currentSession, nextDate);
       appState.pendingNewShowtimeId = null;
       appState.pendingNewShowtimeIsUnsaved = false;
       await loadSelectedDateState();
@@ -1885,6 +1906,7 @@
       appState.pendingNewShowtimeIsUnsaved = false;
 
       appState.selectedDate = returnDate;
+      writeLastSelectedDate(appState.currentSession, returnDate);
 
       updateBatchUi();
       await loadSelectedDateState();
@@ -2009,6 +2031,14 @@
       }
 
       setAuthenticatedUi(session);
+
+      appState.currentSession = session;
+
+      const rememberedDate = readLastSelectedDate(session);
+      const initialDate = rememberedDate || getTodayYmd();
+
+      appState.selectedDate = initialDate;
+      appState.visibleCalendarDate = new Date(`${initialDate}T00:00:00`);
 
       await fetchActiveFilms();
       await fetchActiveLoads();
