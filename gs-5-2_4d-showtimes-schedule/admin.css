@@ -665,6 +665,67 @@ input[type="color"] {
   opacity: 1;
 }
 
+.film-theme-button {
+  align-items: center;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.28), transparent 34%),
+    linear-gradient(135deg, var(--film-theme-primary), var(--film-theme-secondary));
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 1rem;
+  box-shadow:
+    0 0.35rem 0.9rem rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
+  font-weight: 700;
+  justify-content: flex-start;
+  min-height: 4.75rem;
+  overflow: hidden;
+  padding: 1rem 1.15rem;
+  position: relative;
+  text-align: left;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+  transition:
+    box-shadow 180ms ease,
+    filter 180ms ease,
+    transform 180ms ease;
+  width: 100%;
+}
+
+.film-theme-button::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.14));
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.film-theme-button:hover {
+  box-shadow:
+    0 0.55rem 1.2rem rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  transform: translateY(-1px);
+}
+
+.film-theme-button.is-selected {
+  outline: 3px solid rgba(243, 188, 67, 0.8);
+  outline-offset: 2px;
+}
+
+.film-theme-button.is-inactive {
+  filter: grayscale(0.75) opacity(0.72);
+}
+
+.film-theme-button.is-inactive:hover {
+  filter: grayscale(0.55) opacity(0.84);
+}
+
+.film-theme-button-label {
+  position: relative;
+  z-index: 1;
+}
+
 .theme-colour-grid {
   display: grid;
   gap: 1rem;

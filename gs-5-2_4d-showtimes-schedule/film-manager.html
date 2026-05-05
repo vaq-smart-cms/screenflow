@@ -729,7 +729,7 @@
     FILMS.forEach((film) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'film-button secondary';
+      button.className = 'film-button film-theme-button';
 
       if (film.id === appState.selectedFilmId) {
         button.classList.add('is-selected');
@@ -739,7 +739,21 @@
         button.classList.add('is-inactive');
       }
 
-      button.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
+      button.style.setProperty(
+        '--film-theme-primary',
+        normalizeThemeColor(film.theme_color_primary, '#646e78')
+      );
+
+      button.style.setProperty(
+        '--film-theme-secondary',
+        normalizeThemeColor(film.theme_color_secondary, '#2f3a40')
+      );
+
+      const label = document.createElement('span');
+      label.className = 'film-theme-button-label';
+      label.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
+
+      button.appendChild(label);
 
       button.addEventListener('click', () => {
         if (film.id === appState.selectedFilmId) return;
