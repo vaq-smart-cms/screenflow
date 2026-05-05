@@ -184,7 +184,9 @@
             <input id="film-theme-secondary-input" type="color" value="#2f3a40">
           </label>
         </div>
-
+        <button id="sample-theme-button" class="secondary" type="button">
+          Sample from poster
+        </button>
         <p id="film-theme-source-text" class="status-message has-top-margin">
           Theme source: manual
         </p>
@@ -257,6 +259,37 @@
     if (ui.filmThemeSourceText) {
       ui.filmThemeSourceText.textContent = `Theme source: ${source}`;
     }
+  }
+
+  function rgbToHex(r, g, b) {
+    return `#${[r, g, b]
+      .map((value) => Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0'))
+      .join('')}`;
+  }
+
+  function getColourDistance(a, b) {
+    return Math.sqrt(
+      Math.pow(a.r - b.r, 2) +
+      Math.pow(a.g - b.g, 2) +
+      Math.pow(a.b - b.b, 2)
+    );
+  }
+
+  function quantizeColour(r, g, b, step = 32) {
+    return {
+      r: Math.round(r / step) * step,
+      g: Math.round(g / step) * step,
+      b: Math.round(b / step) * step
+    };
+  }
+
+  function isUsefulThemeColour({ r, g, b }) {
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const saturation = max - min;
+    const brightness = (r + g + b) / 3;
+
+    return saturation > 24 && brightness > 28 && brightness < 235;
   }
 
   function getAccessibilityItemsFromEditor() {
@@ -398,6 +431,7 @@
     filmThemePrimaryInput: document.getElementById('film-theme-primary-input'),
     filmThemeSecondaryInput: document.getElementById('film-theme-secondary-input'),
     filmThemeSourceText: document.getElementById('film-theme-source-text'),
+    sampleThemeButton: document.getElementById('sample-theme-button'),
 
     duplicateFilmButton: document.getElementById('duplicate-film-button'),
     deleteFilmButton: document.getElementById('delete-film-button')
@@ -585,6 +619,102 @@
     return window.confirm('You have unsaved film changes. Discard them?');
   }
 
+  async function sampleThemeColoursFromPoster() {
+    const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
+
+    if (!posterCode) {
+      setFilmSaveStatus('Enter a poster code before sampling theme colours.', true);
+      return;
+    }
+
+    const posterUrl = buildPosterUrlFromCode(posterCode, 'md');
+
+    ui.sampleThemeButton.disabled = true;
+    setFilmSaveStatus('Sampling poster colours...');
+
+    try {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+
+      const imageLoaded = new Promise((resolve, reject) => {
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Could not load the medium poster image.'));
+      });
+
+      image.src = `${posterUrl}?v=${Date.now()}`;
+
+      await imageLoaded;
+
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+
+      const sampleWidth = 80;
+      const sampleHeight = Math.max(
+        1,
+        Math.round((image.naturalHeight / image.naturalWidth) * sampleWidth)
+      );
+
+      canvas.width = sampleWidth;
+      canvas.height = sampleHeight;
+
+      context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+
+      const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
+      const colourCounts = new Map();
+
+      for (let index = 0; index < data.length; index += 16) {
+        const alpha = data[index + 3];
+
+        if (alpha < 200) continue;
+
+        const colour = quantizeColour(data[index], data[index + 1], data[index + 2]);
+
+        if (!isUsefulThemeColour(colour)) continue;
+
+        const key = `${colour.r},${colour.g},${colour.b}`;
+        colourCounts.set(key, (colourCounts.get(key) || 0) + 1);
+      }
+
+      const rankedColours = Array.from(colourCounts.entries())
+        .map(([key, count]) => {
+          const [r, g, b] = key.split(',').map(Number);
+
+          return {
+            r,
+            g,
+            b,
+            count
+          };
+        })
+        .sort((a, b) => b.count - a.count);
+
+      if (!rankedColours.length) {
+        throw new Error('No strong poster colours were found.');
+      }
+
+      const primary = rankedColours[0];
+      const secondary =
+        rankedColours.find((colour) => getColourDistance(primary, colour) > 90) ||
+        rankedColours[1] ||
+        primary;
+
+      ui.filmThemePrimaryInput.value = rgbToHex(primary.r, primary.g, primary.b);
+      ui.filmThemeSecondaryInput.value = rgbToHex(secondary.r, secondary.g, secondary.b);
+
+      if (ui.filmThemeSourceText) {
+        ui.filmThemeSourceText.textContent = 'Theme source: poster_sampled';
+      }
+
+      setFilmDirtyState(true);
+      setFilmSaveStatus('Poster colours sampled. Review and save to keep them.');
+    } catch (err) {
+      console.error('Poster colour sampling failed:', err);
+      setFilmSaveStatus(`Could not sample poster colours: ${err.message || err}`, true);
+    } finally {
+      ui.sampleThemeButton.disabled = false;
+    }
+  }
+
   function renderFilmList() {
     ui.filmList.innerHTML = '';
 
@@ -722,7 +852,9 @@
         is_active: ui.filmActiveCheckbox.checked,
         theme_color_primary: normalizeThemeColor(ui.filmThemePrimaryInput.value, '#646e78'),
         theme_color_secondary: normalizeThemeColor(ui.filmThemeSecondaryInput.value, '#2f3a40'),
-        theme_color_source: 'manual',
+        theme_color_source: ui.filmThemeSourceText?.textContent.includes('poster_sampled')
+          ? 'poster_sampled'
+          : 'manual',
         updated_at: new Date().toISOString()
       };
 
@@ -910,6 +1042,7 @@
     ui.duplicateFilmButton.addEventListener('click', duplicateFilm);
     ui.deleteFilmButton.addEventListener('click', deleteFilm);
     ui.cancelFilmEditButton.addEventListener('click', cancelFilmEdit);
+    ui.sampleThemeButton.addEventListener('click', sampleThemeColoursFromPoster);
     [
       ui.posterPreviewSm,
       ui.posterPreviewMd,
