@@ -352,7 +352,6 @@
       .from('load_template_times')
       .select('id, load_template_id, show_time, sort_order, is_after_hours')
       .eq('load_template_id', loadId)
-      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('show_time', { ascending: true });
 
     if (error) {
@@ -667,6 +666,8 @@
       ui.loadTimesContainer.appendChild(empty);
       return;
     }
+
+    sortLoadTemplateTimes();
 
     LOAD_TEMPLATE_TIMES.forEach((timeRow) => {
       const rowEl = document.createElement('div');
