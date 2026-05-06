@@ -357,34 +357,13 @@
   }
 
   function setAccessibilityEditorFromText(value) {
-    const defaultItems = [
+    setMessageEditorFromText(value, ui.filmAccessibilityTexts, ui.filmAccessibilityChecks, [
       'Wheelchair accessible seating',
       'Assistive listening available',
       'Service animals welcome',
       '',
       ''
-    ];
-
-    const existingItems = String(value || '')
-      .split('|')
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    ui.filmAccessibilityTexts.forEach((textInput, index) => {
-      if (!textInput) return;
-
-      const fallbackText = defaultItems[index] || '';
-      const savedText = existingItems[index] || '';
-      const displayText = savedText || fallbackText;
-
-      textInput.value = displayText;
-
-      const checkbox = ui.filmAccessibilityChecks[index];
-      if (!checkbox) return;
-
-      checkbox.checked = existingItems.includes(displayText);
-      checkbox.disabled = !displayText;
-    });
+    ]);
   }
 
   function refreshAccessibilityCheckboxStates() {
@@ -423,25 +402,23 @@
   }
 
   function setMessageEditorFromText(value, textInputs, checkInputs, defaultItems = []) {
-    const existingItems = String(value || '')
-      .split('|')
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const parsedItems = parseMessageEditorValue(value, defaultItems);
 
     textInputs.forEach((textInput, index) => {
       if (!textInput) return;
 
-      const fallbackText = defaultItems[index] || '';
-      const savedText = existingItems[index] || '';
-      const displayText = savedText || fallbackText;
+      const item = parsedItems[index] || {
+        text: defaultItems[index] || '',
+        is_active: false
+      };
 
-      textInput.value = displayText;
+      textInput.value = item.text || '';
 
       const checkbox = checkInputs[index];
       if (!checkbox) return;
 
-      checkbox.checked = existingItems.includes(displayText);
-      checkbox.disabled = !displayText;
+      checkbox.checked = !!item.is_active && !!item.text;
+      checkbox.disabled = !item.text;
     });
   }
 
@@ -458,6 +435,48 @@
         checkbox.checked = false;
       }
     });
+  }
+
+  function parseMessageEditorValue(value, defaultItems = []) {
+    const cleanValue = String(value || '').trim();
+
+    if (cleanValue.startsWith('[')) {
+      try {
+        return JSON.parse(cleanValue);
+      } catch {
+        // Fall back to legacy parsing below.
+      }
+    }
+
+    const activeItems = cleanValue
+      .split('|')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return defaultItems.map((text) => ({
+      text,
+      is_active: activeItems.includes(text)
+    }));
+  }
+
+  function serializeMessageEditorValue(textInputs, checkInputs) {
+    return JSON.stringify(
+      textInputs
+        .map((textInput, index) => ({
+          text: textInput?.value.trim() || '',
+          is_active: !!checkInputs[index]?.checked && !!textInput?.value.trim()
+        }))
+        .filter((item) => item.text)
+    );
+  }
+
+  function getActiveDisplayTextFromStoredMessageValue(value) {
+    const parsed = parseMessageEditorValue(value);
+
+    return parsed
+      .filter((item) => item.is_active)
+      .map((item) => item.text)
+      .join(' | ');
   }
 
   function getPosterCodeFromStoredValue(value) {
@@ -1013,9 +1032,18 @@
           .replace(/^-|-$/g, ''),
         poster_url: posterCode,
         synopsis: ui.filmSynopsisInput.value.trim(),
-        accessibility_text: getActiveAccessibilityTextFromEditor(),
-        advisory_text: getActiveTextFromMessageEditor(ui.filmAdvisoryTexts, ui.filmAdvisoryChecks),
-        testimonial: getActiveTextFromMessageEditor(ui.filmTestimonialTexts, ui.filmTestimonialChecks),
+        accessibility_text: serializeMessageEditorValue(
+          ui.filmAccessibilityTexts,
+          ui.filmAccessibilityChecks
+        ),
+        advisory_text: serializeMessageEditorValue(
+          ui.filmAdvisoryTexts,
+          ui.filmAdvisoryChecks
+        ),
+        testimonial: serializeMessageEditorValue(
+          ui.filmTestimonialTexts,
+          ui.filmTestimonialChecks
+        ),
         is_active: ui.filmActiveCheckbox.checked,
         theme_color_primary: normalizeThemeColor(ui.filmThemePrimaryInput.value, '#646e78'),
         theme_color_secondary: normalizeThemeColor(ui.filmThemeSecondaryInput.value, '#2f3a40'),
