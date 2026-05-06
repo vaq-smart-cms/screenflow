@@ -179,18 +179,20 @@
         <!-- F — Draft Showtimes Editor -->
         <div class="panel">
           <h2>Draft Showtimes</h2>
-          <button id="save-draft-showtimes-button" class="neutral" type="button">
-            Save Pending Showtimes
-          </button>
           <div id="draft-showtimes-container"></div>
-          <button id="add-showtime-button" class="neutral" type="button">+ Add Showtime</button>
+          <div class="draft-showtimes-action-row">
+            <button id="add-showtime-button" class="neutral" type="button">+ Add Showtime</button>
+            <button id="save-draft-showtimes-button" class="neutral" type="button">
+              Save Pending Showtimes
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="admin-lower-right">
         <!-- G — Preview / Publish Section -->
         <div class="panel">
-          <h2>Preview & Publish</h2>
+          <h2>Publish Live</h2>
           <p id="publish-summary">Select a date to review publish readiness.</p>
           <p><strong>Publish Status:</strong> <span id="publish-status-text">Not ready</span></p>
           <button id="publish-button" class="accent" disabled>Publish</button>

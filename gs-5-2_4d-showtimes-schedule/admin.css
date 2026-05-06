@@ -540,6 +540,47 @@ input[type="color"] {
   }
 }
 
+/* Draft Showtimes Actions */
+
+.draft-showtimes-action-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Publish Live Panel */
+
+#publish-button {
+  animation: publish-live-pulse 2.8s ease-in-out infinite;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(126, 155, 45, 0.22);
+  font-size: 1rem;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 12px 20px;
+}
+
+#publish-button:disabled {
+  animation: none;
+  box-shadow: none;
+  opacity: 0.58;
+}
+
+@keyframes publish-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 8px 18px rgba(126, 155, 45, 0.22);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 10px 26px rgba(126, 155, 45, 0.38);
+    transform: scale(1.015);
+  }
+}
+
 /* =========================================================
    05 — Film Manager
    ========================================================= */
