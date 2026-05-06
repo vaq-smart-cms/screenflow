@@ -67,9 +67,9 @@
         <h2>Calendar</h2>
         <p style="color:var(--text-soft);">Tap a date to load it as your working day.</p>
         <div class="calendar-toolbar">
-          <button id="prev-month-button" class="secondary" type="button">‹ Previous</button>
+          <button id="prev-month-button" class="neutral" type="button">‹ Previous</button>
           <strong id="calendar-month-label">Month</strong>
-          <button id="next-month-button" class="secondary" type="button">Next ›</button>
+          <button id="next-month-button" class="neutral" type="button">Next ›</button>
         </div>
         <div class="calendar-weekdays">
           <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
@@ -89,7 +89,7 @@
         </label>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="batch-publish-button" class="accent" type="button">Publish Selected Dates</button>
-          <button id="batch-cancel-button" class="secondary" type="button">Save and Close</button>
+          <button id="batch-cancel-button" class="neutral" type="button">Save and Close</button>
         </div>
       </div>
 
@@ -155,7 +155,7 @@
         <div id="load-preview" style="margin-bottom:12px; color:var(--text-soft);">Select a load to preview its template times.</div>
         <div class="compact-tool-row">
           <div class="load-assignment-actions">
-            <button id="apply-load-button" class="primary load-assignment-apply-button" type="button">
+            <button id="apply-load-button" class="neutral load-assignment-apply-button" type="button">
               Apply Load to Draft
             </button>
             <a class="compact-tool-link" href="./load-manager.html">
@@ -179,6 +179,9 @@
         <!-- F — Draft Showtimes Editor -->
         <div class="panel">
           <h2>Draft Showtimes</h2>
+          <button id="save-draft-showtimes-button" class="neutral" type="button">
+            Save Pending Showtimes
+          </button>
           <div id="draft-showtimes-container"></div>
           <button id="add-showtime-button" class="neutral" type="button">+ Add Showtime</button>
         </div>
@@ -389,6 +392,7 @@
     loadSelect: document.getElementById('load-select'),
     loadPreview: document.getElementById('load-preview'),
     applyLoadButton: document.getElementById('apply-load-button'),
+    saveDraftShowtimesButton: document.getElementById('save-draft-showtimes-button'),
     draftShowtimesContainer: document.getElementById('draft-showtimes-container'),
     addShowtimeButton: document.getElementById('add-showtime-button')
   };
@@ -764,6 +768,12 @@
 
     if (!appState.draftSchedule) {
       alert('No draft schedule exists for this date.');
+      return;
+    }
+
+    const pendingSaveResult = await saveAllDraftShowtimes({ silent: true });
+    if (pendingSaveResult?.errorCount) {
+      alert('One or more showtime changes could not be saved. Please review any Save failed rows before publishing.');
       return;
     }
 
@@ -1380,16 +1390,18 @@
     }).format(dateObj);
   }
 
-  async function deleteDraftShowtime(showtimeId) {
+  async function deleteDraftShowtime(showtimeId, options = {}) {
     if (appState.batchMode) {
       alert('Use Save and Close before editing individual showtimes.');
-      return;
+      return false;
     }
 
-    if (!showtimeId) return;
+    if (!showtimeId) return false;
 
-    const confirmed = window.confirm('Delete this draft showtime?');
-    if (!confirmed) return;
+    if (!options.skipConfirm) {
+      const confirmed = window.confirm('Delete this draft showtime?');
+      if (!confirmed) return false;
+    }
 
     const { error } = await supabaseClient
       .from('daily_showtimes')
@@ -1399,7 +1411,7 @@
     if (error) {
       console.error('Failed to delete draft showtime:', error);
       alert(`Could not delete showtime: ${error.message}`);
-      return;
+      return false;
     }
 
     if (appState.draftSchedule) {
@@ -1411,6 +1423,7 @@
     }
 
     await loadSelectedDateState();
+    return true;
   }
 
   async function cancelPendingNewShowtime(showtimeId) {
@@ -1530,6 +1543,121 @@
     await loadSelectedDateState();
   }
 
+  function setShowtimeRowState(rowEl, state, message = '') {
+    if (!rowEl) return;
+
+    const stateEl = rowEl.querySelector('.showtime-save-state');
+    if (!stateEl) return;
+
+    rowEl.classList.remove('is-saved', 'is-unsaved', 'is-saving', 'is-error');
+    stateEl.classList.remove('is-saved', 'is-unsaved', 'is-saving', 'is-error');
+
+    rowEl.classList.add(`is-${state}`);
+    stateEl.classList.add(`is-${state}`);
+
+    const labelByState = {
+      saved: 'Saved',
+      unsaved: 'Pending save',
+      saving: 'Saving…',
+      error: message || 'Save failed'
+    };
+
+    stateEl.textContent = labelByState[state] || '';
+  }
+
+  function scheduleShowtimeAutoSave(rowEl, saveHandler) {
+    if (!rowEl || typeof saveHandler !== 'function') return;
+
+    window.clearTimeout(rowEl.autoSaveTimer);
+
+    rowEl.autoSaveTimer = window.setTimeout(() => {
+      saveHandler();
+    }, 650);
+  }
+
+  function sortDraftShowtimes() {
+    appState.draftShowtimes.sort((a, b) => {
+      return String(a.show_at || '').localeCompare(String(b.show_at || ''));
+    });
+  }
+
+  function markDraftRowReordered(showtimeId) {
+    requestAnimationFrame(() => {
+      const movedRow = ui.draftShowtimesContainer?.querySelector(
+        `.showtime[data-time-id="${showtimeId}"]`
+      );
+
+      if (!movedRow) return;
+
+      movedRow.classList.add('is-reordered');
+      movedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      window.setTimeout(() => {
+        movedRow.classList.remove('is-reordered');
+      }, 950);
+    });
+  }
+
+  async function saveAllDraftShowtimes(options = {}) {
+    const rows = ui.draftShowtimesContainer?.querySelectorAll('.showtime') || [];
+
+    if (!rows.length) {
+      return { savedCount: 0, errorCount: 0 };
+    }
+
+    let savedCount = 0;
+    let errorCount = 0;
+
+    for (const rowEl of rows) {
+      const stateEl = rowEl.querySelector('.showtime-save-state');
+
+      if (!stateEl || !stateEl.classList.contains('is-unsaved')) {
+        continue;
+      }
+
+      const selects = rowEl.querySelectorAll('select');
+      const hour = selects[0]?.value;
+      const minute = selects[1]?.value;
+      const ampm = selects[2]?.value;
+      const updatedShowAt = buildIsoFrom12HourParts(appState.selectedDate, hour, minute, ampm);
+
+      if (!updatedShowAt) {
+        setShowtimeRowState(rowEl, 'error', 'Invalid time');
+        errorCount++;
+        continue;
+      }
+
+      window.clearTimeout(rowEl.autoSaveTimer);
+      setShowtimeRowState(rowEl, 'saving');
+
+      const result = await editDraftShowtime(rowEl.dataset.timeId, updatedShowAt, { silent: true });
+
+      const refreshedRow = ui.draftShowtimesContainer?.querySelector(
+        `.showtime[data-time-id="${rowEl.dataset.timeId}"]`
+      );
+
+      if (result?.ok) {
+        setShowtimeRowState(refreshedRow || rowEl, 'saved');
+        savedCount++;
+      } else {
+        setShowtimeRowState(refreshedRow || rowEl, 'error', result?.message || 'Could not save');
+        errorCount++;
+      }
+    }
+
+    if (!options.silent) {
+      if (errorCount) {
+        alert(`Saved ${savedCount} pending showtimes. ${errorCount} still need attention.`);
+      } else if (savedCount) {
+        alert('Pending showtimes saved.');
+      } else {
+        alert('There are no pending showtime changes to save.');
+      }
+    }
+
+    return { savedCount, errorCount };
+  }
+
   function renderDraftShowtimes() {
     if (!ui.draftShowtimesContainer) return;
 
@@ -1559,6 +1687,7 @@
     activeRows.forEach((row) => {
       const rowEl = document.createElement('div');
       rowEl.className = 'showtime';
+      rowEl.dataset.timeId = row.id;
 
       const isPendingNewRow =
         appState.pendingNewShowtimeId === row.id &&
@@ -1585,63 +1714,34 @@
         option.textContent = value;
         if (value === timeParts.ampm) option.selected = true;
         ampmSelect.appendChild(option);
-
-        if (isPendingNewRow) {
-          requestAnimationFrame(() => {
-            rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-            const currentHourLooksReasonable = hourSelect.value && hourSelect.value !== '';
-            if (currentHourLooksReasonable) {
-              minuteSelect.focus();
-              minuteSelect.click();
-            } else {
-              hourSelect.focus();
-              hourSelect.click();
-            }
-          });
-        }
-
       });
 
       const previewText = document.createElement('span');
       previewText.className = 'admin-showtime-preview';
       previewText.textContent = formatShowAtTime(row.show_at);
 
-      [hourSelect, minuteSelect, ampmSelect].forEach((control) => {
-        control.addEventListener('change', () => {
-          const previewIso = buildIsoFrom12HourParts(
-            appState.selectedDate,
-            hourSelect.value,
-            minuteSelect.value,
-            ampmSelect.value
-          );
+      const saveStateText = document.createElement('span');
+      saveStateText.className = isPendingNewRow
+        ? 'showtime-save-state is-unsaved'
+        : 'showtime-save-state is-saved';
+      saveStateText.textContent = isPendingNewRow ? 'Pending save' : 'Saved';
 
-          previewText.textContent = previewIso
-            ? formatShowAtTime(previewIso)
-            : 'Invalid time';
-        });
-      });
+      function updatePreview() {
+        const previewIso = buildIsoFrom12HourParts(
+          appState.selectedDate,
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
 
-      leftWrap.appendChild(hourSelect);
-      leftWrap.appendChild(minuteSelect);
-      leftWrap.appendChild(ampmSelect);
-      leftWrap.appendChild(previewText);
+        previewText.textContent = previewIso
+          ? formatShowAtTime(previewIso)
+          : 'Invalid time';
 
-      if (isPendingNewRow) {
-        const badge = document.createElement('span');
-        badge.className = 'showtime-badge';
-        badge.textContent = 'Unsaved';
-        leftWrap.appendChild(badge);
+        setShowtimeRowState(rowEl, previewIso ? 'unsaved' : 'error', previewIso ? '' : 'Invalid time');
       }
 
-      const actionsWrap = document.createElement('div');
-      actionsWrap.className = 'showtime-actions';
-
-      const saveButton = document.createElement('button');
-      saveButton.className = 'showtime-save-now-button';
-      saveButton.type = 'button';
-      saveButton.textContent = 'Save';
-      saveButton.addEventListener('click', async () => {
+      async function saveCurrentRow() {
         const updatedShowAt = buildIsoFrom12HourParts(
           appState.selectedDate,
           hourSelect.value,
@@ -1650,16 +1750,81 @@
         );
 
         if (!updatedShowAt) {
-          alert('Please choose a valid time.');
-          return;
+          setShowtimeRowState(rowEl, 'error', 'Invalid time');
+          return false;
         }
 
-        await editDraftShowtime(row.id, updatedShowAt);
+        setShowtimeRowState(rowEl, 'saving');
 
-        if (appState.pendingNewShowtimeId === row.id) {
-          appState.pendingNewShowtimeId = null;
-          appState.pendingNewShowtimeIsUnsaved = false;
+        const result = await editDraftShowtime(row.id, updatedShowAt, { silent: true });
+
+        const refreshedRow = ui.draftShowtimesContainer.querySelector(
+          `.showtime[data-time-id="${row.id}"]`
+        );
+
+        if (result?.ok) {
+          appState.pendingNewShowtimeId = appState.pendingNewShowtimeId === row.id
+            ? null
+            : appState.pendingNewShowtimeId;
+          appState.pendingNewShowtimeIsUnsaved = appState.pendingNewShowtimeId
+            ? appState.pendingNewShowtimeIsUnsaved
+            : false;
+          setShowtimeRowState(refreshedRow || rowEl, 'saved');
+          return true;
         }
+
+        setShowtimeRowState(
+          refreshedRow || rowEl,
+          'error',
+          result?.message || 'Could not save'
+        );
+
+        return false;
+      }
+
+      [hourSelect, minuteSelect, ampmSelect].forEach((control) => {
+        control.addEventListener('change', () => {
+          updatePreview();
+          scheduleShowtimeAutoSave(rowEl, saveCurrentRow);
+        });
+      });
+
+      leftWrap.appendChild(hourSelect);
+      leftWrap.appendChild(minuteSelect);
+      leftWrap.appendChild(ampmSelect);
+      leftWrap.appendChild(previewText);
+      leftWrap.appendChild(saveStateText);
+
+      if (isPendingNewRow) {
+        const badge = document.createElement('span');
+        badge.className = 'showtime-badge';
+        badge.textContent = 'Unsaved';
+        leftWrap.appendChild(badge);
+
+        requestAnimationFrame(() => {
+          rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+          const currentHourLooksReasonable = hourSelect.value && hourSelect.value !== '';
+          if (currentHourLooksReasonable) {
+            minuteSelect.focus();
+            minuteSelect.click();
+          } else {
+            hourSelect.focus();
+            hourSelect.click();
+          }
+        });
+      }
+
+      const actionsWrap = document.createElement('div');
+      actionsWrap.className = 'showtime-actions';
+
+      const saveButton = document.createElement('button');
+      saveButton.className = 'showtime-save-now-button';
+      saveButton.type = 'button';
+      saveButton.textContent = 'Save Now';
+      saveButton.addEventListener('click', async () => {
+        window.clearTimeout(rowEl.autoSaveTimer);
+        await saveCurrentRow();
       });
 
       actionsWrap.appendChild(saveButton);
@@ -1679,7 +1844,27 @@
         deleteButton.type = 'button';
         deleteButton.textContent = 'Delete';
         deleteButton.addEventListener('click', async () => {
-          await deleteDraftShowtime(row.id);
+          rowEl.style.maxHeight = `${rowEl.scrollHeight}px`;
+
+          const confirmed = window.confirm('Delete this draft showtime?');
+          if (!confirmed) {
+            rowEl.style.maxHeight = '';
+            return;
+          }
+
+          requestAnimationFrame(() => {
+            rowEl.classList.add('is-deleting');
+          });
+
+          window.setTimeout(async () => {
+            const deleted = await deleteDraftShowtime(row.id, { skipConfirm: true });
+
+            if (!deleted) {
+              rowEl.classList.remove('is-deleting');
+              rowEl.style.maxHeight = '';
+              setShowtimeRowState(rowEl, 'error', 'Could not delete');
+            }
+          }, 230);
         });
         actionsWrap.appendChild(deleteButton);
       }
@@ -1690,13 +1875,25 @@
     });
   }
 
-  async function editDraftShowtime(showtimeId, updatedShowAt) {
+  async function editDraftShowtime(showtimeId, updatedShowAt, options = {}) {
     if (appState.batchMode) {
-      alert('Use Save and Close before editing individual showtimes.');
-      return;
+      if (!options.silent) {
+        alert('Use Save and Close before editing individual showtimes.');
+      }
+      return {
+        ok: false,
+        reason: 'batch-mode',
+        message: 'Batch mode active'
+      };
     }
 
-    if (!showtimeId || !updatedShowAt) return;
+    if (!showtimeId || !updatedShowAt) {
+      return {
+        ok: false,
+        reason: 'invalid',
+        message: 'Invalid time'
+      };
+    }
 
     const { error } = await supabaseClient
       .from('daily_showtimes')
@@ -1705,22 +1902,58 @@
 
     if (error) {
       console.error('Failed to edit draft showtime:', error);
-      alert(`Could not update showtime: ${error.message}`);
-      return;
+
+      if (!options.silent) {
+        alert(`Could not update showtime: ${error.message}`);
+      }
+
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'Save failed'
+      };
     }
 
     if (appState.draftSchedule) {
-      await supabaseClient
+      const scheduleResult = await supabaseClient
         .from('daily_schedules')
         .update({
           has_manual_edits: true,
           updated_at: new Date().toISOString()
         })
         .eq('id', appState.draftSchedule.id)
-        .eq('status', 'draft');
+        .eq('status', 'draft')
+        .select('*')
+        .single();
+
+      if (scheduleResult.error) {
+        console.error('Failed to update draft schedule metadata:', scheduleResult.error);
+      } else {
+        appState.draftSchedule = scheduleResult.data;
+      }
     }
 
-    await loadSelectedDateState();
+    const updatedRow = appState.draftShowtimes.find((row) => row.id === showtimeId);
+    if (updatedRow) {
+      updatedRow.show_at = updatedShowAt;
+    }
+
+    if (appState.pendingNewShowtimeId === showtimeId) {
+      appState.pendingNewShowtimeId = null;
+      appState.pendingNewShowtimeIsUnsaved = false;
+    }
+
+    sortDraftShowtimes();
+    renderDraftShowtimes();
+    updateHeaderAndSummary();
+    updatePublishState();
+    await fetchCalendarDayStates();
+    updateCalendarIndicators();
+    markDraftRowReordered(showtimeId);
+
+    return {
+      ok: true
+    };
   }
 
   async function loadSelectedDateState() {
@@ -2176,6 +2409,11 @@
     if (ui.addShowtimeButton && !ui.addShowtimeButton.dataset.bound) {
       ui.addShowtimeButton.addEventListener('click', addDraftShowtime);
       ui.addShowtimeButton.dataset.bound = 'true';
+    }
+
+    if (ui.saveDraftShowtimesButton && !ui.saveDraftShowtimesButton.dataset.bound) {
+      ui.saveDraftShowtimesButton.addEventListener('click', saveAllDraftShowtimes);
+      ui.saveDraftShowtimesButton.dataset.bound = 'true';
     }
 
     if (ui.loadSelect && !ui.loadSelect.dataset.bound) {
