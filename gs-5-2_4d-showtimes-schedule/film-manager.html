@@ -102,14 +102,58 @@
             <input id="film-accessibility-5-text" type="text" placeholder="Optional accessibility item">
           </label>
         </div>
-        <label class="field">
+        <div class="accessibility-editor">
           <span class="field-label">Advisory Text</span>
-          <textarea id="film-advisory-input" rows="3" placeholder="Motion, sound, intensity, or age guidance"></textarea>
-        </label>
-        <label class="field">
-          <span class="field-label">Testimonial</span>
-          <textarea id="film-testimonial-input" rows="4" placeholder="Optional short quote or guest-facing testimonial"></textarea>
-        </label>
+          <p class="field-help">
+            Check the advisory messages that should appear for guests.
+          </p>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-1-check" type="checkbox">
+            <input id="film-advisory-1-text" type="text" value="Features motion seats and sensory effects">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-2-check" type="checkbox">
+            <input id="film-advisory-2-text" type="text" value="Includes sudden movement, mist, wind, and scent effects">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-3-check" type="checkbox">
+            <input id="film-advisory-3-text" type="text" value="Recommended for guests who are comfortable with a more active theatre experience">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-4-check" type="checkbox" disabled>
+            <input id="film-advisory-4-text" type="text" placeholder="Optional advisory item">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-5-check" type="checkbox" disabled>
+            <input id="film-advisory-5-text" type="text" placeholder="Optional advisory item">
+          </label>
+        </div>
+        <div class="accessibility-editor">
+          <span class="field-label">Testimonials</span>
+          <p class="field-help">
+            Optional guest-facing quotes. Check only the ones that should appear.
+          </p>
+
+          <label class="accessibility-row">
+            <input id="film-testimonial-1-check" type="checkbox" disabled>
+            <input id="film-testimonial-1-text" type="text" placeholder="Optional testimonial">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-testimonial-2-check" type="checkbox" disabled>
+            <input id="film-testimonial-2-text" type="text" placeholder="Optional testimonial">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-testimonial-3-check" type="checkbox" disabled>
+            <input id="film-testimonial-3-text" type="text" placeholder="Optional testimonial">
+          </label>
+        </div>
         <label class="checkbox-row">
           <input id="film-active-checkbox" type="checkbox" checked>
           <span>Active / available in scheduler</span>
@@ -358,6 +402,64 @@
     });
   }
 
+  function getItemsFromMessageEditor(textInputs, checkInputs) {
+    return textInputs
+      .map((textInput, index) => {
+        const text = textInput?.value.trim() || '';
+        const isActive = !!checkInputs[index]?.checked;
+
+        return {
+          text,
+          is_active: isActive && !!text
+        };
+      });
+  }
+
+  function getActiveTextFromMessageEditor(textInputs, checkInputs) {
+    return getItemsFromMessageEditor(textInputs, checkInputs)
+      .filter((item) => item.is_active)
+      .map((item) => item.text)
+      .join(' | ');
+  }
+
+  function setMessageEditorFromText(value, textInputs, checkInputs, defaultItems = []) {
+    const existingItems = String(value || '')
+      .split('|')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    textInputs.forEach((textInput, index) => {
+      if (!textInput) return;
+
+      const fallbackText = defaultItems[index] || '';
+      const savedText = existingItems[index] || '';
+      const displayText = savedText || fallbackText;
+
+      textInput.value = displayText;
+
+      const checkbox = checkInputs[index];
+      if (!checkbox) return;
+
+      checkbox.checked = existingItems.includes(displayText);
+      checkbox.disabled = !displayText;
+    });
+  }
+
+  function refreshMessageCheckboxStates(textInputs, checkInputs) {
+    textInputs.forEach((textInput, index) => {
+      const checkbox = checkInputs[index];
+      const hasText = !!textInput?.value.trim();
+
+      if (!checkbox) return;
+
+      checkbox.disabled = !hasText;
+
+      if (!hasText) {
+        checkbox.checked = false;
+      }
+    });
+  }
+
   function getPosterCodeFromStoredValue(value) {
     const cleanValue = String(value || '').trim();
 
@@ -402,8 +504,6 @@
 
     filmTitleInput: document.getElementById('film-title-input'),
     filmSynopsisInput: document.getElementById('film-synopsis-input'),
-    filmAdvisoryInput: document.getElementById('film-advisory-input'),
-    filmTestimonialInput: document.getElementById('film-testimonial-input'),
     filmAccessibilityChecks: [
       document.getElementById('film-accessibility-1-check'),
       document.getElementById('film-accessibility-2-check'),
@@ -417,6 +517,30 @@
       document.getElementById('film-accessibility-3-text'),
       document.getElementById('film-accessibility-4-text'),
       document.getElementById('film-accessibility-5-text')
+    ],
+    filmAdvisoryChecks: [
+      document.getElementById('film-advisory-1-check'),
+      document.getElementById('film-advisory-2-check'),
+      document.getElementById('film-advisory-3-check'),
+      document.getElementById('film-advisory-4-check'),
+      document.getElementById('film-advisory-5-check')
+    ],
+    filmAdvisoryTexts: [
+      document.getElementById('film-advisory-1-text'),
+      document.getElementById('film-advisory-2-text'),
+      document.getElementById('film-advisory-3-text'),
+      document.getElementById('film-advisory-4-text'),
+      document.getElementById('film-advisory-5-text')
+    ],
+    filmTestimonialChecks: [
+      document.getElementById('film-testimonial-1-check'),
+      document.getElementById('film-testimonial-2-check'),
+      document.getElementById('film-testimonial-3-check')
+    ],
+    filmTestimonialTexts: [
+      document.getElementById('film-testimonial-1-text'),
+      document.getElementById('film-testimonial-2-text'),
+      document.getElementById('film-testimonial-3-text')
     ],
     filmActiveCheckbox: document.getElementById('film-active-checkbox'),
     saveFilmButton: document.getElementById('save-film-button'),
@@ -785,8 +909,19 @@
     if (!film) {
       ui.filmTitleInput.value = '';
       ui.filmSynopsisInput.value = '';
-      ui.filmAdvisoryInput.value = '';
-      ui.filmTestimonialInput.value = '';
+      setMessageEditorFromText('', ui.filmAdvisoryTexts, ui.filmAdvisoryChecks, [
+        'Features motion seats and sensory effects',
+        'Includes sudden movement, mist, wind, and scent effects',
+        'Recommended for guests who are comfortable with a more active theatre experience',
+        '',
+        ''
+      ]);
+
+      setMessageEditorFromText('', ui.filmTestimonialTexts, ui.filmTestimonialChecks, [
+        '',
+        '',
+        ''
+      ]);
       setAccessibilityEditorFromText('');
       ui.filmActiveCheckbox.checked = true;
       ui.filmPosterUrlInput.value = '';
@@ -796,8 +931,19 @@
 
     ui.filmTitleInput.value = film.title || '';
     ui.filmSynopsisInput.value = film.synopsis || '';
-    ui.filmAdvisoryInput.value = film.advisory_text || '';
-    ui.filmTestimonialInput.value = formatTestimonialForDisplay(film.testimonial || '');
+    setMessageEditorFromText(film.advisory_text || '', ui.filmAdvisoryTexts, ui.filmAdvisoryChecks, [
+      'Features motion seats and sensory effects',
+      'Includes sudden movement, mist, wind, and scent effects',
+      'Recommended for guests who are comfortable with a more active theatre experience',
+      '',
+      ''
+    ]);
+
+    setMessageEditorFromText(film.testimonial || '', ui.filmTestimonialTexts, ui.filmTestimonialChecks, [
+      '',
+      '',
+      ''
+    ]);
     setAccessibilityEditorFromText(film.accessibility_text || '');
     ui.filmActiveCheckbox.checked = !!film.is_active;
     ui.filmPosterUrlInput.value = getPosterCodeFromStoredValue(film.poster_url || '');
@@ -868,8 +1014,8 @@
         poster_url: posterCode,
         synopsis: ui.filmSynopsisInput.value.trim(),
         accessibility_text: getActiveAccessibilityTextFromEditor(),
-        advisory_text: ui.filmAdvisoryInput.value.trim(),
-        testimonial: stripWrappingQuotes(ui.filmTestimonialInput.value),
+        advisory_text: getActiveTextFromMessageEditor(ui.filmAdvisoryTexts, ui.filmAdvisoryChecks),
+        testimonial: getActiveTextFromMessageEditor(ui.filmTestimonialTexts, ui.filmTestimonialChecks),
         is_active: ui.filmActiveCheckbox.checked,
         theme_color_primary: normalizeThemeColor(ui.filmThemePrimaryInput.value, '#646e78'),
         theme_color_secondary: normalizeThemeColor(ui.filmThemeSecondaryInput.value, '#2f3a40'),
@@ -1092,8 +1238,10 @@
     [
       ui.filmTitleInput,
       ui.filmSynopsisInput,
-      ui.filmAdvisoryInput,
-      ui.filmTestimonialInput,
+      ...ui.filmAdvisoryChecks,
+      ...ui.filmAdvisoryTexts,
+      ...ui.filmTestimonialChecks,
+      ...ui.filmTestimonialTexts,
       ui.filmPosterUrlInput,
       ui.filmThemePrimaryInput,
       ui.filmThemeSecondaryInput,
@@ -1117,6 +1265,30 @@
 
       textInput.addEventListener('input', refreshAccessibilityCheckboxStates);
       textInput.addEventListener('change', refreshAccessibilityCheckboxStates);
+    });
+
+    ui.filmAdvisoryTexts.forEach((textInput) => {
+      if (!textInput) return;
+
+      textInput.addEventListener('input', () => {
+        refreshMessageCheckboxStates(ui.filmAdvisoryTexts, ui.filmAdvisoryChecks);
+      });
+
+      textInput.addEventListener('change', () => {
+        refreshMessageCheckboxStates(ui.filmAdvisoryTexts, ui.filmAdvisoryChecks);
+      });
+    });
+
+    ui.filmTestimonialTexts.forEach((textInput) => {
+      if (!textInput) return;
+
+      textInput.addEventListener('input', () => {
+        refreshMessageCheckboxStates(ui.filmTestimonialTexts, ui.filmTestimonialChecks);
+      });
+
+      textInput.addEventListener('change', () => {
+        refreshMessageCheckboxStates(ui.filmTestimonialTexts, ui.filmTestimonialChecks);
+      });
     });
 
     ui.passwordInput.addEventListener('keydown', (event) => {
