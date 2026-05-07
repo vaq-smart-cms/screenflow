@@ -277,6 +277,83 @@
 
   const POSTER_BASE_PATH = './film-posters/web/';
 
+  const ACCESSIBILITY_KEY_DEFAULTS = [
+    'wheelchair',
+    'assistive',
+    'service_animal',
+    'captions',
+    'inductive'
+  ];
+
+  const ACCESSIBILITY_ICON_BY_KEY = {
+    wheelchair: '../assets/acc-wc.svg',
+    assistive: '../assets/acc-assistive.svg',
+    captions: '../assets/acc-cc.svg',
+    service_animal: '../assets/acc-svc-dog.svg',
+    inductive: '../assets/acc-induc.svg',
+    information: '../assets/information.svg'
+  };
+
+  function parseMessageEditorValue(value) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (!value) {
+      return [];
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+
+      if (!trimmed) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // Fall through to legacy pipe parsing.
+      }
+
+      return trimmed
+        .split('|')
+        .map((item, index) => ({
+          text: item.trim(),
+          is_active: true,
+          sort_order: index + 1
+        }))
+        .filter((item) => item.text);
+    }
+
+    return [];
+  }
+
+  function serializeMessageEditorValue(textInputs, checkInputs, options = {}) {
+    const keys = options.keys || [];
+
+    return textInputs
+      .map((textInput, index) => {
+        const text = String(textInput?.value || '').trim();
+        const isActive = !!checkInputs[index]?.checked;
+
+        if (!text) {
+          return null;
+        }
+
+        return {
+          key: keys[index] || `${options.kind || 'item'}-${index + 1}`,
+          text,
+          is_active: isActive,
+          sort_order: index + 1
+        };
+      })
+      .filter(Boolean);
+  }
+
   function normalizePosterCode(value) {
     return String(value || '')
       .trim()
@@ -337,16 +414,14 @@
   }
 
   function getAccessibilityItemsFromEditor() {
-    return ui.filmAccessibilityTexts
-      .map((textInput, index) => {
-        const text = textInput?.value.trim() || '';
-        const isActive = !!ui.filmAccessibilityChecks[index]?.checked;
-
-        return {
-          text,
-          is_active: isActive && !!text
-        };
-      });
+    return serializeMessageEditorValue(
+      ui.filmAccessibilityTexts,
+      ui.filmAccessibilityChecks,
+      {
+        keys: ACCESSIBILITY_KEY_DEFAULTS,
+        kind: 'accessibility'
+      }
+    );
   }
 
   function getActiveAccessibilityTextFromEditor() {
@@ -357,13 +432,22 @@
   }
 
   function setAccessibilityEditorFromText(value) {
-    setMessageEditorFromText(value, ui.filmAccessibilityTexts, ui.filmAccessibilityChecks, [
-      'Wheelchair accessible seating',
-      'Assistive listening available',
-      'Service animals welcome',
-      '',
-      ''
-    ]);
+    setMessageEditorFromText(
+      value,
+      ui.filmAccessibilityTexts,
+      ui.filmAccessibilityChecks,
+      [
+        'Wheelchair access and designated wheelchair seating',
+        'Audio technology providing direct sound to hearing-impaired guests',
+        'Service animals welcome',
+        'Closed captioning units available upon request',
+        'Wireless audio transmission directly to hearing aids via electromagnetic induction'
+      ],
+      {
+        keys: ACCESSIBILITY_KEY_DEFAULTS,
+        kind: 'accessibility'
+      }
+    );
   }
 
   function refreshAccessibilityCheckboxStates() {
@@ -401,24 +485,27 @@
       .join(' | ');
   }
 
-  function setMessageEditorFromText(value, textInputs, checkInputs, defaultItems = []) {
-    const parsedItems = parseMessageEditorValue(value, defaultItems);
+  function setMessageEditorFromText(value, textInputs, checkInputs, defaultItems = [], options = {}) {
+    const parsedItems = parseMessageEditorValue(value);
+    const keys = options.keys || [];
 
     textInputs.forEach((textInput, index) => {
       if (!textInput) return;
 
-      const item = parsedItems[index] || {
-        text: defaultItems[index] || '',
-        is_active: false
-      };
+      const savedItem = parsedItems[index] || null;
+      const fallbackText = defaultItems[index] || '';
+      const displayText = savedItem?.text || fallbackText;
 
-      textInput.value = item.text || '';
+      textInput.value = displayText;
 
       const checkbox = checkInputs[index];
       if (!checkbox) return;
 
-      checkbox.checked = !!item.is_active && !!item.text;
-      checkbox.disabled = !item.text;
+      checkbox.checked = savedItem
+        ? !!savedItem.is_active
+        : false;
+
+      checkbox.disabled = !displayText;
     });
   }
 
@@ -1033,17 +1120,27 @@
         poster_url: posterCode,
         synopsis: ui.filmSynopsisInput.value.trim(),
         accessibility_text: serializeMessageEditorValue(
-          ui.filmAccessibilityTexts,
-          ui.filmAccessibilityChecks
-        ),
-        advisory_text: serializeMessageEditorValue(
-          ui.filmAdvisoryTexts,
-          ui.filmAdvisoryChecks
-        ),
-        testimonial: serializeMessageEditorValue(
-          ui.filmTestimonialTexts,
-          ui.filmTestimonialChecks
-        ),
+        ui.filmAccessibilityTexts,
+        ui.filmAccessibilityChecks,
+        {
+          keys: ACCESSIBILITY_KEY_DEFAULTS,
+          kind: 'accessibility'
+        }
+      ),
+      advisory_text: serializeMessageEditorValue(
+        ui.filmAdvisoryTexts,
+        ui.filmAdvisoryChecks,
+        {
+          kind: 'advisory'
+        }
+      ),
+      testimonial: serializeMessageEditorValue(
+        ui.filmTestimonialTexts,
+        ui.filmTestimonialChecks,
+        {
+          kind: 'testimonial'
+        }
+      ),
         is_active: ui.filmActiveCheckbox.checked,
         theme_color_primary: normalizeThemeColor(ui.filmThemePrimaryInput.value, '#646e78'),
         theme_color_secondary: normalizeThemeColor(ui.filmThemeSecondaryInput.value, '#2f3a40'),
