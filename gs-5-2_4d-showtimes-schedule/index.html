@@ -185,6 +185,10 @@
       height: var(--poster-height);
       left: 18px;
       object-fit: cover;
+      opacity: 1;
+      transition:
+        opacity 420ms ease,
+        transform 520ms ease;
       position: absolute;
       top: 19px;
       width: var(--poster-width);
@@ -193,6 +197,7 @@
 
     .poster-fallback {
       align-items: center;
+      backdrop-filter: blur(2px);
       background: rgba(0, 0, 0, 0.22);
       border: 4px solid var(--film-primary);
       border-radius: 7px;
@@ -210,6 +215,11 @@
       top: 19px;
       width: var(--poster-width);
       z-index: 2;
+    }
+
+    .poster-image.is-loading {
+      opacity: 0;
+      transform: scale(1.015);
     }
 
     /* Top tile */
@@ -546,6 +556,7 @@
     const TIMEZONE_NAME = 'America/Vancouver';
     const POSTER_BASE_PATH = './film-posters/web/';
     const POSTER_SIZE = 'lg';
+    const USE_PLACEHOLDER_DATA = false;
 
     const ADVISORY_ROTATION_MS = 9000;
     const TESTIMONIAL_ROTATION_MS = 9000;
@@ -557,6 +568,9 @@
 
     const END_OF_DAY_NEXT_LABEL = 'Shows have ended for today';
     const END_OF_DAY_BODY_LABEL = 'Please check back tomorrow for more 4D showtimes.';
+    const LOADING_LABEL = 'Loading 4D showtimes...';
+    const UNAVAILABLE_LABEL = '4D showtimes are not available right now.';
+    const FALLBACK_ERROR_LABEL = 'Unable to load 4D showtimes.';
 
     const ACCESSIBILITY_ICON_BY_KEY = {
       wheelchair: '../assets/acc-wc.svg',
@@ -606,7 +620,8 @@
       showtimeBoundaryTimerId: null,
       advisoryTimerId: null,
       testimonialTimerId: null,
-      testimonialHideTimerId: null
+      testimonialHideTimerId: null,
+      lastPayloadSignature: ''
     };
 
     const ui = {
@@ -833,9 +848,34 @@
       const posterUrl = buildPosterUrl(data.poster_url, 'lg');
 
       ui.posterImage.alt = `${data.film_title || '4D film'} poster`;
-      ui.posterImage.src = posterUrl;
-      ui.posterImage.style.display = posterUrl ? 'block' : 'none';
-      ui.posterFallback.style.display = posterUrl ? 'none' : 'flex';
+
+      if (!posterUrl) {
+        ui.posterImage.style.display = 'none';
+        ui.posterFallback.style.display = 'flex';
+        return;
+      }
+
+      ui.posterFallback.style.display = 'none';
+
+      ui.posterImage.classList.add('is-loading');
+      ui.posterImage.style.display = 'block';
+
+      const nextImage = new Image();
+
+      nextImage.onload = () => {
+        ui.posterImage.src = posterUrl;
+
+        requestAnimationFrame(() => {
+          ui.posterImage.classList.remove('is-loading');
+        });
+      };
+
+      nextImage.onerror = () => {
+        ui.posterImage.style.display = 'none';
+        ui.posterFallback.style.display = 'flex';
+      };
+
+      nextImage.src = posterUrl;
     }
 
     function showAccessibilityIcons() {
@@ -925,7 +965,7 @@
       }, ADVISORY_ROTATION_MS);
     }
 
-    function renderAdvisory(data) {
+    function renderAdvisory(data, options = {}) {
       const activeItems = getActiveItems(data.advisories);
 
       if (!activeItems.length) {
@@ -943,7 +983,9 @@
 
       ui.advisoryText.textContent = activeItems[state.advisoryIndex].text;
 
-      scheduleAdvisoryRotation(activeItems);
+      if (!options.preserveTimers) {
+        scheduleAdvisoryRotation(activeItems);
+      }
     }
 
     function createShowtimeElement(showtime, index, shouldShowMeridiem) {
@@ -1151,6 +1193,24 @@
       }, delay);
     }
 
+    function getPayloadSignature(data) {
+      if (!data) return '';
+
+      return JSON.stringify({
+        schedule_id: data.schedule_id,
+        updated_at: data.updated_at,
+        published_at: data.published_at,
+        film_id: data.film_id,
+        theme_color_primary: data.theme_color_primary,
+        theme_color_secondary: data.theme_color_secondary,
+        poster_url: data.poster_url,
+        accessibility: data.accessibility,
+        advisories: data.advisories,
+        testimonials: data.testimonials,
+        showtimes: data.showtimes
+      });
+    }
+
     function scheduleLiveRefresh() {
       if (state.liveRefreshTimerId) {
         window.clearTimeout(state.liveRefreshTimerId);
@@ -1162,7 +1222,11 @@
           const liveData = await fetchLiveSchedule();
 
           if (liveData) {
-            renderSign(liveData, { preserveTimers: true });
+            const nextSignature = getPayloadSignature(liveData);
+
+            if (nextSignature !== state.lastPayloadSignature) {
+              renderSign(liveData, { preserveTimers: true });
+            }
           }
         } catch (error) {
           console.error('Live 4D signage refresh failed:', error);
@@ -1178,11 +1242,12 @@
         clearTimers();
       }
 
+      state.lastPayloadSignature = getPayloadSignature(data);
       state.schedule = data;
 
       renderPoster(data);
       renderAccessibility(data);
-      renderAdvisory(data);
+      renderAdvisory(data, options);
       renderShowtimes(data);
 
       if (!options.preserveTimers) {
@@ -1209,23 +1274,28 @@
     }
 
     async function initialize() {
-      showStatus('Loading 4D showtimes...');
+      showStatus(LOADING_LABEL);
 
       try {
+        if (USE_PLACEHOLDER_DATA) {
+          renderSign(PLACEHOLDER_DATA);
+          return;
+        }
+
         const liveData = await fetchLiveSchedule();
 
         if (!liveData) {
-          showStatus('4D showtimes unavailable');
+          showStatus(UNAVAILABLE_LABEL);
           return;
         }
 
         renderSign(liveData);
         scheduleDataRefresh();
+
       } catch (error) {
         console.error('Failed to load live 4D signage data:', error);
 
-        // Scaffold fallback only. Remove this fallback before final production rollout if desired.
-        renderSign(PLACEHOLDER_DATA);
+        showStatus(FALLBACK_ERROR_LABEL);
         scheduleDataRefresh();
       }
     }
