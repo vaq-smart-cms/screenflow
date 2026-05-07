@@ -227,7 +227,7 @@
       overflow: hidden;
       position: absolute;
       top: 0;
-      width: 1296px;
+      width: 820px;
     }
 
     .next-show-tile::before {
@@ -285,7 +285,7 @@
     }
 
     .next-show-time {
-      color: var(--vaq-gold);
+      color: inherit;
     }
 
     /* Supplemental top-right region */
@@ -293,18 +293,18 @@
     .supplemental-region {
       align-items: center;
       display: flex;
-      height: 120px;
+      height: var(--tile-height);
       justify-content: flex-end;
-      left: 1070px;
+      left: 1434px;
       position: absolute;
-      top: 168px;
-      width: 810px;
+      top: 0;
+      width: 446px;
     }
 
     .accessibility-icons {
       align-items: center;
       display: flex;
-      gap: 30px;
+      gap: 18px;
       justify-content: flex-end;
       width: 100%;
     }
@@ -315,9 +315,9 @@
       border-radius: 999px;
       display: flex;
       filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
-      height: 100px;
+      height: 92px;
       justify-content: center;
-      width: 100px;
+      width: 92px;
     }
 
     .accessibility-icon img {
@@ -392,6 +392,10 @@
         opacity var(--transition-page) ease,
         transform var(--transition-page) ease;
       white-space: nowrap;
+    }
+
+    .showtime-item.is-moving {
+      z-index: 2;
     }
 
     .showtime-item.is-next {
@@ -951,7 +955,41 @@
         : formatShowtime(showtime.show_at, { omitMeridiem: true });
     }
 
+    function captureShowtimePositions() {
+      const positions = new Map();
+
+      state.showtimeElementsById.forEach((element, id) => {
+        positions.set(id, element.getBoundingClientRect());
+      });
+
+      return positions;
+    }
+
+    function animateShowtimeReflow(previousPositions) {
+      state.showtimeElementsById.forEach((element, id) => {
+        const previous = previousPositions.get(id);
+        if (!previous) return;
+
+        const current = element.getBoundingClientRect();
+        const deltaX = previous.left - current.left;
+        const deltaY = previous.top - current.top;
+
+        if (!deltaX && !deltaY) return;
+
+        element.classList.add('is-moving');
+        element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+        requestAnimationFrame(() => {
+          element.style.transform = 'translate(0, 0)';
+          window.setTimeout(() => {
+            element.classList.remove('is-moving');
+          }, SHOWTIME_TRANSITION_MS);
+        });
+      });
+    }
+
     function renderShowtimes(data) {
+      const previousPositions = captureShowtimePositions();
       const futureShowtimes = getFutureShowtimes(data.showtimes);
 
       if (!futureShowtimes.length) {
@@ -1021,6 +1059,10 @@
       });
 
       state.visibleShowtimeIds = nextVisibleIds;
+
+      requestAnimationFrame(() => {
+        animateShowtimeReflow(previousPositions);
+      });
     }
 
     function scheduleNextShowtimeRefresh(data) {
