@@ -417,6 +417,18 @@
       padding-left: 9px;
     }
 
+    .showtimes-end-message {
+      color: #ffffff;
+      font-size: 46px;
+      font-weight: 700;
+      grid-column: 1 / -1;
+      line-height: 1.12;
+      max-width: 760px;
+      opacity: 0.94;
+      text-align: center;
+      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+}
+
     /* Advisory */
 
     .advisory-region {
@@ -540,6 +552,9 @@
     const DATA_REFRESH_MS = 60000;
     const SHOWTIME_BOUNDARY_FUDGE_MS = 750;
     const SHOWTIME_TRANSITION_MS = 520;
+
+    const END_OF_DAY_NEXT_LABEL = 'Shows have ended for today';
+    const END_OF_DAY_BODY_LABEL = 'Please check back tomorrow for more 4D showtimes.';
 
     const ACCESSIBILITY_ICON_BY_KEY = {
       wheelchair: '../assets/acc-wc.svg',
@@ -993,7 +1008,7 @@
       const futureShowtimes = getFutureShowtimes(data.showtimes);
 
       if (!futureShowtimes.length) {
-        ui.nextShowTime.textContent = 'No more shows today';
+        ui.nextShowTime.textContent = END_OF_DAY_NEXT_LABEL;
 
         state.showtimeElementsById.forEach((element) => {
           element.style.opacity = '0';
@@ -1003,6 +1018,13 @@
 
         state.showtimeElementsById.clear();
         state.visibleShowtimeIds.clear();
+
+        ui.showtimesGrid.innerHTML = `
+          <div class="showtimes-end-message">
+            ${END_OF_DAY_BODY_LABEL}
+          </div>
+        `;
+
         return;
       }
 
