@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=1920, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no"
+  />
+  <title>VAQ 4D Showtimes</title>
+
+  <!--
+    Target container: 1920 x 810 px
+    Initial rollout scaffold for Kuusoft / NexSigns.
+    Shared assets expected in ../assets/
+  -->
+
+  <style>
+    @font-face {
+      font-display: swap;
+      font-family: 'BlissPro';
+      font-style: normal;
+      font-weight: 700;
+      src:
+        url('../assets/BlissPro-Bold.woff2') format('woff2'),
+        url('../assets/BlissPro-Bold.woff') format('woff');
+    }
+
+    @font-face {
+      font-display: swap;
+      font-family: 'BlissPro';
+      font-style: italic;
+      font-weight: 400;
+      src:
+        url('../assets/BlissPro-Italic.woff2') format('woff2'),
+        url('../assets/BlissPro-Italic.woff') format('woff');
+    }
+
+    :root {
+      --page-width: 1920px;
+      --page-height: 810px;
+
+      --page-fallback: #113466;
+      --vaq-blue: #64a5c3;
+      --vaq-green: #7d9b2d;
+      --vaq-gold: #f3bc43;
+      --theatre-purple: #cca1cc;
+
+      --film-primary: #404020;
+      --film-secondary: #c0c0e0;
+
+      --outer-padding-x: 20px;
+      --outer-padding-y: 20px;
+
+      --poster-width: 498px;
+      --poster-height: 720px;
+
+      --poster-frame-width: 534px;
+      --poster-frame-height: 758px;
+
+      --tile-height: 138px;
+      --tile-radius: 13px;
+      --tile-opacity: 0.80;
+
+      --icon-column-width: 154px;
+      --divider-color: rgba(0, 0, 0, 0.10);
+      --inner-stroke: rgba(255, 255, 255, 0.10);
+
+      --transition-fast: 280ms;
+      --transition-page: 520ms;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: var(--page-width);
+      height: var(--page-height);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--page-fallback);
+    }
+
+    body {
+      color: #ffffff;
+      font-family: 'BlissPro', Arial, sans-serif;
+      position: relative;
+    }
+
+    .page {
+      background: var(--page-fallback);
+      height: var(--page-height);
+      overflow: hidden;
+      position: relative;
+      width: var(--page-width);
+    }
+
+    .bg-rotator {
+      animation: slowRotate 200s linear infinite;
+      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+      background-repeat: no-repeat;
+      background-size: 5000px 5000px;
+      height: 5000px;
+      left: -1732px;
+      pointer-events: none;
+      position: absolute;
+      top: -3500px;
+      transform-origin: center center;
+      width: 5000px;
+      z-index: 1;
+    }
+
+    .content-layer {
+      height: 100%;
+      padding: var(--outer-padding-y) var(--outer-padding-x);
+      position: relative;
+      width: 100%;
+      z-index: 2;
+    }
+
+    .status-panel {
+      align-items: center;
+      background: rgba(0, 0, 0, 0.22);
+      border-radius: 18px;
+      color: #ffffff;
+      display: flex;
+      font-size: 40px;
+      font-weight: 700;
+      inset: 20px;
+      justify-content: center;
+      line-height: 1.15;
+      padding: 40px;
+      position: absolute;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .status-panel[hidden],
+    .sign-layout[hidden] {
+      display: none !important;
+    }
+
+    .sign-layout {
+      height: 100%;
+      position: relative;
+      width: 100%;
+    }
+
+    /* Poster hero */
+
+    .poster-region {
+      height: 770px;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 560px;
+    }
+
+    .poster-frame {
+      background:
+        linear-gradient(
+          180deg,
+          var(--film-primary) 0%,
+          var(--film-secondary) 100%
+        );
+      border-radius: 12px;
+      box-shadow:
+        inset 0 0 18px rgba(255, 255, 255, 0.30),
+        0 4px 16px rgba(0, 0, 0, 0.50);
+      height: var(--poster-frame-height);
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: var(--poster-frame-width);
+      z-index: 1;
+    }
+
+    .poster-image {
+      background: rgba(255, 255, 255, 0.08);
+      border: 4px solid var(--film-primary);
+      border-radius: 7px;
+      display: block;
+      height: var(--poster-height);
+      left: 18px;
+      object-fit: cover;
+      position: absolute;
+      top: 19px;
+      width: var(--poster-width);
+      z-index: 2;
+    }
+
+    .poster-fallback {
+      align-items: center;
+      background: rgba(0, 0, 0, 0.22);
+      border: 4px solid var(--film-primary);
+      border-radius: 7px;
+      color: rgba(255, 255, 255, 0.86);
+      display: none;
+      font-size: 44px;
+      font-weight: 700;
+      height: var(--poster-height);
+      justify-content: center;
+      left: 18px;
+      line-height: 1.08;
+      padding: 32px;
+      position: absolute;
+      text-align: center;
+      top: 19px;
+      width: var(--poster-width);
+      z-index: 2;
+    }
+
+    /* Top tile */
+
+    .next-show-tile {
+      background: rgba(204, 161, 204, var(--tile-opacity));
+      border-radius: var(--tile-radius);
+      box-shadow:
+        inset 0 0 0 8px var(--inner-stroke),
+        0 8px 18px rgba(0, 0, 0, 0.16);
+      display: grid;
+      grid-template-columns: var(--icon-column-width) 1fr;
+      height: var(--tile-height);
+      left: 584px;
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      width: 1296px;
+    }
+
+    .next-show-tile::before {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 0.25) 0%,
+          rgba(0, 0, 0, 0.12) 18%,
+          rgba(0, 0, 0, 0.00) 42%
+        );
+      content: '';
+      inset: 0;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      position: absolute;
+      z-index: 1;
+    }
+
+    .next-show-icon {
+      align-items: center;
+      border-right: 2px solid var(--divider-color);
+      display: flex;
+      height: 100%;
+      justify-content: center;
+      padding: 18px 12px;
+      position: relative;
+      width: var(--icon-column-width);
+      z-index: 2;
+    }
+
+    .next-show-icon img {
+      display: block;
+      max-height: 104px;
+      max-width: 132px;
+    }
+
+    .next-show-content {
+      align-items: center;
+      display: flex;
+      min-width: 0;
+      padding: 12px 30px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .next-show-title {
+      color: #ffffff;
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.05;
+      margin: 0;
+      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+      white-space: nowrap;
+    }
+
+    .next-show-time {
+      color: var(--vaq-gold);
+    }
+
+    /* Supplemental top-right region */
+
+    .supplemental-region {
+      align-items: center;
+      display: flex;
+      height: 120px;
+      justify-content: flex-end;
+      left: 1070px;
+      position: absolute;
+      top: 168px;
+      width: 810px;
+    }
+
+    .accessibility-icons {
+      align-items: center;
+      display: flex;
+      gap: 30px;
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .accessibility-icon {
+      align-items: center;
+      background: var(--vaq-blue);
+      border-radius: 999px;
+      display: flex;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
+      height: 100px;
+      justify-content: center;
+      width: 100px;
+    }
+
+    .accessibility-icon img {
+      display: block;
+      max-height: 58px;
+      max-width: 58px;
+    }
+
+    .accessibility-icons[data-count="5"] {
+      gap: 22px;
+    }
+
+    .accessibility-icons[data-count="5"] .accessibility-icon {
+      height: 90px;
+      width: 90px;
+    }
+
+    .testimonial-panel {
+      color: #ffffff;
+      display: none;
+      font-size: 34px;
+      font-style: italic;
+      line-height: 1.16;
+      max-width: 780px;
+      opacity: 0;
+      text-align: right;
+      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+      transform: translateY(6px);
+      transition:
+        opacity 500ms ease,
+        transform 500ms ease;
+    }
+
+    .testimonial-panel.is-visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Showtimes */
+
+    .showtimes-region {
+      align-items: center;
+      display: flex;
+      height: 398px;
+      justify-content: center;
+      left: 584px;
+      position: absolute;
+      top: 315px;
+      width: 1296px;
+    }
+
+    .showtimes-grid {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(var(--rows-per-column, 3), auto);
+      justify-content: space-between;
+      row-gap: 22px;
+      width: 100%;
+    }
+
+    .showtime-item {
+      color: #ffffff;
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1;
+      min-width: 360px;
+      opacity: 1;
+      text-align: left;
+      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+      transition:
+        opacity var(--transition-page) ease,
+        transform var(--transition-page) ease;
+      white-space: nowrap;
+    }
+
+    .showtime-item.is-next {
+      color: var(--vaq-gold);
+    }
+
+    .showtime-meridiem {
+      font-size: 0.52em;
+      padding-left: 9px;
+    }
+
+    /* Advisory */
+
+    .advisory-region {
+      align-items: center;
+      bottom: 0;
+      display: grid;
+      gap: 22px;
+      grid-template-columns: 72px minmax(0, 1fr);
+      left: 584px;
+      min-height: 74px;
+      position: absolute;
+      width: 1296px;
+    }
+
+    .advisory-icon {
+      align-items: center;
+      background: var(--vaq-green);
+      border-radius: 999px;
+      display: flex;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
+      height: 72px;
+      justify-content: center;
+      width: 72px;
+    }
+
+    .advisory-icon img {
+      display: block;
+      max-height: 42px;
+      max-width: 42px;
+    }
+
+    .advisory-text {
+      color: #ffffff;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.12;
+      margin: 0;
+      opacity: 1;
+      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+      transform: translateY(0);
+      transition:
+        opacity 500ms ease,
+        transform 500ms ease;
+    }
+
+    .advisory-text.is-fading {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    @keyframes slowRotate {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <div class="bg-rotator" aria-hidden="true"></div>
+
+    <div class="content-layer">
+      <div id="status-panel" class="status-panel" hidden></div>
+
+      <section id="sign-layout" class="sign-layout" hidden>
+        <div class="poster-region">
+          <div id="poster-frame" class="poster-frame" aria-hidden="true"></div>
+          <img id="poster-image" class="poster-image" alt="4D film poster" />
+          <div id="poster-fallback" class="poster-fallback">4D<br>Experience</div>
+        </div>
+
+        <article class="next-show-tile">
+          <div class="next-show-icon">
+            <img src="../assets/information.svg" alt="" aria-hidden="true" />
+          </div>
+          <div class="next-show-content">
+            <p class="next-show-title">
+              Next show &ndash; <span id="next-show-time" class="next-show-time">11:00 a.m.</span>
+            </p>
+          </div>
+        </article>
+
+        <div class="supplemental-region">
+          <div id="accessibility-icons" class="accessibility-icons" data-count="4"></div>
+          <div id="testimonial-panel" class="testimonial-panel"></div>
+        </div>
+
+        <section class="showtimes-region" aria-label="Today’s 4D showtimes">
+          <div id="showtimes-grid" class="showtimes-grid"></div>
+        </section>
+
+        <section id="advisory-region" class="advisory-region">
+          <div class="advisory-icon">
+            <img src="../assets/information.svg" alt="" aria-hidden="true" />
+          </div>
+          <p id="advisory-text" class="advisory-text"></p>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const TIMEZONE_NAME = 'America/Vancouver';
+    const POSTER_BASE_PATH = './film-posters/web/';
+    const POSTER_SIZE = 'lg';
+
+    const ADVISORY_ROTATION_MS = 9000;
+    const TESTIMONIAL_ROTATION_MS = 9000;
+    const TESTIMONIAL_INTERRUPT_MS = 60000;
+
+    const ACCESSIBILITY_ICON_BY_KEY = {
+      wheelchair: '../assets/acc-wc.svg',
+      assistive: '../assets/acc-assistive.svg',
+      captions: '../assets/acc-cc.svg',
+      service_animal: '../assets/acc-svc-dog.svg',
+      inductive: '../assets/acc-induc.svg',
+      information: '../assets/information.svg'
+    };
+
+    const PLACEHOLDER_DATA = {
+      film_title: 'BBC Earth: North America 4D Experience',
+      poster_url: 'na4d',
+      theme_color_primary: '#404020',
+      theme_color_secondary: '#c0c0e0',
+      accessibility: [
+        { key: 'wheelchair', text: 'Wheelchair access and designated wheelchair seating', is_active: true, sort_order: 1 },
+        { key: 'assistive', text: 'Audio technology providing direct sound to hearing-impaired guests', is_active: true, sort_order: 2 },
+        { key: 'service_animal', text: 'Service animals welcome', is_active: true, sort_order: 3 },
+        { key: 'captions', text: 'Closed captioning units available upon request', is_active: true, sort_order: 4 }
+      ],
+      advisories: [
+        {
+          text: 'The 4-D show includes flashing lights, moving seats, scents, and other sensory effects.',
+          is_active: true,
+          sort_order: 1
+        }
+      ],
+      testimonials: [],
+      showtimes: [
+        { id: 'demo-1', show_at: '2026-05-06T11:00:00', is_cancelled: false, sort_order: 1 },
+        { id: 'demo-2', show_at: '2026-05-06T12:00:00', is_cancelled: false, sort_order: 2 },
+        { id: 'demo-3', show_at: '2026-05-06T13:00:00', is_cancelled: false, sort_order: 3 },
+        { id: 'demo-4', show_at: '2026-05-06T14:00:00', is_cancelled: false, sort_order: 4 },
+        { id: 'demo-5', show_at: '2026-05-06T15:00:00', is_cancelled: false, sort_order: 5 }
+      ]
+    };
+
+    const state = {
+      schedule: null,
+      advisoryIndex: 0,
+      testimonialIndex: 0,
+      timers: []
+    };
+
+    const ui = {
+      statusPanel: document.getElementById('status-panel'),
+      signLayout: document.getElementById('sign-layout'),
+      posterFrame: document.getElementById('poster-frame'),
+      posterImage: document.getElementById('poster-image'),
+      posterFallback: document.getElementById('poster-fallback'),
+      nextShowTime: document.getElementById('next-show-time'),
+      accessibilityIcons: document.getElementById('accessibility-icons'),
+      testimonialPanel: document.getElementById('testimonial-panel'),
+      showtimesGrid: document.getElementById('showtimes-grid'),
+      advisoryRegion: document.getElementById('advisory-region'),
+      advisoryText: document.getElementById('advisory-text')
+    };
+
+    function showStatus(message) {
+      clearTimers();
+      ui.statusPanel.hidden = false;
+      ui.statusPanel.textContent = message;
+      ui.signLayout.hidden = true;
+    }
+
+    function showSign() {
+      ui.statusPanel.hidden = true;
+      ui.signLayout.hidden = false;
+    }
+
+    function clearTimers() {
+      state.timers.forEach((timerId) => window.clearTimeout(timerId));
+      state.timers = [];
+    }
+
+    function normalizeHexColor(value, fallback) {
+      return /^#[0-9a-fA-F]{6}$/.test(String(value || '')) ? value : fallback;
+    }
+
+    function normalizePosterCode(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .split('/')
+        .pop()
+        .replace(/_poster_(sm|md|lg)\.jpe?g$/i, '')
+        .replace(/[^a-z0-9_-]/g, '');
+    }
+
+    function buildPosterUrl(code, size = POSTER_SIZE) {
+      const cleanCode = normalizePosterCode(code);
+      return cleanCode ? `${POSTER_BASE_PATH}${cleanCode}_poster_${size}.jpg` : '';
+    }
+
+    function normalizeItemArray(value) {
+      if (Array.isArray(value)) return value;
+
+      if (!value) return [];
+
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return value.trim()
+            ? [{ text: value.trim(), is_active: true, sort_order: 1 }]
+            : [];
+        }
+      }
+
+      return [];
+    }
+
+    function getActiveItems(value) {
+      return normalizeItemArray(value)
+        .filter((item) => item && item.text && item.is_active !== false)
+        .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    }
+
+    function formatShowtime(isoString, options = {}) {
+      const date = new Date(isoString);
+      if (Number.isNaN(date.getTime())) return '';
+
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE_NAME,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).formatToParts(date);
+
+      const hour = parts.find((part) => part.type === 'hour')?.value || '';
+      const minute = parts.find((part) => part.type === 'minute')?.value || '';
+      const dayPeriodRaw = parts.find((part) => part.type === 'dayPeriod')?.value || '';
+      const dayPeriod = dayPeriodRaw.toLowerCase().replace(' ', '');
+
+      if (options.omitMeridiem) {
+        return `${hour}:${minute}`;
+      }
+
+      return `${hour}:${minute} ${dayPeriod}`;
+    }
+
+    function getShowtimeMeridiem(isoString) {
+      const date = new Date(isoString);
+      if (Number.isNaN(date.getTime())) return '';
+
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE_NAME,
+        hour: 'numeric',
+        hour12: true
+      }).formatToParts(date);
+
+      return String(parts.find((part) => part.type === 'dayPeriod')?.value || '')
+        .toLowerCase()
+        .replace(' ', '');
+    }
+
+    function getFutureShowtimes(showtimes) {
+      const now = Date.now();
+
+      return normalizeItemArray(showtimes)
+        .filter((showtime) => !showtime.is_cancelled)
+        .filter((showtime) => {
+          const time = new Date(showtime.show_at).getTime();
+          return Number.isFinite(time) && time > now;
+        })
+        .sort((a, b) => new Date(a.show_at) - new Date(b.show_at));
+    }
+
+    function renderPoster(data) {
+      const primary = normalizeHexColor(data.theme_color_primary, '#646e78');
+      const secondary = normalizeHexColor(data.theme_color_secondary, '#2f3a40');
+
+      document.documentElement.style.setProperty('--film-primary', primary);
+      document.documentElement.style.setProperty('--film-secondary', secondary);
+
+      const posterUrl = buildPosterUrl(data.poster_url, 'lg');
+
+      ui.posterImage.alt = `${data.film_title || '4D film'} poster`;
+      ui.posterImage.src = posterUrl;
+      ui.posterImage.style.display = posterUrl ? 'block' : 'none';
+      ui.posterFallback.style.display = posterUrl ? 'none' : 'flex';
+    }
+
+    function renderAccessibility(data) {
+      const activeItems = getActiveItems(data.accessibility).slice(0, 5);
+
+      ui.accessibilityIcons.innerHTML = '';
+      ui.accessibilityIcons.dataset.count = String(activeItems.length);
+
+      activeItems.forEach((item) => {
+        const circle = document.createElement('div');
+        circle.className = 'accessibility-icon';
+        circle.title = item.text;
+
+        const img = document.createElement('img');
+        img.src = ACCESSIBILITY_ICON_BY_KEY[item.key] || ACCESSIBILITY_ICON_BY_KEY.information;
+        img.alt = '';
+
+        circle.appendChild(img);
+        ui.accessibilityIcons.appendChild(circle);
+      });
+
+      ui.accessibilityIcons.hidden = activeItems.length === 0;
+    }
+
+    function renderAdvisory(data) {
+      const activeItems = getActiveItems(data.advisories);
+
+      if (!activeItems.length) {
+        ui.advisoryRegion.hidden = true;
+        ui.advisoryText.textContent = '';
+        return;
+      }
+
+      ui.advisoryRegion.hidden = false;
+      ui.advisoryText.textContent = activeItems[0].text;
+    }
+
+    function renderShowtimes(data) {
+      const futureShowtimes = getFutureShowtimes(data.showtimes);
+
+      if (!futureShowtimes.length) {
+        ui.nextShowTime.textContent = 'No more shows today';
+        ui.showtimesGrid.innerHTML = '';
+        return;
+      }
+
+      const rowsPerColumn = Math.max(1, Math.ceil(futureShowtimes.length / 3));
+      ui.showtimesGrid.style.setProperty('--rows-per-column', String(rowsPerColumn));
+      ui.nextShowTime.textContent = formatShowtime(futureShowtimes[0].show_at);
+
+      ui.showtimesGrid.innerHTML = '';
+
+      let previousVisibleMeridiem = '';
+
+      futureShowtimes.forEach((showtime, index) => {
+        const item = document.createElement('div');
+        const currentMeridiem = getShowtimeMeridiem(showtime.show_at);
+        const shouldShowMeridiem = currentMeridiem && currentMeridiem !== previousVisibleMeridiem;
+
+        item.className = 'showtime-item';
+        if (index === 0) item.classList.add('is-next');
+
+        item.innerHTML = shouldShowMeridiem
+          ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${currentMeridiem}</span>`
+          : formatShowtime(showtime.show_at, { omitMeridiem: true });
+
+        previousVisibleMeridiem = currentMeridiem || previousVisibleMeridiem;
+        ui.showtimesGrid.appendChild(item);
+      });
+    }
+
+    function renderSign(data) {
+      state.schedule = data;
+
+      renderPoster(data);
+      renderAccessibility(data);
+      renderAdvisory(data);
+      renderShowtimes(data);
+
+      showSign();
+    }
+
+    async function fetchLiveSchedule() {
+      const { data, error } = await supabaseClient
+        .from('live_4d_signage_today')
+        .select('*')
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    }
+
+    async function initialize() {
+      showStatus('Loading 4D showtimes...');
+
+      try {
+        const liveData = await fetchLiveSchedule();
+
+        if (!liveData) {
+          showStatus('4D showtimes unavailable');
+          return;
+        }
+
+        renderSign(liveData);
+      } catch (error) {
+        console.error('Failed to load live 4D signage data:', error);
+
+        // Scaffold fallback only. Remove this fallback before final production rollout if desired.
+        renderSign(PLACEHOLDER_DATA);
+      }
+    }
+
+    ui.posterImage.addEventListener('error', () => {
+      ui.posterImage.style.display = 'none';
+      ui.posterFallback.style.display = 'flex';
+    });
+
+    document.addEventListener('DOMContentLoaded', initialize);
+  </script>
+</body>
+</html>
