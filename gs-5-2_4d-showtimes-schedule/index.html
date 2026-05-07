@@ -260,8 +260,9 @@
 
     .next-show-icon img {
       display: block;
-      max-height: 104px;
-      max-width: 132px;
+      max-height: 108px;
+      max-width: 142px;
+      transform: scale(1.12);
     }
 
     .next-show-content {
@@ -490,7 +491,7 @@
 
         <article class="next-show-tile">
           <div class="next-show-icon">
-            <img src="../assets/information.svg" alt="" aria-hidden="true" />
+            <img src="../gs-1-2_daily-program-schedule/program-schedule-full/assets/icons/4d-theatre.svg" alt="" aria-hidden="true" />
           </div>
           <div class="next-show-content">
             <p class="next-show-title">
@@ -531,8 +532,10 @@
     const ADVISORY_ROTATION_MS = 9000;
     const TESTIMONIAL_ROTATION_MS = 9000;
     const TESTIMONIAL_INTERRUPT_MS = 60000;
+
     const DATA_REFRESH_MS = 60000;
     const SHOWTIME_BOUNDARY_FUDGE_MS = 750;
+    const SHOWTIME_TRANSITION_MS = 520;
 
     const ACCESSIBILITY_ICON_BY_KEY = {
       wheelchair: '../assets/acc-wc.svg',
@@ -575,8 +578,11 @@
       schedule: null,
       advisoryIndex: 0,
       testimonialIndex: 0,
+      timers: [],
+      visibleShowtimeIds: new Set(),
       showtimeElementsById: new Map(),
-      timers: []
+      liveRefreshTimerId: null,
+      showtimeBoundaryTimerId: null
     };
 
     const ui = {
@@ -608,6 +614,16 @@
     function clearTimers() {
       state.timers.forEach((timerId) => window.clearTimeout(timerId));
       state.timers = [];
+
+      if (state.liveRefreshTimerId) {
+        window.clearTimeout(state.liveRefreshTimerId);
+        state.liveRefreshTimerId = null;
+      }
+
+      if (state.showtimeBoundaryTimerId) {
+        window.clearTimeout(state.showtimeBoundaryTimerId);
+        state.showtimeBoundaryTimerId = null;
+      }
     }
 
     function setManagedTimeout(callback, delayMs) {
@@ -722,6 +738,42 @@
     function getNextShowtimeBoundaryMs(showtimes) {
       const now = Date.now();
 
+      const nextTime = normalizeItemArray(showtimes)
+        .filter((showtime) => !showtime.is_cancelled)
+        .map((showtime) => new Date(showtime.show_at).getTime())
+        .filter((time) => Number.isFinite(time) && time > now)
+        .sort((a, b) => a - b)[0];
+
+      if (!nextTime) {
+        return null;
+      }
+
+      return Math.max(1000, nextTime - now + SHOWTIME_BOUNDARY_FUDGE_MS);
+    }
+
+    function createShowtimeElement(showtime, index, shouldShowMeridiem, currentMeridiem) {
+      const item = document.createElement('div');
+
+      item.className = 'showtime-item';
+      item.dataset.showtimeId = showtime.id;
+
+      if (index === 0) {
+        item.classList.add('is-next');
+      }
+
+      item.innerHTML = shouldShowMeridiem
+        ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${currentMeridiem}</span>`
+        : formatShowtime(showtime.show_at, { omitMeridiem: true });
+
+      item.style.opacity = '0';
+      item.style.transform = 'translateY(10px)';
+
+      return item;
+    }
+
+    function getNextShowtimeBoundaryMs(showtimes) {
+      const now = Date.now();
+
       return normalizeItemArray(showtimes)
         .filter((showtime) => !showtime.is_cancelled)
         .map(getShowtimeMs)
@@ -813,11 +865,15 @@
 
       if (!futureShowtimes.length) {
         ui.nextShowTime.textContent = 'No more shows today';
-        state.showtimeElementsById.forEach((item) => {
-          item.classList.add('is-exiting');
-          setManagedTimeout(() => item.remove(), 540);
+
+        state.showtimeElementsById.forEach((element) => {
+          element.style.opacity = '0';
+          element.style.transform = 'translateY(-10px)';
+          window.setTimeout(() => element.remove(), SHOWTIME_TRANSITION_MS);
         });
+
         state.showtimeElementsById.clear();
+        state.visibleShowtimeIds.clear();
         return;
       }
 
@@ -825,34 +881,55 @@
       ui.showtimesGrid.style.setProperty('--rows-per-column', String(rowsPerColumn));
       ui.nextShowTime.textContent = formatShowtime(futureShowtimes[0].show_at);
 
-      const newIds = new Set(futureShowtimes.map((showtime) => showtime.id || showtime.show_at));
+      const nextVisibleIds = new Set(futureShowtimes.map((showtime) => showtime.id));
 
-      state.showtimeElementsById.forEach((item, showtimeId) => {
-        if (!newIds.has(showtimeId)) {
-          item.classList.add('is-exiting');
-          state.showtimeElementsById.delete(showtimeId);
-          setManagedTimeout(() => item.remove(), 540);
+      state.visibleShowtimeIds.forEach((id) => {
+        if (!nextVisibleIds.has(id)) {
+          const staleElement = state.showtimeElementsById.get(id);
+
+          if (!staleElement) return;
+
+          staleElement.style.opacity = '0';
+          staleElement.style.transform = 'translateY(-12px)';
+
+          window.setTimeout(() => {
+            staleElement.remove();
+            state.showtimeElementsById.delete(id);
+          }, SHOWTIME_TRANSITION_MS);
         }
       });
 
       let previousVisibleMeridiem = '';
 
       futureShowtimes.forEach((showtime, index) => {
-        const showtimeId = showtime.id || showtime.show_at;
         const currentMeridiem = getShowtimeMeridiem(showtime.show_at);
         const shouldShowMeridiem = currentMeridiem && currentMeridiem !== previousVisibleMeridiem;
-        let item = state.showtimeElementsById.get(showtimeId);
 
-        if (item) {
-          updateShowtimeElement(item, showtime, index, shouldShowMeridiem);
+        let item = state.showtimeElementsById.get(showtime.id);
+
+        if (!item) {
+          item = createShowtimeElement(showtime, index, shouldShowMeridiem, currentMeridiem);
+          ui.showtimesGrid.appendChild(item);
+          state.showtimeElementsById.set(showtime.id, item);
+
+          requestAnimationFrame(() => {
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+          });
         } else {
-          item = createShowtimeElement(showtime, index, shouldShowMeridiem);
-          state.showtimeElementsById.set(showtimeId, item);
+          item.classList.toggle('is-next', index === 0);
+
+          item.innerHTML = shouldShowMeridiem
+            ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${currentMeridiem}</span>`
+            : formatShowtime(showtime.show_at, { omitMeridiem: true });
+
+          ui.showtimesGrid.appendChild(item);
         }
 
-        ui.showtimesGrid.appendChild(item);
         previousVisibleMeridiem = currentMeridiem || previousVisibleMeridiem;
       });
+
+      state.visibleShowtimeIds = nextVisibleIds;
     }
 
     function scheduleNextShowtimeRefresh(data) {
@@ -892,7 +969,45 @@
       }, DATA_REFRESH_MS);
     }
 
+    function scheduleShowtimeBoundaryRefresh() {
+      if (state.showtimeBoundaryTimerId) {
+        window.clearTimeout(state.showtimeBoundaryTimerId);
+        state.showtimeBoundaryTimerId = null;
+      }
+
+      const delay = getNextShowtimeBoundaryMs(state.schedule?.showtimes || []);
+
+      if (!delay) return;
+
+      state.showtimeBoundaryTimerId = window.setTimeout(() => {
+        renderShowtimes(state.schedule);
+        scheduleShowtimeBoundaryRefresh();
+      }, delay);
+    }
+
+    function scheduleLiveRefresh() {
+      if (state.liveRefreshTimerId) {
+        window.clearTimeout(state.liveRefreshTimerId);
+        state.liveRefreshTimerId = null;
+      }
+
+      state.liveRefreshTimerId = window.setTimeout(async () => {
+        try {
+          const liveData = await fetchLiveSchedule();
+
+          if (liveData) {
+            renderSign(liveData);
+          }
+        } catch (error) {
+          console.error('Live 4D signage refresh failed:', error);
+        }
+
+        scheduleLiveRefresh();
+      }, DATA_REFRESH_MS);
+    }
+
     function renderSign(data, options = {}) {
+
       if (!options.preserveTimers) {
         clearTimers();
       }
@@ -903,7 +1018,9 @@
       renderAccessibility(data);
       renderAdvisory(data);
       renderShowtimes(data);
-      scheduleNextShowtimeRefresh(data);
+
+      scheduleShowtimeBoundaryRefresh();
+      scheduleLiveRefresh();
 
       showSign();
     }
