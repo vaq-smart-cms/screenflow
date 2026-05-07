@@ -582,7 +582,8 @@
       visibleShowtimeIds: new Set(),
       showtimeElementsById: new Map(),
       liveRefreshTimerId: null,
-      showtimeBoundaryTimerId: null
+      showtimeBoundaryTimerId: null,
+      advisoryTimerId: null
     };
 
     const ui = {
@@ -623,6 +624,11 @@
       if (state.showtimeBoundaryTimerId) {
         window.clearTimeout(state.showtimeBoundaryTimerId);
         state.showtimeBoundaryTimerId = null;
+      }
+
+      if (state.advisoryTimerId) {
+        window.clearTimeout(state.advisoryTimerId);
+        state.advisoryTimerId = null;
       }
     }
 
@@ -818,17 +824,48 @@
       ui.accessibilityIcons.hidden = activeItems.length === 0;
     }
 
+    function scheduleAdvisoryRotation(activeItems) {
+      if (state.advisoryTimerId) {
+        window.clearTimeout(state.advisoryTimerId);
+        state.advisoryTimerId = null;
+      }
+
+      if (!activeItems.length || activeItems.length === 1) {
+        return;
+      }
+
+      state.advisoryTimerId = window.setTimeout(() => {
+        state.advisoryIndex = (state.advisoryIndex + 1) % activeItems.length;
+
+        ui.advisoryText.classList.add('is-fading');
+
+        window.setTimeout(() => {
+          ui.advisoryText.textContent = activeItems[state.advisoryIndex].text;
+          ui.advisoryText.classList.remove('is-fading');
+          scheduleAdvisoryRotation(activeItems);
+        }, 500);
+      }, ADVISORY_ROTATION_MS);
+    }
+
     function renderAdvisory(data) {
       const activeItems = getActiveItems(data.advisories);
 
       if (!activeItems.length) {
         ui.advisoryRegion.hidden = true;
         ui.advisoryText.textContent = '';
+        state.advisoryIndex = 0;
         return;
       }
 
       ui.advisoryRegion.hidden = false;
-      ui.advisoryText.textContent = activeItems[0].text;
+
+      if (state.advisoryIndex >= activeItems.length) {
+        state.advisoryIndex = 0;
+      }
+
+      ui.advisoryText.textContent = activeItems[state.advisoryIndex].text;
+
+      scheduleAdvisoryRotation(activeItems);
     }
 
     function createShowtimeElement(showtime, index, shouldShowMeridiem) {
