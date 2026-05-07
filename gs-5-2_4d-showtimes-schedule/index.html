@@ -583,7 +583,9 @@
       showtimeElementsById: new Map(),
       liveRefreshTimerId: null,
       showtimeBoundaryTimerId: null,
-      advisoryTimerId: null
+      advisoryTimerId: null,
+      testimonialTimerId: null,
+      testimonialHideTimerId: null
     };
 
     const ui = {
@@ -629,6 +631,16 @@
       if (state.advisoryTimerId) {
         window.clearTimeout(state.advisoryTimerId);
         state.advisoryTimerId = null;
+      }
+
+      if (state.testimonialTimerId) {
+        window.clearTimeout(state.testimonialTimerId);
+        state.testimonialTimerId = null;
+      }
+
+      if (state.testimonialHideTimerId) {
+        window.clearTimeout(state.testimonialHideTimerId);
+        state.testimonialHideTimerId = null;
       }
     }
 
@@ -800,6 +812,48 @@
       ui.posterImage.src = posterUrl;
       ui.posterImage.style.display = posterUrl ? 'block' : 'none';
       ui.posterFallback.style.display = posterUrl ? 'none' : 'flex';
+    }
+
+    function showAccessibilityIcons() {
+      ui.testimonialPanel.classList.remove('is-visible');
+      ui.accessibilityIcons.hidden = ui.accessibilityIcons.children.length === 0
+        ? true
+        : false;
+    }
+
+    function showTestimonial(activeTestimonials) {
+      if (!activeTestimonials.length) return;
+
+      const item = activeTestimonials[state.testimonialIndex] || activeTestimonials[0];
+
+      ui.accessibilityIcons.hidden = true;
+      ui.testimonialPanel.textContent = item.text;
+      ui.testimonialPanel.classList.add('is-visible');
+
+      state.testimonialIndex = (state.testimonialIndex + 1) % activeTestimonials.length;
+
+      state.testimonialHideTimerId = window.setTimeout(() => {
+        showAccessibilityIcons();
+      }, TESTIMONIAL_ROTATION_MS);
+    }
+
+    function scheduleTestimonialInterrupt(data) {
+      if (state.testimonialTimerId) {
+        window.clearTimeout(state.testimonialTimerId);
+        state.testimonialTimerId = null;
+      }
+
+      const activeTestimonials = getActiveItems(data.testimonials);
+
+      if (!activeTestimonials.length) {
+        showAccessibilityIcons();
+        return;
+      }
+
+      state.testimonialTimerId = window.setTimeout(() => {
+        showTestimonial(activeTestimonials);
+        scheduleTestimonialInterrupt(data);
+      }, TESTIMONIAL_INTERRUPT_MS);
     }
 
     function renderAccessibility(data) {
@@ -1055,6 +1109,7 @@
       renderAccessibility(data);
       renderAdvisory(data);
       renderShowtimes(data);
+      scheduleTestimonialInterrupt(data);
 
       scheduleShowtimeBoundaryRefresh();
       scheduleLiveRefresh();
