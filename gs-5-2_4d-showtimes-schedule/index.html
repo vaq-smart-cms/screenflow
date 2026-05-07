@@ -10,7 +10,7 @@
 
   <!--
     Target container: 1920 x 810 px
-    Initial rollout scaffold for Kuusoft / NexSigns.
+    Initial rollout scaffold v02 for Kuusoft / NexSigns.
     Shared assets expected in ../assets/
   -->
 
@@ -397,6 +397,16 @@
       color: var(--vaq-gold);
     }
 
+    .showtime-item.is-entering {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .showtime-item.is-exiting {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+
     .showtime-meridiem {
       font-size: 0.52em;
       padding-left: 9px;
@@ -521,6 +531,8 @@
     const ADVISORY_ROTATION_MS = 9000;
     const TESTIMONIAL_ROTATION_MS = 9000;
     const TESTIMONIAL_INTERRUPT_MS = 60000;
+    const DATA_REFRESH_MS = 60000;
+    const SHOWTIME_BOUNDARY_FUDGE_MS = 750;
 
     const ACCESSIBILITY_ICON_BY_KEY = {
       wheelchair: '../assets/acc-wc.svg',
@@ -563,6 +575,7 @@
       schedule: null,
       advisoryIndex: 0,
       testimonialIndex: 0,
+      showtimeElementsById: new Map(),
       timers: []
     };
 
@@ -595,6 +608,16 @@
     function clearTimers() {
       state.timers.forEach((timerId) => window.clearTimeout(timerId));
       state.timers = [];
+    }
+
+    function setManagedTimeout(callback, delayMs) {
+      const timerId = window.setTimeout(() => {
+        state.timers = state.timers.filter((id) => id !== timerId);
+        callback();
+      }, delayMs);
+
+      state.timers.push(timerId);
+      return timerId;
     }
 
     function normalizeHexColor(value, fallback) {
@@ -679,16 +702,31 @@
         .replace(' ', '');
     }
 
+    function getShowtimeMs(showtime) {
+      const time = new Date(showtime?.show_at).getTime();
+      return Number.isFinite(time) ? time : null;
+    }
+
     function getFutureShowtimes(showtimes) {
       const now = Date.now();
 
       return normalizeItemArray(showtimes)
         .filter((showtime) => !showtime.is_cancelled)
         .filter((showtime) => {
-          const time = new Date(showtime.show_at).getTime();
-          return Number.isFinite(time) && time > now;
+          const time = getShowtimeMs(showtime);
+          return time !== null && time > now;
         })
-        .sort((a, b) => new Date(a.show_at) - new Date(b.show_at));
+        .sort((a, b) => getShowtimeMs(a) - getShowtimeMs(b));
+    }
+
+    function getNextShowtimeBoundaryMs(showtimes) {
+      const now = Date.now();
+
+      return normalizeItemArray(showtimes)
+        .filter((showtime) => !showtime.is_cancelled)
+        .map(getShowtimeMs)
+        .filter((time) => time !== null && time > now)
+        .sort((a, b) => a - b)[0] || null;
     }
 
     function renderPoster(data) {
@@ -741,12 +779,45 @@
       ui.advisoryText.textContent = activeItems[0].text;
     }
 
+    function createShowtimeElement(showtime, index, shouldShowMeridiem) {
+      const item = document.createElement('div');
+      const showtimeId = showtime.id || showtime.show_at;
+
+      item.className = 'showtime-item is-entering';
+      item.dataset.showtimeId = showtimeId;
+
+      if (index === 0) {
+        item.classList.add('is-next');
+      }
+
+      item.innerHTML = shouldShowMeridiem
+        ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${getShowtimeMeridiem(showtime.show_at)}</span>`
+        : formatShowtime(showtime.show_at, { omitMeridiem: true });
+
+      requestAnimationFrame(() => {
+        item.classList.remove('is-entering');
+      });
+
+      return item;
+    }
+
+    function updateShowtimeElement(item, showtime, index, shouldShowMeridiem) {
+      item.classList.toggle('is-next', index === 0);
+      item.innerHTML = shouldShowMeridiem
+        ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${getShowtimeMeridiem(showtime.show_at)}</span>`
+        : formatShowtime(showtime.show_at, { omitMeridiem: true });
+    }
+
     function renderShowtimes(data) {
       const futureShowtimes = getFutureShowtimes(data.showtimes);
 
       if (!futureShowtimes.length) {
         ui.nextShowTime.textContent = 'No more shows today';
-        ui.showtimesGrid.innerHTML = '';
+        state.showtimeElementsById.forEach((item) => {
+          item.classList.add('is-exiting');
+          setManagedTimeout(() => item.remove(), 540);
+        });
+        state.showtimeElementsById.clear();
         return;
       }
 
@@ -754,34 +825,85 @@
       ui.showtimesGrid.style.setProperty('--rows-per-column', String(rowsPerColumn));
       ui.nextShowTime.textContent = formatShowtime(futureShowtimes[0].show_at);
 
-      ui.showtimesGrid.innerHTML = '';
+      const newIds = new Set(futureShowtimes.map((showtime) => showtime.id || showtime.show_at));
+
+      state.showtimeElementsById.forEach((item, showtimeId) => {
+        if (!newIds.has(showtimeId)) {
+          item.classList.add('is-exiting');
+          state.showtimeElementsById.delete(showtimeId);
+          setManagedTimeout(() => item.remove(), 540);
+        }
+      });
 
       let previousVisibleMeridiem = '';
 
       futureShowtimes.forEach((showtime, index) => {
-        const item = document.createElement('div');
+        const showtimeId = showtime.id || showtime.show_at;
         const currentMeridiem = getShowtimeMeridiem(showtime.show_at);
         const shouldShowMeridiem = currentMeridiem && currentMeridiem !== previousVisibleMeridiem;
+        let item = state.showtimeElementsById.get(showtimeId);
 
-        item.className = 'showtime-item';
-        if (index === 0) item.classList.add('is-next');
+        if (item) {
+          updateShowtimeElement(item, showtime, index, shouldShowMeridiem);
+        } else {
+          item = createShowtimeElement(showtime, index, shouldShowMeridiem);
+          state.showtimeElementsById.set(showtimeId, item);
+        }
 
-        item.innerHTML = shouldShowMeridiem
-          ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${currentMeridiem}</span>`
-          : formatShowtime(showtime.show_at, { omitMeridiem: true });
-
-        previousVisibleMeridiem = currentMeridiem || previousVisibleMeridiem;
         ui.showtimesGrid.appendChild(item);
+        previousVisibleMeridiem = currentMeridiem || previousVisibleMeridiem;
       });
     }
 
-    function renderSign(data) {
+    function scheduleNextShowtimeRefresh(data) {
+      const nextBoundaryMs = getNextShowtimeBoundaryMs(data.showtimes);
+
+      if (!nextBoundaryMs) {
+        return;
+      }
+
+      const delayMs = Math.max(1000, nextBoundaryMs - Date.now() + SHOWTIME_BOUNDARY_FUDGE_MS);
+
+      setManagedTimeout(() => {
+        renderShowtimes(data);
+        scheduleNextShowtimeRefresh(data);
+      }, delayMs);
+    }
+
+    async function refreshLiveSchedule() {
+      try {
+        const liveData = await fetchLiveSchedule();
+
+        if (!liveData) {
+          showStatus('4D showtimes unavailable');
+          return;
+        }
+
+        renderSign(liveData, { preserveTimers: true });
+      } catch (error) {
+        console.error('Failed to refresh live 4D signage data:', error);
+      }
+    }
+
+    function scheduleDataRefresh() {
+      setManagedTimeout(async () => {
+        await refreshLiveSchedule();
+        scheduleDataRefresh();
+      }, DATA_REFRESH_MS);
+    }
+
+    function renderSign(data, options = {}) {
+      if (!options.preserveTimers) {
+        clearTimers();
+      }
+
       state.schedule = data;
 
       renderPoster(data);
       renderAccessibility(data);
       renderAdvisory(data);
       renderShowtimes(data);
+      scheduleNextShowtimeRefresh(data);
 
       showSign();
     }
@@ -811,11 +933,13 @@
         }
 
         renderSign(liveData);
+        scheduleDataRefresh();
       } catch (error) {
         console.error('Failed to load live 4D signage data:', error);
 
         // Scaffold fallback only. Remove this fallback before final production rollout if desired.
         renderSign(PLACEHOLDER_DATA);
+        scheduleDataRefresh();
       }
     }
 
