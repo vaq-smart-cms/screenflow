@@ -152,6 +152,23 @@
       width: 100%;
     }
 
+    .sign-layout.is-ended .next-show-tile,
+    .sign-layout.is-ended .supplemental-region,
+    .sign-layout.is-ended .advisory-region {
+      display: none;
+    }
+
+    .sign-layout.is-ended .showtimes-region {
+      height: 520px;
+      top: 150px;
+    }
+
+    .sign-layout.is-ended .showtimes-grid {
+      align-content: center;
+      align-items: center;
+      height: 100%;
+    }
+
     /* Poster hero */
 
     .poster-region {
@@ -171,7 +188,7 @@
         );
       border-radius: 12px;
       box-shadow:
-        inset 0 0 18px rgba(255, 255, 255, 0.30),
+        inset 0 0 22px rgba(255, 255, 255, 0.22),
         0 4px 16px rgba(0, 0, 0, 0.50);
       height: var(--poster-frame-height);
       left: 0;
@@ -181,10 +198,31 @@
       z-index: 1;
     }
 
+    .poster-glow {
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(255, 255, 255, 0.14) 0%,
+          rgba(255, 255, 255, 0.04) 42%,
+          rgba(255, 255, 255, 0.00) 72%
+        );
+      filter: blur(18px);
+      height: 760px;
+      left: -10px;
+      opacity: 0.70;
+      pointer-events: none;
+      position: absolute;
+      top: -4px;
+      width: 552px;
+      z-index: 1;
+    }
+
     .poster-image {
       background: rgba(255, 255, 255, 0.08);
       border: 4px solid var(--film-primary);
       border-radius: 7px;
+      box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.26);
       display: block;
       height: var(--poster-height);
       left: 18px;
@@ -263,7 +301,6 @@
 
     .next-show-icon {
       align-items: center;
-      background: rgba(0, 0, 0, 0.08);
       border-right: 2px solid var(--divider-color);
       display: flex;
       height: 100%;
@@ -456,6 +493,11 @@
       transform: translateY(-12px);
     }
 
+    .showtime-item.is-departing {
+      color: rgba(255, 255, 255, 0.62);
+      transform: translateY(-10px) scale(0.96);
+    }
+
     .showtime-meridiem {
       font-size: 0.52em;
       padding-left: 9px;
@@ -463,15 +505,24 @@
 
     .showtimes-end-message {
       color: #ffffff;
-      font-size: 46px;
+      font-size: 54px;
       font-weight: 700;
       grid-column: 1 / -1;
       line-height: 1.12;
-      max-width: 760px;
-      opacity: 0.94;
+      max-width: 880px;
+      opacity: 0.96;
+      padding: 28px 38px;
       text-align: center;
       text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
-}
+    }
+
+    .showtimes-end-message span {
+      color: rgba(255, 255, 255, 0.86);
+      display: block;
+      font-size: 0.62em;
+      line-height: 1.18;
+      margin-top: 12px;
+    }
 
     /* Advisory */
 
@@ -535,7 +586,7 @@
       }
 
       to {
-        transform: rotate(360deg);
+        transform: rotate(-360deg);
       }
     }
     @keyframes accessibilityIconSettle {
@@ -562,6 +613,7 @@
       <section id="sign-layout" class="sign-layout" hidden>
         <div class="poster-region">
           <div id="poster-frame" class="poster-frame" aria-hidden="true"></div>
+          <div class="poster-glow" aria-hidden="true"></div>
           <img id="poster-image" class="poster-image" alt="4D film poster" />
           <div id="poster-fallback" class="poster-fallback">4D<br>Experience</div>
         </div>
@@ -617,7 +669,7 @@
     const SHOWTIME_BOUNDARY_FUDGE_MS = 750;
     const SHOWTIME_TRANSITION_MS = 520;
 
-    const END_OF_DAY_NEXT_LABEL = 'Shows have ended for today';
+    /* const END_OF_DAY_NEXT_LABEL = 'Shows have ended for today'; */
     const END_OF_DAY_BODY_LABEL = 'Please check back tomorrow for more 4D showtimes.';
     const LOADING_LABEL = 'Loading 4D showtimes...';
     const UNAVAILABLE_LABEL = '4D showtimes are not available right now.';
@@ -1082,11 +1134,11 @@
       const futureShowtimes = getFutureShowtimes(data.showtimes);
 
       if (!futureShowtimes.length) {
-        setNextShowTile(END_OF_DAY_NEXT_LABEL);
+        ui.signLayout.classList.add('is-ended');
 
         state.showtimeElementsById.forEach((element) => {
+          element.classList.add('is-departing');
           element.style.opacity = '0';
-          element.style.transform = 'translateY(-10px)';
           window.setTimeout(() => element.remove(), SHOWTIME_TRANSITION_MS);
         });
 
@@ -1095,12 +1147,15 @@
 
         ui.showtimesGrid.innerHTML = `
           <div class="showtimes-end-message">
-            ${END_OF_DAY_BODY_LABEL}
+            Shows have ended for today
+            <span>${END_OF_DAY_BODY_LABEL}</span>
           </div>
         `;
 
         return;
       }
+
+      ui.signLayout.classList.remove('is-ended');
 
       const showtimeCount = futureShowtimes.length;
       const rowsPerColumn = Math.max(1, Math.ceil(showtimeCount / 3));
@@ -1134,8 +1189,8 @@
 
           if (!staleElement) return;
 
+          staleElement.classList.add('is-departing');
           staleElement.style.opacity = '0';
-          staleElement.style.transform = 'translateY(-12px)';
 
           window.setTimeout(() => {
             staleElement.remove();
