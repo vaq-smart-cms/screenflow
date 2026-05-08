@@ -158,7 +158,7 @@
       height: 770px;
       left: 0;
       position: absolute;
-      top: 0;
+      top: 6px;
       width: 560px;
     }
 
@@ -233,11 +233,12 @@
       border-radius: var(--tile-radius);
       box-shadow:
         inset 0 0 0 8px var(--inner-stroke),
-        0 8px 18px rgba(0, 0, 0, 0.16);
+        inset 0 -18px 32px rgba(0, 0, 0, 0.10),
+        0 8px 20px rgba(0, 0, 0, 0.22);
       display: grid;
       grid-template-columns: var(--icon-column-width) 1fr;
       height: var(--tile-height);
-      left: 584px;
+      left: 600px;
       overflow: hidden;
       position: absolute;
       top: 0;
@@ -262,6 +263,7 @@
 
     .next-show-icon {
       align-items: center;
+      background: rgba(0, 0, 0, 0.08);
       border-right: 2px solid var(--divider-color);
       display: flex;
       height: 100%;
@@ -284,7 +286,7 @@
       align-items: center;
       display: flex;
       min-width: 0;
-      padding: 12px 24px;
+      padding: 12px 28px;
       position: relative;
       z-index: 2;
     }
@@ -297,7 +299,9 @@
       margin: 0;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+      text-shadow:
+        0 3px 3px rgba(0, 0, 0, 0.34),
+        0 0 12px rgba(0, 0, 0, 0.14);
       white-space: nowrap;
     }
 
@@ -312,14 +316,15 @@
       display: flex;
       height: var(--tile-height);
       justify-content: flex-end;
-      left: 1434px;
+      left: 1450px;
       position: absolute;
       top: 0;
-      width: 446px;
+      width: 430px;
     }
 
     .accessibility-icon {
       align-items: center;
+      animation: accessibilityIconSettle 520ms ease both;
       background: var(--vaq-blue);
       border-radius: 999px;
       display: flex;
@@ -390,10 +395,10 @@
       display: flex;
       height: 430px;
       justify-content: center;
-      left: 584px;
+      left: 600px;
       position: absolute;
       top: 286px;
-      width: 1296px;
+      width: 1280px;
     }
 
     .showtimes-grid {
@@ -476,10 +481,10 @@
       display: grid;
       gap: 22px;
       grid-template-columns: 72px minmax(0, 1fr);
-      left: 584px;
+      left: 600px;
       min-height: 74px;
       position: absolute;
-      width: 1296px;
+      width: 1280px;
     }
 
     .advisory-icon {
@@ -531,6 +536,17 @@
 
       to {
         transform: rotate(360deg);
+      }
+    }
+    @keyframes accessibilityIconSettle {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.92);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
     }
   </style>
