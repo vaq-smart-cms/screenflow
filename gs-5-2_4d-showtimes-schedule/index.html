@@ -57,6 +57,10 @@
       --poster-frame-width: 534px;
       --poster-frame-height: 758px;
 
+      --showtime-font-size: 64px;
+      --showtime-column-gap: 110px;
+      --showtime-row-gap: 22px;
+
       --tile-height: 138px;
       --tile-radius: 13px;
       --tile-opacity: 0.80;
@@ -395,13 +399,13 @@
     .showtimes-grid {
       align-content: center;
       align-items: center;
+      column-gap: var(--showtime-column-gap);
       display: grid;
       grid-auto-columns: minmax(260px, auto);
       grid-auto-flow: column;
       grid-template-rows: repeat(var(--rows-per-column, 3), auto);
       justify-content: center;
-      column-gap: 110px;
-      row-gap: 22px;
+      row-gap: var(--showtime-row-gap);
       width: 100%;
     }
 
@@ -415,7 +419,7 @@
 
     .showtime-item {
       color: #ffffff;
-      font-size: 64px;
+      font-size: var(--showtime-font-size);
       font-weight: 700;
       line-height: 1;
       min-width: 360px;
@@ -819,50 +823,18 @@
         .sort((a, b) => getShowtimeMs(a) - getShowtimeMs(b));
     }
 
-    function getNextShowtimeBoundaryMs(showtimes) {
+    function getNextShowtimeBoundaryDelayMs(showtimes) {
       const now = Date.now();
 
       const nextTime = normalizeItemArray(showtimes)
         .filter((showtime) => !showtime.is_cancelled)
-        .map((showtime) => new Date(showtime.show_at).getTime())
-        .filter((time) => Number.isFinite(time) && time > now)
-        .sort((a, b) => a - b)[0];
-
-      if (!nextTime) {
-        return null;
-      }
-
-      return Math.max(1000, nextTime - now + SHOWTIME_BOUNDARY_FUDGE_MS);
-    }
-
-    function createShowtimeElement(showtime, index, shouldShowMeridiem, currentMeridiem) {
-      const item = document.createElement('div');
-
-      item.className = 'showtime-item';
-      item.dataset.showtimeId = showtime.id;
-
-      if (index === 0) {
-        item.classList.add('is-next');
-      }
-
-      item.innerHTML = shouldShowMeridiem
-        ? `${formatShowtime(showtime.show_at, { omitMeridiem: true })}<span class="showtime-meridiem">${currentMeridiem}</span>`
-        : formatShowtime(showtime.show_at, { omitMeridiem: true });
-
-      item.style.opacity = '0';
-      item.style.transform = 'translateY(10px)';
-
-      return item;
-    }
-
-    function getNextShowtimeBoundaryMs(showtimes) {
-      const now = Date.now();
-
-      return normalizeItemArray(showtimes)
-        .filter((showtime) => !showtime.is_cancelled)
         .map(getShowtimeMs)
         .filter((time) => time !== null && time > now)
-        .sort((a, b) => a - b)[0] || null;
+        .sort((a, b) => a - b)[0];
+
+      if (!nextTime) return null;
+
+      return Math.max(1000, nextTime - now + SHOWTIME_BOUNDARY_FUDGE_MS);
     }
 
     function renderPoster(data) {
@@ -1110,19 +1082,28 @@
         return;
       }
 
-      const rowsPerColumn = Math.max(1, Math.ceil(futureShowtimes.length / 3));
+      const showtimeCount = futureShowtimes.length;
+      const rowsPerColumn = Math.max(1, Math.ceil(showtimeCount / 3));
 
       ui.showtimesGrid.style.setProperty('--rows-per-column', String(rowsPerColumn));
 
-      ui.showtimesGrid.classList.toggle(
-        'is-compact',
-        futureShowtimes.length >= 8
-      );
-
-      ui.showtimesGrid.classList.toggle(
-        'is-spacious',
-        futureShowtimes.length <= 4
-      );
+      if (showtimeCount <= 3) {
+        ui.showtimesGrid.style.setProperty('--showtime-font-size', '78px');
+        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '150px');
+        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '28px');
+      } else if (showtimeCount <= 5) {
+        ui.showtimesGrid.style.setProperty('--showtime-font-size', '70px');
+        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '130px');
+        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '24px');
+      } else if (showtimeCount <= 7) {
+        ui.showtimesGrid.style.setProperty('--showtime-font-size', '64px');
+        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '110px');
+        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '22px');
+      } else {
+        ui.showtimesGrid.style.setProperty('--showtime-font-size', '58px');
+        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '82px');
+        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '18px');
+      }
       setNextShowTile('Next show', formatShowtime(futureShowtimes[0].show_at));
 
       const nextVisibleIds = new Set(futureShowtimes.map((showtime) => showtime.id));
@@ -1180,21 +1161,6 @@
       });
     }
 
-    function scheduleNextShowtimeRefresh(data) {
-      const nextBoundaryMs = getNextShowtimeBoundaryMs(data.showtimes);
-
-      if (!nextBoundaryMs) {
-        return;
-      }
-
-      const delayMs = Math.max(1000, nextBoundaryMs - Date.now() + SHOWTIME_BOUNDARY_FUDGE_MS);
-
-      setManagedTimeout(() => {
-        renderShowtimes(data);
-        scheduleNextShowtimeRefresh(data);
-      }, delayMs);
-    }
-
     async function refreshLiveSchedule() {
       try {
         const liveData = await fetchLiveSchedule();
@@ -1223,7 +1189,7 @@
         state.showtimeBoundaryTimerId = null;
       }
 
-      const delay = getNextShowtimeBoundaryMs(state.schedule?.showtimes || []);
+      const delay = getNextShowtimeBoundaryDelayMs(state.schedule?.showtimes || []);
 
       if (!delay) return;
 
@@ -1330,7 +1296,6 @@
         }
 
         renderSign(liveData);
-        scheduleDataRefresh();
 
       } catch (error) {
         console.error('Failed to load live 4D signage data:', error);
