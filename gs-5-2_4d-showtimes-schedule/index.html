@@ -381,6 +381,9 @@
       display: flex;
       gap: 18px;
       justify-content: flex-end;
+      transition:
+        opacity 420ms ease,
+        transform 420ms ease;
       width: 100%;
     }
 
@@ -397,6 +400,14 @@
     .accessibility-icons[data-count="5"] .accessibility-icon {
       height: 90px;
       width: 90px;
+    }
+
+    .accessibility-icons.is-muted {
+      opacity: 0;
+      transform: translateY(6px);
+      transition:
+        opacity 420ms ease,
+        transform 420ms ease;
     }
 
     .supplemental-region.is-empty {
@@ -951,19 +962,27 @@
 
     function showAccessibilityIcons() {
       ui.testimonialPanel.classList.remove('is-visible');
-      ui.accessibilityIcons.hidden = ui.accessibilityIcons.children.length === 0
-        ? true
-        : false;
+
+      window.setTimeout(() => {
+        ui.accessibilityIcons.hidden = ui.accessibilityIcons.children.length === 0;
+        ui.accessibilityIcons.classList.remove('is-muted');
+      }, 420);
     }
 
     function showTestimonial(activeTestimonials) {
+      if (ui.signLayout.classList.contains('is-ended')) return;
+
       if (!activeTestimonials.length) return;
 
       const item = activeTestimonials[state.testimonialIndex] || activeTestimonials[0];
 
-      ui.accessibilityIcons.hidden = true;
-      ui.testimonialPanel.textContent = item.text;
-      ui.testimonialPanel.classList.add('is-visible');
+      ui.accessibilityIcons.classList.add('is-muted');
+
+      window.setTimeout(() => {
+        ui.accessibilityIcons.hidden = true;
+        ui.testimonialPanel.textContent = item.text;
+        ui.testimonialPanel.classList.add('is-visible');
+      }, 420);
 
       state.testimonialIndex = (state.testimonialIndex + 1) % activeTestimonials.length;
 
@@ -979,6 +998,11 @@
       }
 
       const activeTestimonials = getActiveItems(data.testimonials);
+
+      if (ui.signLayout.classList.contains('is-ended')) {
+        showAccessibilityIcons();
+        return;
+      }
 
       if (!activeTestimonials.length) {
         showAccessibilityIcons();
