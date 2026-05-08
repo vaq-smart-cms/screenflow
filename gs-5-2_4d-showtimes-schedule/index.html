@@ -1045,11 +1045,19 @@
         state.advisoryTimerId = null;
       }
 
+      if (ui.signLayout.classList.contains('is-ended')) {
+        return;
+      }
+
       if (!activeItems.length || activeItems.length === 1) {
         return;
       }
 
       state.advisoryTimerId = window.setTimeout(() => {
+        if (ui.signLayout.classList.contains('is-ended')) {
+          return;
+        }
+        
         state.advisoryIndex = (state.advisoryIndex + 1) % activeItems.length;
 
         ui.advisoryText.classList.add('is-fading');
@@ -1159,6 +1167,24 @@
 
       if (!futureShowtimes.length) {
         ui.signLayout.classList.add('is-ended');
+
+        if (state.advisoryTimerId) {
+          window.clearTimeout(state.advisoryTimerId);
+          state.advisoryTimerId = null;
+        }
+
+        if (state.testimonialTimerId) {
+          window.clearTimeout(state.testimonialTimerId);
+          state.testimonialTimerId = null;
+        }
+
+        if (state.testimonialHideTimerId) {
+          window.clearTimeout(state.testimonialHideTimerId);
+          state.testimonialHideTimerId = null;
+        }
+
+        ui.testimonialPanel.classList.remove('is-visible');
+        ui.accessibilityIcons.classList.remove('is-muted');
 
         state.showtimeElementsById.forEach((element) => {
           element.classList.add('is-departing');
