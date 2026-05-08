@@ -311,14 +311,6 @@
       width: 446px;
     }
 
-    .accessibility-icons {
-      align-items: center;
-      display: flex;
-      gap: 18px;
-      justify-content: flex-end;
-      width: 100%;
-    }
-
     .accessibility-icon {
       align-items: center;
       background: var(--vaq-blue);
@@ -327,7 +319,20 @@
       filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
       height: 92px;
       justify-content: center;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition:
+        opacity 420ms ease,
+        transform 420ms ease;
       width: 92px;
+    }
+
+    .accessibility-icons {
+      align-items: center;
+      display: flex;
+      gap: 18px;
+      justify-content: flex-end;
+      width: 100%;
     }
 
     .accessibility-icon img {
@@ -343,6 +348,10 @@
     .accessibility-icons[data-count="5"] .accessibility-icon {
       height: 90px;
       width: 90px;
+    }
+
+    .supplemental-region.is-empty {
+      display: none;
     }
 
     .testimonial-panel {
@@ -381,12 +390,23 @@
     }
 
     .showtimes-grid {
+      align-content: center;
       display: grid;
+      grid-auto-columns: minmax(260px, auto);
       grid-auto-flow: column;
       grid-template-rows: repeat(var(--rows-per-column, 3), auto);
-      justify-content: space-between;
+      justify-content: center;
+      column-gap: 110px;
       row-gap: 22px;
       width: 100%;
+    }
+
+    .showtimes-grid.is-compact {
+      column-gap: 82px;
+    }
+
+    .showtimes-grid.is-spacious {
+      column-gap: 150px;
     }
 
     .showtime-item {
@@ -398,6 +418,7 @@
       opacity: 1;
       text-align: left;
       text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
+      transform-origin: center center;
       transition:
         opacity var(--transition-page) ease,
         transform var(--transition-page) ease;
@@ -926,10 +947,11 @@
       ui.accessibilityIcons.innerHTML = '';
       ui.accessibilityIcons.dataset.count = String(activeItems.length);
 
-      activeItems.forEach((item) => {
+      activeItems.forEach((item, index) => {
         const circle = document.createElement('div');
         circle.className = 'accessibility-icon';
         circle.title = item.text;
+        circle.style.transitionDelay = `${index * 60}ms`;
 
         const img = document.createElement('img');
         img.src = ACCESSIBILITY_ICON_BY_KEY[item.key] || ACCESSIBILITY_ICON_BY_KEY.information;
@@ -940,6 +962,7 @@
       });
 
       ui.accessibilityIcons.hidden = activeItems.length === 0;
+      ui.accessibilityIcons.closest('.supplemental-region')?.classList.toggle('is-empty', activeItems.length === 0);
     }
 
     function scheduleAdvisoryRotation(activeItems) {
@@ -1082,7 +1105,18 @@
       }
 
       const rowsPerColumn = Math.max(1, Math.ceil(futureShowtimes.length / 3));
+
       ui.showtimesGrid.style.setProperty('--rows-per-column', String(rowsPerColumn));
+
+      ui.showtimesGrid.classList.toggle(
+        'is-compact',
+        futureShowtimes.length >= 8
+      );
+
+      ui.showtimesGrid.classList.toggle(
+        'is-spacious',
+        futureShowtimes.length <= 4
+      );
       setNextShowTile('Next show', formatShowtime(futureShowtimes[0].show_at));
 
       const nextVisibleIds = new Set(futureShowtimes.map((showtime) => showtime.id));
