@@ -1057,7 +1057,7 @@
         if (ui.signLayout.classList.contains('is-ended')) {
           return;
         }
-        
+
         state.advisoryIndex = (state.advisoryIndex + 1) % activeItems.length;
 
         ui.advisoryText.classList.add('is-fading');
@@ -1342,6 +1342,31 @@
       });
     }
 
+    function restartSupplementalTimers(data) {
+      if (ui.signLayout.classList.contains('is-ended')) return;
+
+      if (state.advisoryTimerId) {
+        window.clearTimeout(state.advisoryTimerId);
+        state.advisoryTimerId = null;
+      }
+
+      if (state.testimonialTimerId) {
+        window.clearTimeout(state.testimonialTimerId);
+        state.testimonialTimerId = null;
+      }
+
+      if (state.testimonialHideTimerId) {
+        window.clearTimeout(state.testimonialHideTimerId);
+        state.testimonialHideTimerId = null;
+      }
+
+      ui.testimonialPanel.classList.remove('is-visible');
+      ui.accessibilityIcons.classList.remove('is-muted');
+
+      renderAdvisory(data);
+      scheduleTestimonialInterrupt(data);
+    }
+
     function scheduleLiveRefresh() {
       if (state.liveRefreshTimerId) {
         window.clearTimeout(state.liveRefreshTimerId);
@@ -1380,6 +1405,10 @@
       renderAccessibility(data);
       renderAdvisory(data, options);
       renderShowtimes(data);
+
+      if (!ui.signLayout.classList.contains('is-ended') && options.preserveTimers) {
+        restartSupplementalTimers(data);
+      }
 
       if (!options.preserveTimers) {
         scheduleTestimonialInterrupt(data);
