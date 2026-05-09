@@ -332,26 +332,13 @@
     return [];
   }
 
-  function serializeMessageEditorValue(textInputs, checkInputs, options = {}) {
-    const keys = options.keys || [];
-
+  function serializeMessageEditorValue(textInputs, checkInputs) {
     return textInputs
-      .map((textInput, index) => {
-        const text = String(textInput?.value || '').trim();
-        const isActive = !!checkInputs[index]?.checked;
-
-        if (!text) {
-          return null;
-        }
-
-        return {
-          key: keys[index] || `${options.kind || 'item'}-${index + 1}`,
-          text,
-          is_active: isActive,
-          sort_order: index + 1
-        };
-      })
-      .filter(Boolean);
+      .map((textInput, index) => ({
+        text: textInput?.value.trim() || '',
+        is_active: !!checkInputs[index]?.checked && !!textInput?.value.trim()
+      }))
+      .filter((item) => item.text);
   }
 
   function normalizePosterCode(value) {
@@ -525,6 +512,10 @@
   }
 
   function parseMessageEditorValue(value, defaultItems = []) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
     const cleanValue = String(value || '').trim();
 
     if (cleanValue.startsWith('[')) {
