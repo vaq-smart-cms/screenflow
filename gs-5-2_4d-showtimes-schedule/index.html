@@ -807,6 +807,41 @@
       return timerId;
     }
 
+    function normalizeAccessibilityKey(value) {
+      const key = String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, '_');
+
+      const aliases = {
+        wheelchair_access: 'wheelchair',
+        wheelchair_accessible: 'wheelchair',
+        audio: 'assistive',
+        audio_assistive: 'assistive',
+        assistive_listening: 'assistive',
+        closed_captioning: 'captions',
+        closed_captions: 'captions',
+        captioning: 'captions',
+        service_animals: 'service_animal',
+        service_dog: 'service_animal',
+        induction_loop: 'inductive',
+        hearing_loop: 'inductive'
+      };
+
+      return aliases[key] || key;
+    }
+
+    function getActiveAccessibilityItems(value) {
+      return normalizeItemArray(value)
+        .map((item) => ({
+          ...item,
+          key: normalizeAccessibilityKey(item?.key)
+        }))
+        .filter((item) => item && item.text && item.is_active === true)
+        .filter((item) => item.key && ACCESSIBILITY_ICON_BY_KEY[item.key])
+        .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    }
+
     function normalizeHexColor(value, fallback) {
       return /^#[0-9a-fA-F]{6}$/.test(String(value || '')) ? value : fallback;
     }
@@ -1018,6 +1053,8 @@
     function renderAccessibility(data) {
       const activeItems = getActiveItems(data.accessibility).slice(0, 5);
 
+      console.log('Accessibility items for signage:', activeItems);
+
       ui.accessibilityIcons.innerHTML = '';
       ui.accessibilityIcons.dataset.count = String(activeItems.length);
 
@@ -1072,6 +1109,8 @@
 
     function renderAdvisory(data, options = {}) {
       const activeItems = getActiveItems(data.advisories);
+
+      console.log('Advisory items for signage:', activeItems);
 
       if (!activeItems.length) {
         ui.advisoryRegion.hidden = true;
