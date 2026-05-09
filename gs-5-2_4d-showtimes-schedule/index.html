@@ -1053,7 +1053,11 @@
     function renderAccessibility(data) {
       const activeItems = getActiveItems(data.accessibility).slice(0, 5);
 
-      console.log('Accessibility items for signage:', activeItems);
+      console.table(activeItems.map((item) => ({
+        text: item.text,
+        key: item.key,
+        icon: ACCESSIBILITY_ICON_BY_KEY[item.key]
+      })));
 
       ui.accessibilityIcons.innerHTML = '';
       ui.accessibilityIcons.dataset.count = String(activeItems.length);
