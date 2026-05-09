@@ -389,8 +389,8 @@
 
     .accessibility-icon img {
       display: block;
-      max-height: calc(100% - 16px);
-      max-width: calc(100% - 16px);
+      max-height: calc(100% - 6px);
+      max-width: calc(100% - 6px);
     }
 
     .accessibility-icons[data-count="5"] {
@@ -565,8 +565,8 @@
 
     .advisory-icon img {
       display: block;
-      max-height: calc(100% - 16px);
-      max-width: calc(100% - 16px);
+      max-height: calc(100% - 6px);
+      max-width: calc(100% - 6px);
     }
 
     .advisory-text {
@@ -1152,7 +1152,7 @@
     }
 
     function renderAdvisory(data, options = {}) {
-      const activeItems = getActiveItems(data.advisories);
+      const activeItems = getActiveTextItems(data.advisories);
 
       console.log('Advisory items for signage:', activeItems);
 
