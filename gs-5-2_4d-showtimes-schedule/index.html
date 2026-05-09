@@ -808,7 +808,9 @@
     }
 
     function normalizeAccessibilityKey(value) {
-      const key = String(value || '')
+      if (!value) return '';
+
+      const key = String(value)
         .trim()
         .toLowerCase()
         .replace(/[\s-]+/g, '_');
@@ -848,10 +850,11 @@
         .map((item) => {
           const explicitKey = normalizeAccessibilityKey(item?.key);
           const inferredKey = inferAccessibilityKeyFromText(item?.text);
+          const resolvedKey = explicitKey || inferredKey;
 
           return {
             ...item,
-            key: explicitKey || inferredKey
+            key: resolvedKey
           };
         })
         .filter((item) => item && item.text && item.is_active === true)
@@ -1068,7 +1071,7 @@
     }
 
     function renderAccessibility(data) {
-      const activeItems = getActiveItems(data.accessibility).slice(0, 5);
+      const activeItems = getActiveAccessibilityItems(data.accessibility).slice(0, 5);
 
       console.table(activeItems.map((item) => ({
         text: item.text,
