@@ -862,6 +862,26 @@
         .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
     }
 
+    function expandDelimitedTextItems(value) {
+      return normalizeItemArray(value)
+        .flatMap((item) => {
+          const text = String(item?.text || '').trim();
+
+          if (!text.includes('|')) {
+            return [item];
+          }
+
+          return text
+            .split('|')
+            .map((part, index) => ({
+              ...item,
+              text: part.trim(),
+              sort_order: Number(item.sort_order || 0) + index * 0.01
+            }))
+            .filter((splitItem) => splitItem.text);
+        });
+    }
+
     function normalizeHexColor(value, fallback) {
       return /^#[0-9a-fA-F]{6}$/.test(String(value || '')) ? value : fallback;
     }
@@ -900,9 +920,9 @@
       return [];
     }
 
-    function getActiveItems(value) {
-      return normalizeItemArray(value)
-        .filter((item) => item && item.text && item.is_active !== false)
+    function getActiveTextItems(value) {
+      return expandDelimitedTextItems(value)
+        .filter((item) => item && item.text && item.is_active === true)
         .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
     }
 
