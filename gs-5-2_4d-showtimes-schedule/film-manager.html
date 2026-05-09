@@ -511,43 +511,6 @@
     });
   }
 
-  function parseMessageEditorValue(value, defaultItems = []) {
-    if (Array.isArray(value)) {
-      return value;
-    }
-
-    const cleanValue = String(value || '').trim();
-
-    if (cleanValue.startsWith('[')) {
-      try {
-        return JSON.parse(cleanValue);
-      } catch {
-        // Fall back to legacy parsing below.
-      }
-    }
-
-    const activeItems = cleanValue
-      .split('|')
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    return defaultItems.map((text) => ({
-      text,
-      is_active: activeItems.includes(text)
-    }));
-  }
-
-  function serializeMessageEditorValue(textInputs, checkInputs) {
-    return JSON.stringify(
-      textInputs
-        .map((textInput, index) => ({
-          text: textInput?.value.trim() || '',
-          is_active: !!checkInputs[index]?.checked && !!textInput?.value.trim()
-        }))
-        .filter((item) => item.text)
-    );
-  }
-
   function getActiveDisplayTextFromStoredMessageValue(value) {
     const parsed = parseMessageEditorValue(value);
 
@@ -1147,6 +1110,9 @@
         return;
       }
 
+      console.log('Film save payload:', payload);
+      console.log('accessibility_text is array:', Array.isArray(payload.accessibility_text), payload.accessibility_text);
+
       const { error } = await supabaseClient
         .from('films')
         .update(payload)
@@ -1193,9 +1159,9 @@
           .replace(/^-|-$/g, ''),
         poster_url: '',
         synopsis: '',
-        testimonial: '',
-        advisory_text: '',
-        accessibility_text: '',
+        testimonial: [],
+        advisory_text: [],
+        accessibility_text: [],
         theme_color_primary: '#646e78',
         theme_color_secondary: '#2f3a40',
         theme_color_source: 'manual',
@@ -1240,9 +1206,9 @@
       .insert({
         title: title.trim(),
         synopsis: source.synopsis || '',
-        testimonial: source.testimonial || '',
-        advisory_text: source.advisory_text || '',
-        accessibility_text: source.accessibility_text || '',
+        testimonial: parseMessageEditorValue(source.testimonial),
+        advisory_text: parseMessageEditorValue(source.advisory_text),
+        accessibility_text: parseMessageEditorValue(source.accessibility_text),
         poster_url: source.poster_url || '',
         theme_color_primary: source.theme_color_primary || '#646e78',
         theme_color_secondary: source.theme_color_secondary || '#2f3a40',
