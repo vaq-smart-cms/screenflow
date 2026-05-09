@@ -831,12 +831,29 @@
       return aliases[key] || key;
     }
 
+    function inferAccessibilityKeyFromText(value) {
+      const text = String(value || '').toLowerCase();
+
+      if (text.includes('wheelchair')) return 'wheelchair';
+      if (text.includes('assistive') || text.includes('listening') || text.includes('audio')) return 'assistive';
+      if (text.includes('caption')) return 'captions';
+      if (text.includes('service animal') || text.includes('service dog')) return 'service_animal';
+      if (text.includes('inductive') || text.includes('hearing loop') || text.includes('induction')) return 'inductive';
+
+      return '';
+    }
+
     function getActiveAccessibilityItems(value) {
       return normalizeItemArray(value)
-        .map((item) => ({
-          ...item,
-          key: normalizeAccessibilityKey(item?.key)
-        }))
+        .map((item) => {
+          const explicitKey = normalizeAccessibilityKey(item?.key);
+          const inferredKey = inferAccessibilityKeyFromText(item?.text);
+
+          return {
+            ...item,
+            key: explicitKey || inferredKey
+          };
+        })
         .filter((item) => item && item.text && item.is_active === true)
         .filter((item) => item.key && ACCESSIBILITY_ICON_BY_KEY[item.key])
         .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
