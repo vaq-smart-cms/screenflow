@@ -238,6 +238,9 @@
         <button id="sample-theme-button" class="secondary" type="button">
           Sample from poster
         </button>
+        <button id="swap-theme-colours-button" class="secondary" type="button">
+          Swap colours
+        </button>
         <p id="film-theme-source-text" class="status-message has-top-margin">
           Theme source: manual
         </p>
@@ -548,6 +551,20 @@
     return `${cleanCode}_poster_${size}.jpg`;
   }
 
+  function swapThemeColours() {
+    const primary = ui.filmThemePrimaryInput.value;
+    const secondary = ui.filmThemeSecondaryInput.value;
+
+    ui.filmThemePrimaryInput.value = secondary;
+    ui.filmThemeSecondaryInput.value = primary;
+
+    if (ui.filmThemeSourceText) {
+      ui.filmThemeSourceText.textContent = 'Theme source: manual';
+    }
+
+    setFilmDirtyState(true);
+  }
+
   function buildPosterUrlFromCode(code, size) {
     const filename = buildPosterFilenameFromCode(code, size);
 
@@ -625,6 +642,7 @@
     filmThemeSecondaryInput: document.getElementById('film-theme-secondary-input'),
     filmThemeSourceText: document.getElementById('film-theme-source-text'),
     sampleThemeButton: document.getElementById('sample-theme-button'),
+    swapThemeColoursButton: document.getElementById('swap-theme-colours-button'),
 
     duplicateFilmButton: document.getElementById('duplicate-film-button'),
     deleteFilmButton: document.getElementById('delete-film-button')
@@ -1333,6 +1351,7 @@
     ui.deleteFilmButton.addEventListener('click', deleteFilm);
     ui.cancelFilmEditButton.addEventListener('click', cancelFilmEdit);
     ui.sampleThemeButton.addEventListener('click', sampleThemeColoursFromPoster);
+    ui.swapThemeColoursButton.addEventListener('click', swapThemeColours);
     [
       ui.posterPreviewSm,
       ui.posterPreviewMd,
