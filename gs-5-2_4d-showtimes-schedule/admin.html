@@ -59,7 +59,16 @@
           <span class="status-segment status-segment-draft" data-status="draft">Draft</span>
           <span class="status-segment status-segment-live" data-status="live">Live</span>
         </div>
-        <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+        <div class="inline-action-row">
+          <label class="theme-toggle-control" title="Toggle Night Mode">
+          <span class="theme-toggle-label">Night Mode</span>
+          <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
+          <span class="theme-toggle-track" aria-hidden="true">
+            <span class="theme-toggle-knob"></span>
+          </span>
+        </label>
+          <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+        </div>
       </div>
 
       <!-- B — Calendar / Date Picker -->
@@ -315,6 +324,29 @@
     localStorage.setItem(getUserSessionKey(session, 'last_selected_date'), dateYmd);
   }
 
+  function readNightModePreference(session) {
+    return localStorage.getItem(getUserSessionKey(session, 'night_mode')) === 'true';
+  }
+
+  function writeNightModePreference(session, isEnabled) {
+    if (!session) return;
+    localStorage.setItem(getUserSessionKey(session, 'night_mode'), String(isEnabled));
+  }
+
+  function applyNightModePreference(isEnabled) {
+    document.body.classList.toggle('theme-night', !!isEnabled);
+
+    if (ui.nightModeToggle) {
+      ui.nightModeToggle.checked = !!isEnabled;
+    }
+  }
+
+  function handleNightModeToggle() {
+    const isEnabled = !!ui.nightModeToggle?.checked;
+    applyNightModePreference(isEnabled);
+    writeNightModePreference(appState.currentSession, isEnabled);
+  }
+
   function getPosterCodeFromStoredValue(value) {
     const cleanValue = String(value || '').trim();
 
@@ -484,7 +516,8 @@
     applyLoadButton: document.getElementById('apply-load-button'),
     saveDraftShowtimesButton: document.getElementById('save-draft-showtimes-button'),
     draftShowtimesContainer: document.getElementById('draft-showtimes-container'),
-    addShowtimeButton: document.getElementById('add-showtime-button')
+    addShowtimeButton: document.getElementById('add-showtime-button'),
+    nightModeToggle: document.getElementById('night-mode-toggle')
   };
 
   const appState = {
@@ -2400,6 +2433,7 @@
       setAuthenticatedUi(session);
 
       appState.currentSession = session;
+      applyNightModePreference(readNightModePreference(session));
 
       const rememberedDate = readLastSelectedDate(session);
       const initialDate = rememberedDate || getTodayYmd();
@@ -2517,6 +2551,11 @@
     supabaseClient.auth.onAuthStateChange((_event, session) => {
       setAuthenticatedUi(session);
     });
+
+    if (ui.nightModeToggle && !ui.nightModeToggle.dataset.bound) {
+      ui.nightModeToggle.addEventListener('change', handleNightModeToggle);
+      ui.nightModeToggle.dataset.bound = 'true';
+    }
 
     if (ui.signOutButton && !ui.signOutButton.dataset.bound) {
       ui.signOutButton.addEventListener('click', handleSignOut);

@@ -39,6 +39,13 @@
         <p id="session-text">Signed in as: Admin User</p>
       </div>
       <div class="inline-action-row">
+        <label class="theme-toggle-control" title="Toggle Night Mode">
+          <span class="theme-toggle-label">Night Mode</span>
+          <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
+          <span class="theme-toggle-track" aria-hidden="true">
+            <span class="theme-toggle-knob"></span>
+          </span>
+        </label>
         <a class="button-link" href="./admin.html">
           <button class="secondary" type="button">← Back to Calendar</button>
         </a>
@@ -272,7 +279,8 @@
 
   const appState = {
     selectedFilmId: null,
-    isDirty: false
+    isDirty: false,
+    currentSession: null
   };
 
   const POSTER_BASE_PATH = './film-posters/web/';
@@ -555,6 +563,7 @@
     passwordInput: document.getElementById('password-input'),
     signInButton: document.getElementById('sign-in-button'),
     signOutButton: document.getElementById('sign-out-button'),
+    nightModeToggle: document.getElementById('night-mode-toggle'),
     authMessage: document.getElementById('auth-message'),
     sessionText: document.getElementById('session-text'),
 
@@ -620,6 +629,35 @@
     duplicateFilmButton: document.getElementById('duplicate-film-button'),
     deleteFilmButton: document.getElementById('delete-film-button')
   };
+
+
+  function getUserSessionKey(session, suffix) {
+    const userKey = session?.user?.id || session?.user?.email || 'unknown-user';
+    return `vaq_4d_admin_${userKey}_${suffix}`;
+  }
+
+  function readNightModePreference(session) {
+    return localStorage.getItem(getUserSessionKey(session, 'night_mode')) === 'true';
+  }
+
+  function writeNightModePreference(session, isEnabled) {
+    if (!session) return;
+    localStorage.setItem(getUserSessionKey(session, 'night_mode'), String(isEnabled));
+  }
+
+  function applyNightModePreference(isEnabled) {
+    document.body.classList.toggle('theme-night', !!isEnabled);
+
+    if (ui.nightModeToggle) {
+      ui.nightModeToggle.checked = !!isEnabled;
+    }
+  }
+
+  function handleNightModeToggle() {
+    const isEnabled = !!ui.nightModeToggle?.checked;
+    applyNightModePreference(isEnabled);
+    writeNightModePreference(appState.currentSession, isEnabled);
+  }
 
   function readCache(key) {
     try {
@@ -1280,12 +1318,15 @@
     }
 
     setAuthenticatedUi(session);
+    appState.currentSession = session;
+    applyNightModePreference(readNightModePreference(session));
     await refreshFilmManager();
   }
 
   async function initializePage() {
     ui.signInButton.addEventListener('click', handleSignIn);
     ui.signOutButton.addEventListener('click', handleSignOut);
+    ui.nightModeToggle.addEventListener('change', handleNightModeToggle);
     ui.createFilmButton.addEventListener('click', createFilm);
     ui.saveFilmButton.addEventListener('click', saveFilmDetails);
     ui.duplicateFilmButton.addEventListener('click', duplicateFilm);

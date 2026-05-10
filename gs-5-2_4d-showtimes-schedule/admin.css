@@ -24,6 +24,29 @@
   --vaq-green: #7d9b2d;
   --vaq-grey: #646e78;
   --vaq-orange: #e6782d;
+
+  --danger: #9f1f1f;
+  --gold: #f3bc43;
+  --input-bg: #ffffff;
+  --input-text: var(--text);
+  --muted-panel: #eef3f6;
+  --toggle-bg: #d7e0e5;
+  --toggle-knob: #ffffff;
+}
+
+body.theme-night {
+  --bg: #101820;
+  --line: #314451;
+  --panel: #182631;
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+  --text: #edf4f7;
+  --text-soft: #b7c7d0;
+
+  --input-bg: #101c25;
+  --input-text: #edf4f7;
+  --muted-panel: #22333f;
+  --toggle-bg: #314451;
+  --toggle-knob: #f3bc43;
 }
 
 body {
@@ -51,9 +74,11 @@ button {
 
 input,
 select {
+  background: var(--input-bg);
   border: 1px solid var(--line);
   border-radius: 8px;
   box-sizing: border-box;
+  color: var(--input-text);
   font: inherit;
   padding: 10px;
   width: 100%;
@@ -154,6 +179,72 @@ input[type="color"] {
 
 .status-message.has-top-margin {
   margin-top: 10px;
+}
+
+
+/* Shared theme controls */
+
+.theme-toggle-control {
+  align-items: center;
+  background: var(--muted-panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 10px;
+  min-height: 38px;
+  padding: 6px 10px 6px 12px;
+  user-select: none;
+}
+
+.theme-toggle-control input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.theme-toggle-label {
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.theme-toggle-track {
+  align-items: center;
+  background: var(--toggle-bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: inline-flex;
+  height: 24px;
+  padding: 2px;
+  transition: background 160ms ease, border-color 160ms ease;
+  width: 44px;
+}
+
+.theme-toggle-knob {
+  background: var(--toggle-knob);
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
+  display: block;
+  height: 20px;
+  transform: translateX(0);
+  transition: transform 160ms ease, background 160ms ease;
+  width: 20px;
+}
+
+.theme-toggle-control input:checked + .theme-toggle-track {
+  background: rgba(243, 188, 67, 0.24);
+  border-color: rgba(243, 188, 67, 0.68);
+}
+
+.theme-toggle-control input:checked + .theme-toggle-track .theme-toggle-knob {
+  transform: translateX(20px);
+}
+
+.theme-toggle-control:focus-within {
+  box-shadow: 0 0 0 3px rgba(100, 165, 195, 0.24);
 }
 
 /* =========================================================
@@ -1272,8 +1363,177 @@ select:disabled {
   display: none;
 }
 
+
 /* =========================================================
-   09 — Responsive Layout: Small Screens
+   09 — Night Mode Theme Overrides
+   ========================================================= */
+
+body.theme-night .boot-panel,
+body.theme-night .day,
+body.theme-night .compact-tool-button,
+body.theme-night .tool-button,
+body.theme-night .desktop-sign-out-button,
+body.theme-night .header #sign-out-button {
+  background: var(--panel);
+  color: var(--text);
+}
+
+body.theme-night textarea,
+body.theme-night input,
+body.theme-night select {
+  background: var(--input-bg);
+  border-color: var(--line);
+  color: var(--input-text);
+}
+
+body.theme-night input::placeholder,
+body.theme-night textarea::placeholder {
+  color: rgba(237, 244, 247, 0.48);
+}
+
+body.theme-night .schedule-status-meter {
+  background: #111d26;
+  border-color: rgba(183, 199, 208, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body.theme-night .status-segment {
+  background: #16242e;
+  color: rgba(237, 244, 247, 0.44);
+}
+
+body.theme-night .status-segment-empty.is-active {
+  background: linear-gradient(135deg, #2a3944, #3f505d);
+  color: #edf4f7;
+}
+
+body.theme-night .status-segment-draft.is-active {
+  background: linear-gradient(135deg, #18384a, #64a5c3);
+  color: #ffffff;
+}
+
+body.theme-night .status-segment-live.is-active {
+  background: linear-gradient(135deg, #34450f, #7d9b2d);
+  color: #ffffff;
+}
+
+body.theme-night .day:hover,
+body.theme-night .compact-tool-button:hover,
+body.theme-night .tool-button:hover {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+}
+
+body.theme-night .day.has-live {
+  background: rgba(125, 155, 45, 0.24);
+}
+
+body.theme-night .day.has-draft {
+  outline-color: #7cc6e6;
+}
+
+body.theme-night .day.has-edits,
+body.theme-night .day.is-batch-selected {
+  border-color: var(--gold);
+}
+
+body.theme-night .day.is-selected {
+  border-color: var(--vaq-green);
+  box-shadow: inset 0 0 0 2px var(--vaq-green), 0 0 0 2px rgba(125, 155, 45, 0.22);
+}
+
+body.theme-night .showtime,
+body.theme-night .default-edit-row {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--line);
+}
+
+body.theme-night .showtime-empty-state {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--line);
+  color: var(--text-soft);
+}
+
+body.theme-night .showtime-save-now-button {
+  background: #22333f;
+  border-color: var(--line);
+  color: var(--text);
+}
+
+body.theme-night .showtime-save-now-button:hover {
+  background: #2b414f;
+}
+
+body.theme-night .showtime-save-state.is-saved {
+  background: rgba(125, 155, 45, 0.24);
+  color: #d9eca5;
+}
+
+body.theme-night .showtime-save-state.is-unsaved,
+body.theme-night .summary-badge-warning,
+body.theme-night .default-lock-note {
+  background: rgba(243, 188, 67, 0.18);
+  border-color: rgba(243, 188, 67, 0.42);
+  color: #ffe2a3;
+}
+
+body.theme-night .showtime-save-state.is-saving {
+  background: rgba(100, 165, 195, 0.22);
+  color: #b8e5f8;
+}
+
+body.theme-night .showtime-save-state.is-error,
+body.theme-night .showtime-badge,
+body.theme-night .time-cell.is-after-hours {
+  background: rgba(230, 120, 45, 0.2);
+  border-color: rgba(230, 120, 45, 0.42);
+  color: #ffbf8f;
+}
+
+body.theme-night .summary-badge-empty {
+  background: rgba(183, 199, 208, 0.14);
+  color: #d7e0e5;
+}
+
+body.theme-night .poster-preview-image,
+body.theme-night .poster,
+body.theme-night .poster-image {
+  background: #263845;
+  border-color: var(--line);
+}
+
+body.theme-night .tool-icon {
+  background: rgba(100, 165, 195, 0.14);
+}
+
+body.theme-night .desktop-sign-out-button,
+body.theme-night .header #sign-out-button {
+  border-color: rgba(230, 120, 45, 0.42);
+  color: #ffbf8f;
+}
+
+body.theme-night .desktop-sign-out-button:hover,
+body.theme-night .header #sign-out-button:hover {
+  background: rgba(230, 120, 45, 0.12);
+}
+
+body.theme-night .showtime.is-reordered {
+  animation: showtimeReorderPulseNight 900ms ease both;
+}
+
+@keyframes showtimeReorderPulseNight {
+  0% {
+    background: rgba(243, 188, 67, 0.24);
+    transform: translateY(-4px);
+  }
+
+  100% {
+    background: rgba(255, 255, 255, 0.03);
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   10 — Responsive Layout: Small Screens
    ========================================================= */
 
 @media (max-width: 520px) {
@@ -1291,7 +1551,7 @@ select:disabled {
 }
 
 /* =========================================================
-   10 — Responsive Layout: Desktop Admin
+   11 — Responsive Layout: Desktop Admin
    ========================================================= */
 
 @media (min-width: 1275px) {
@@ -1503,7 +1763,7 @@ select:disabled {
 }
 
 /* =========================================================
-   11 — Shared Animations
+   12 — Shared Animations
    ========================================================= */
 
 @keyframes liveStatusPulse {

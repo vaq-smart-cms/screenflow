@@ -37,8 +37,15 @@
         <h1>4D Load Manager</h1>
         <p id="session-text">Signed in as: Admin User</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <a href="./admin.html">
+      <div class="inline-action-row">
+        <label class="theme-toggle-control" title="Toggle Night Mode">
+          <span class="theme-toggle-label">Night Mode</span>
+          <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
+          <span class="theme-toggle-track" aria-hidden="true">
+            <span class="theme-toggle-knob"></span>
+          </span>
+        </label>
+        <a class="button-link" href="./admin.html">
           <button class="neutral" type="button">← Back to Calendar</button>
         </a>
       </div>
@@ -207,7 +214,8 @@
 
   const appState = {
     selectedLoadId: null,
-    editDefaultLoad: false
+    editDefaultLoad: false,
+    currentSession: null
   };
 
   const ui = {
@@ -217,6 +225,7 @@
     passwordInput: document.getElementById('password-input'),
     signInButton: document.getElementById('sign-in-button'),
     /* signOutButton: document.getElementById('sign-out-button'), */
+    nightModeToggle: document.getElementById('night-mode-toggle'),
     authMessage: document.getElementById('auth-message'),
     sessionText: document.getElementById('session-text'),
 
@@ -242,6 +251,35 @@
     duplicateLoadInlineButton: document.getElementById('duplicate-load-inline-button'),
     deleteLoadButton: document.getElementById('delete-load-button')
   };
+
+
+  function getUserSessionKey(session, suffix) {
+    const userKey = session?.user?.id || session?.user?.email || 'unknown-user';
+    return `vaq_4d_admin_${userKey}_${suffix}`;
+  }
+
+  function readNightModePreference(session) {
+    return localStorage.getItem(getUserSessionKey(session, 'night_mode')) === 'true';
+  }
+
+  function writeNightModePreference(session, isEnabled) {
+    if (!session) return;
+    localStorage.setItem(getUserSessionKey(session, 'night_mode'), String(isEnabled));
+  }
+
+  function applyNightModePreference(isEnabled) {
+    document.body.classList.toggle('theme-night', !!isEnabled);
+
+    if (ui.nightModeToggle) {
+      ui.nightModeToggle.checked = !!isEnabled;
+    }
+  }
+
+  function handleNightModeToggle() {
+    const isEnabled = !!ui.nightModeToggle?.checked;
+    applyNightModePreference(isEnabled);
+    writeNightModePreference(appState.currentSession, isEnabled);
+  }
 
   function setAuthenticatedUi(session) {
     const isAuthed = !!session;
@@ -1263,12 +1301,15 @@
     }
 
     setAuthenticatedUi(session);
+    appState.currentSession = session;
+    applyNightModePreference(readNightModePreference(session));
     await refreshLoadManager();
   }
 
   async function initializePage() {
     ui.signInButton.addEventListener('click', handleSignIn);
     /* ui.signOutButton.addEventListener('click', handleSignOut); */
+    ui.nightModeToggle.addEventListener('change', handleNightModeToggle);
     ui.saveLoadButton.addEventListener('click', saveLoadDetails);
     ui.saveLoadTimesButton.addEventListener('click', saveAllShowtimes);
     ui.addLoadTimeTopButton.addEventListener('click', addLoadTime);
