@@ -921,8 +921,38 @@
     }
 
     function getActiveTextItems(value) {
-      return expandDelimitedTextItems(value)
+      const seen = new Set();
+
+      return normalizeItemArray(value)
+        .flatMap((item) => {
+          const text = String(item?.text || '').trim();
+
+          if (!text) return [];
+
+          if (!text.includes('|')) {
+            return [item];
+          }
+
+          return text
+            .split('|')
+            .map((part, index) => ({
+              ...item,
+              text: part.trim(),
+              sort_order: Number(item.sort_order || 0) + index * 0.01
+            }))
+            .filter((splitItem) => splitItem.text);
+        })
         .filter((item) => item && item.text && item.is_active === true)
+        .filter((item) => {
+          const key = item.text.trim().toLowerCase();
+
+          if (seen.has(key)) {
+            return false;
+          }
+
+          seen.add(key);
+          return true;
+        })
         .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
     }
 
