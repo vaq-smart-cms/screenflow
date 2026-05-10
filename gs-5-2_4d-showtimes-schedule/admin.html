@@ -137,7 +137,8 @@
           <div>
             <h3 id="film-title" style="margin-bottom:8px;">BBC Earth: North America 4D Experience</h3>
             <p id="film-synopsis" style="margin-bottom:8px;">Poster preview for the currently assigned 4D film.</p>
-            <p id="film-advisory" style="margin-bottom:12px; color:var(--text-soft);"></p>
+            <div id="film-accessibility-summary" class="film-accessibility-summary"></div>
+            <div id="film-testimonial-summary" class="film-testimonial-summary"></div>
           </div>
         </div>
       </div>
@@ -346,6 +347,92 @@
     ].join(', ');
   }
 
+  const ACCESSIBILITY_ICON_BY_KEY = {
+    wheelchair: './assets/acc-wc.svg',
+    assistive: './assets/acc-assistive.svg',
+    captions: './assets/acc-cc.svg',
+    service_animal: './assets/acc-svc-dog.svg',
+    inductive: './assets/acc-induc.svg'
+  };
+
+  function normalizeItemArray(value) {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value.trim()
+          ? [{ text: value.trim(), is_active: true, sort_order: 1 }]
+          : [];
+      }
+    }
+
+    return [];
+  }
+
+  function normalizeAccessibilityKey(value) {
+    if (!value) return '';
+
+    const key = String(value)
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_');
+
+    const aliases = {
+      wheelchair_access: 'wheelchair',
+      wheelchair_accessible: 'wheelchair',
+      audio: 'assistive',
+      audio_assistive: 'assistive',
+      assistive_listening: 'assistive',
+      closed_captioning: 'captions',
+      closed_captions: 'captions',
+      captioning: 'captions',
+      service_animals: 'service_animal',
+      service_dog: 'service_animal',
+      induction_loop: 'inductive',
+      hearing_loop: 'inductive'
+    };
+
+    return aliases[key] || key;
+  }
+
+  function inferAccessibilityKeyFromText(value) {
+    const text = String(value || '').toLowerCase();
+
+    if (text.includes('wheelchair')) return 'wheelchair';
+    if (text.includes('assistive') || text.includes('listening') || text.includes('audio')) return 'assistive';
+    if (text.includes('caption')) return 'captions';
+    if (text.includes('service animal') || text.includes('service dog')) return 'service_animal';
+    if (text.includes('inductive') || text.includes('hearing loop') || text.includes('induction')) return 'inductive';
+
+    return '';
+  }
+
+  function getActiveAccessibilityItems(value) {
+    return normalizeItemArray(value)
+      .map((item) => {
+        const explicitKey = normalizeAccessibilityKey(item?.key);
+        const inferredKey = inferAccessibilityKeyFromText(item?.text);
+
+        return {
+          ...item,
+          key: explicitKey || inferredKey
+        };
+      })
+      .filter((item) => item && item.text && item.is_active === true)
+      .filter((item) => item.key && ACCESSIBILITY_ICON_BY_KEY[item.key])
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+  }
+
+  function getActiveTextItems(value) {
+    return normalizeItemArray(value)
+      .filter((item) => item && item.text && item.is_active === true)
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+  }
+
   let FILMS = [];
   let LOAD_TEMPLATES = [];
   let LOAD_TEMPLATE_TIMES = [];
@@ -363,7 +450,8 @@
     filmSelect: document.getElementById('film-select'),
     filmTitle: document.getElementById('film-title'),
     filmSynopsis: document.getElementById('film-synopsis'),
-    filmAdvisory: document.getElementById('film-advisory'),
+    filmAccessibilitySummary: document.getElementById('film-accessibility-summary'),
+    filmTestimonialSummary: document.getElementById('film-testimonial-summary'),
     filmPosterImage: document.getElementById('film-poster-image'),
     filmPosterFallback: document.getElementById('film-poster-fallback'),
     statusMeter: document.getElementById('status-meter'),
@@ -453,22 +541,66 @@
     }
   }
 
+  function renderFilmAccessibilitySummary(film) {
+    const activeItems = getActiveAccessibilityItems(film?.accessibility_text).slice(0, 5);
+
+    ui.filmAccessibilitySummary.innerHTML = '';
+
+    if (!activeItems.length) {
+      ui.filmAccessibilitySummary.hidden = true;
+      return;
+    }
+
+    ui.filmAccessibilitySummary.hidden = false;
+
+    activeItems.forEach((item) => {
+      const iconWrap = document.createElement('span');
+      iconWrap.className = 'film-accessibility-icon';
+      iconWrap.title = item.text;
+
+      const img = document.createElement('img');
+      img.src = ACCESSIBILITY_ICON_BY_KEY[item.key];
+      img.alt = '';
+
+      iconWrap.appendChild(img);
+      ui.filmAccessibilitySummary.appendChild(iconWrap);
+    });
+  }
+
+  function renderFilmTestimonialSummary(film) {
+    const activeTestimonials = getActiveTextItems(film?.testimonial_text);
+
+    ui.filmTestimonialSummary.innerHTML = '';
+
+    if (!activeTestimonials.length) {
+      ui.filmTestimonialSummary.hidden = true;
+      return;
+    }
+
+    ui.filmTestimonialSummary.hidden = false;
+    ui.filmTestimonialSummary.textContent = activeTestimonials
+      .map((item) => item.text)
+      .join(' · ');
+  }
+
   function renderFilmPreview(filmId) {
     const film = FILMS.find((item) => item.id === filmId) || null;
 
     if (!film) {
       ui.filmTitle.textContent = 'No active film selected';
       ui.filmSynopsis.textContent = 'Add or activate a film to see its preview here.';
-      ui.filmAdvisory.textContent = '';
       ui.filmPosterImage.style.display = 'none';
       ui.filmPosterFallback.style.display = 'grid';
+      ui.filmAccessibilitySummary.innerHTML = '';
+      ui.filmTestimonialSummary.innerHTML = '';
       return;
     }
 
     ui.filmTitle.textContent = film.title || 'Untitled film';
     ui.filmSynopsis.textContent = film.synopsis || 'No synopsis available.';
-    ui.filmAdvisory.textContent = film.advisory_text || '';
-
+    renderFilmAccessibilitySummary(film);
+    renderFilmTestimonialSummary(film);
+    
     ui.filmPosterFallback.style.display = 'none';
     ui.filmPosterImage.style.display = 'block';
     ui.filmPosterImage.alt = `${film.title} poster`;
@@ -552,7 +684,7 @@
     }
 
     if (!times.length) {
-      ui.loadPreview.innerHTML = `<strong>${selectedLoad.name}</strong><br>No template times found.`;
+      ui.loadPreview.textContent = 'No template times found.';
       return;
     }
 
@@ -562,7 +694,6 @@
     }));
 
     ui.loadPreview.innerHTML = `
-      <strong>${selectedLoad.name}</strong>
       <div class="load-preview-times-grid">
         ${formattedTimes.map((time) => `
           <div class="time-cell ${time.isAfterHours ? 'is-after-hours' : ''}">
@@ -817,7 +948,7 @@
     }
     const { data, error } = await supabaseClient
       .from('films')
-      .select('id, title, poster_url, synopsis, advisory_text, is_active, sort_order')
+      .select('id, title, poster_url, synopsis, accessibility_text, testimonial_text, is_active, sort_order')
       .eq('is_active', true)
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('title', { ascending: true });
@@ -834,7 +965,8 @@
       poster_code: getPosterCodeFromStoredValue(film.poster_url || ''),
       poster_url: buildPosterUrlFromCode(film.poster_url || '', 'lg'),
       synopsis: film.synopsis || '',
-      advisory_text: film.advisory_text || ''
+      accessibility_text: film.accessibility_text || [],
+      testimonial_text: film.testimonial_text || []
     }));
 
     writeCache('vaq_4d_active_films', FILMS);
