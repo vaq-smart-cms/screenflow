@@ -1031,27 +1031,29 @@ select:focus {
 }
 
 .film-accessibility-summary {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
 .film-accessibility-icon {
   align-items: center;
-  background: #eef1f3;
-  border-radius: 5px;
+  background: #64a5c3;
+  border-radius: 999px;
   display: inline-flex;
-  height: 30px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+  height: 38px;
   justify-content: center;
   padding: 4px;
-  width: 30px;
+  width: 38px;
 }
 
 .film-accessibility-icon img {
   display: block;
-  max-height: 100%;
-  max-width: 100%;
+  max-height: calc(100% - 4px);
+  max-width: calc(100% - 4px);
 }
 
 .film-testimonial-summary {

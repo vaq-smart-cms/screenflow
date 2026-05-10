@@ -348,11 +348,11 @@
   }
 
   const ACCESSIBILITY_ICON_BY_KEY = {
-    wheelchair: './assets/acc-wc.svg',
-    assistive: './assets/acc-assistive.svg',
-    captions: './assets/acc-cc.svg',
-    service_animal: './assets/acc-svc-dog.svg',
-    inductive: './assets/acc-induc.svg'
+    wheelchair: '../assets/acc-wc.svg',
+    assistive: '../assets/acc-assistive.svg',
+    captions: '../assets/acc-cc.svg',
+    service_animal: '../assets/acc-svc-dog.svg',
+    inductive: '../assets/acc-induc.svg'
   };
 
   function normalizeItemArray(value) {
@@ -2482,7 +2482,6 @@
     updateHeaderAndSummary();
     updatePublishState();
     updateCalendarIndicators();
-    setDirtyState(false);
   }
 
   async function initializePage() {
