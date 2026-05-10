@@ -568,7 +568,7 @@
   }
 
   function renderFilmTestimonialSummary(film) {
-    const activeTestimonials = getActiveTextItems(film?.testimonials);
+    const activeTestimonials = getActiveTextItems(film?.testimonial);
 
     ui.filmTestimonialSummary.innerHTML = '';
 
@@ -948,7 +948,7 @@
     }
     const { data, error } = await supabaseClient
       .from('films')
-      .select('id, title, poster_url, synopsis, accessibility_text, testimonials, is_active, sort_order')
+      .select('id, title, poster_url, synopsis, accessibility_text, testimonial, is_active, sort_order')
       .eq('is_active', true)
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('title', { ascending: true });
@@ -966,7 +966,7 @@
       poster_url: buildPosterUrlFromCode(film.poster_url || '', 'lg'),
       synopsis: film.synopsis || '',
       accessibility_text: film.accessibility_text || [],
-      testimonials: film.testimonials || []
+      testimonials: film.testimonial || []
     }));
 
     writeCache('vaq_4d_active_films', FILMS);
