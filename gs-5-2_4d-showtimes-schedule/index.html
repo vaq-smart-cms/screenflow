@@ -676,7 +676,7 @@
     const TESTIMONIAL_ROTATION_MS = 9000;
     const TESTIMONIAL_INTERRUPT_MS = 60000;
 
-    const DATA_REFRESH_MS = 60000;
+    const DATA_REFRESH_MS = 10000;
     const SHOWTIME_BOUNDARY_FUDGE_MS = 750;
     const SHOWTIME_TRANSITION_MS = 520;
 
@@ -1529,6 +1529,7 @@
 
         if (!liveData) {
           showStatus(UNAVAILABLE_LABEL);
+          scheduleDataRefresh();
           return;
         }
 
