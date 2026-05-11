@@ -7,614 +7,14 @@
     content="width=1920, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no"
   />
   <title>VAQ 4D Showtimes</title>
+  <link rel="stylesheet" href="./index.css?v=1" />
+</head>
 
-  <!--
+<!--
     Target container: 1920 x 810 px
     Initial rollout scaffold v02 for Kuusoft / NexSigns.
     Shared assets expected in ../assets/
   -->
-
-  <style>
-    @font-face {
-      font-display: swap;
-      font-family: 'BlissPro';
-      font-style: normal;
-      font-weight: 700;
-      src:
-        url('../assets/BlissPro-Bold.woff2') format('woff2'),
-        url('../assets/BlissPro-Bold.woff') format('woff');
-    }
-
-    @font-face {
-      font-display: swap;
-      font-family: 'BlissPro';
-      font-style: italic;
-      font-weight: 400;
-      src:
-        url('../assets/BlissPro-Italic.woff2') format('woff2'),
-        url('../assets/BlissPro-Italic.woff') format('woff');
-    }
-
-    :root {
-      --page-width: 1920px;
-      --page-height: 810px;
-
-      --page-fallback: #113466;
-      --vaq-blue: #64a5c3;
-      --vaq-green: #7d9b2d;
-      --vaq-gold: #f3bc43;
-      --theatre-purple: #cca1cc;
-
-      --film-primary: #404020;
-      --film-secondary: #c0c0e0;
-
-      --outer-padding-x: 20px;
-      --outer-padding-y: 20px;
-
-      --poster-width: 498px;
-      --poster-height: 720px;
-
-      --poster-frame-width: 534px;
-      --poster-frame-height: 758px;
-
-      --showtime-font-size: 64px;
-      --showtime-column-gap: 110px;
-      --showtime-row-gap: 22px;
-
-      --tile-height: 138px;
-      --tile-radius: 13px;
-      --tile-opacity: 0.80;
-
-      --icon-column-width: 154px;
-      --divider-color: rgba(0, 0, 0, 0.10);
-      --inner-stroke: rgba(255, 255, 255, 0.10);
-
-      --transition-fast: 280ms;
-      --transition-page: 520ms;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      width: var(--page-width);
-      height: var(--page-height);
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: var(--page-fallback);
-    }
-
-    body {
-      color: #ffffff;
-      font-family: 'BlissPro', Arial, sans-serif;
-      position: relative;
-    }
-
-    .page {
-      background: var(--page-fallback);
-      height: var(--page-height);
-      overflow: hidden;
-      position: relative;
-      width: var(--page-width);
-    }
-
-    .bg-rotator {
-      animation: slowRotate 200s linear infinite;
-      background-image: url('../assets/RotCircAnim_5000x5000.jpg');
-      background-repeat: no-repeat;
-      background-size: 5000px 5000px;
-      height: 5000px;
-      left: -1732px;
-      pointer-events: none;
-      position: absolute;
-      top: -3500px;
-      transform-origin: center center;
-      width: 5000px;
-      z-index: 1;
-    }
-
-    .content-layer {
-      height: 100%;
-      padding: var(--outer-padding-y) var(--outer-padding-x);
-      position: relative;
-      width: 100%;
-      z-index: 2;
-    }
-
-    .status-panel {
-      align-items: center;
-      background: rgba(0, 0, 0, 0.22);
-      border-radius: 18px;
-      color: #ffffff;
-      display: flex;
-      font-size: 40px;
-      font-weight: 700;
-      inset: 20px;
-      justify-content: center;
-      line-height: 1.15;
-      padding: 40px;
-      position: absolute;
-      text-align: center;
-      z-index: 10;
-    }
-
-    .status-panel[hidden],
-    .sign-layout[hidden] {
-      display: none !important;
-    }
-
-    .sign-layout {
-      height: 100%;
-      position: relative;
-      width: 100%;
-    }
-
-    .sign-layout.is-ended .next-show-tile,
-    .sign-layout.is-ended .supplemental-region,
-    .sign-layout.is-ended .advisory-region {
-      display: none;
-    }
-
-    .sign-layout.is-ended .showtimes-region {
-      height: 520px;
-      top: 150px;
-    }
-
-    .sign-layout.is-ended .showtimes-grid {
-      align-content: center;
-      align-items: center;
-      height: 100%;
-    }
-
-    /* Poster hero */
-
-    .poster-region {
-      height: 770px;
-      left: 0;
-      position: absolute;
-      top: 6px;
-      width: 560px;
-    }
-
-    .poster-frame {
-      background:
-        linear-gradient(
-          180deg,
-          var(--film-primary) 0%,
-          var(--film-secondary) 100%
-        );
-      border-radius: 12px;
-      box-shadow:
-        inset 0 0 22px rgba(255, 255, 255, 0.22),
-        0 4px 16px rgba(0, 0, 0, 0.50);
-      height: var(--poster-frame-height);
-      left: 0;
-      position: absolute;
-      top: 0;
-      width: var(--poster-frame-width);
-      z-index: 1;
-    }
-
-    .poster-glow {
-      background:
-        radial-gradient(
-          circle at center,
-          rgba(255, 255, 255, 0.14) 0%,
-          rgba(255, 255, 255, 0.04) 42%,
-          rgba(255, 255, 255, 0.00) 72%
-        );
-      filter: blur(18px);
-      height: 760px;
-      left: -10px;
-      opacity: 0.70;
-      pointer-events: none;
-      position: absolute;
-      top: -4px;
-      width: 552px;
-      z-index: 1;
-    }
-
-    .poster-image {
-      background: rgba(255, 255, 255, 0.08);
-      border: 4px solid var(--film-primary);
-      border-radius: 7px;
-      box-shadow:
-        0 10px 24px rgba(0, 0, 0, 0.26);
-      display: block;
-      height: var(--poster-height);
-      left: 18px;
-      object-fit: cover;
-      opacity: 1;
-      transition:
-        opacity 420ms ease,
-        transform 520ms ease;
-      position: absolute;
-      top: 19px;
-      width: var(--poster-width);
-      z-index: 2;
-    }
-
-    .poster-fallback {
-      align-items: center;
-      backdrop-filter: blur(2px);
-      background: rgba(0, 0, 0, 0.22);
-      border: 4px solid var(--film-primary);
-      border-radius: 7px;
-      color: rgba(255, 255, 255, 0.86);
-      display: none;
-      font-size: 44px;
-      font-weight: 700;
-      height: var(--poster-height);
-      justify-content: center;
-      left: 18px;
-      line-height: 1.08;
-      padding: 32px;
-      position: absolute;
-      text-align: center;
-      top: 19px;
-      width: var(--poster-width);
-      z-index: 2;
-    }
-
-    .poster-image.is-loading {
-      opacity: 0;
-      transform: scale(1.015);
-    }
-
-    /* Top tile */
-
-    .next-show-tile {
-      background: rgba(204, 161, 204, var(--tile-opacity));
-      border-radius: var(--tile-radius);
-      box-shadow:
-        inset 0 0 0 8px var(--inner-stroke),
-        inset 0 -18px 32px rgba(0, 0, 0, 0.10),
-        0 8px 20px rgba(0, 0, 0, 0.22);
-      display: grid;
-      grid-template-columns: var(--icon-column-width) 1fr;
-      height: var(--tile-height);
-      left: 600px;
-      overflow: hidden;
-      position: absolute;
-      top: 6px;
-      width: 820px;
-    }
-
-    .next-show-tile::before {
-      background:
-        linear-gradient(
-          90deg,
-          rgba(0, 0, 0, 0.25) 0%,
-          rgba(0, 0, 0, 0.12) 18%,
-          rgba(0, 0, 0, 0.00) 42%
-        );
-      content: '';
-      inset: 0;
-      mix-blend-mode: multiply;
-      pointer-events: none;
-      position: absolute;
-      z-index: 1;
-    }
-
-    .next-show-icon {
-      align-items: center;
-      border-right: 2px solid var(--divider-color);
-      display: flex;
-      height: 100%;
-      justify-content: center;
-      padding: 14px 12px;
-      position: relative;
-      width: var(--icon-column-width);
-      z-index: 2;
-    }
-
-    .next-show-icon img {
-      display: block;
-      filter: drop-shadow(0 0 13px rgba(0, 0, 0, 0.20));
-      max-height: 104px;
-      max-width: 136px;
-      transform: scale(1.08);
-    }
-
-    .next-show-content {
-      align-items: center;
-      display: flex;
-      min-width: 0;
-      padding: 12px 28px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .next-show-title {
-      color: #ffffff;
-      font-size: 50px;
-      font-weight: 700;
-      line-height: 1.05;
-      margin: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-shadow:
-        0 3px 3px rgba(0, 0, 0, 0.34),
-        0 0 12px rgba(0, 0, 0, 0.14);
-      white-space: nowrap;
-    }
-
-    .next-show-time {
-      color: inherit;
-    }
-
-    /* Supplemental top-right region */
-
-    .supplemental-region {
-      align-items: center;
-      display: flex;
-      height: var(--tile-height);
-      justify-content: flex-end;
-      left: 1450px;
-      position: absolute;
-      top: 0;
-      width: 430px;
-    }
-
-    .accessibility-icon {
-      align-items: center;
-      animation: accessibilityIconSettle 520ms ease both;
-      aspect-ratio: 1 / 1;
-      background: var(--vaq-blue);
-      border-radius: 999px;
-      display: flex;
-      flex: 0 0 auto;
-      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
-      height: 92px;
-      justify-content: center;
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      transition:
-        opacity 420ms ease,
-        transform 420ms ease;
-      width: 92px;
-    }
-
-    .accessibility-icons {
-      align-items: center;
-      display: flex;
-      gap: 18px;
-      justify-content: flex-end;
-      transition:
-        opacity 420ms ease,
-        transform 420ms ease;
-      width: 100%;
-    }
-
-    .accessibility-icon img {
-      display: block;
-      max-height: calc(100% - 6px);
-      max-width: calc(100% - 6px);
-    }
-
-    .accessibility-icons[data-count="5"] {
-      gap: 12px;
-    }
-
-    .accessibility-icons[data-count="5"] .accessibility-icon {
-      height: 76px;
-      width: 76px;
-    }
-
-    .accessibility-icons.is-muted {
-      opacity: 0;
-      transform: translateY(6px);
-      transition:
-        opacity 420ms ease,
-        transform 420ms ease;
-    }
-
-    .supplemental-region.is-empty {
-      display: none;
-    }
-
-    .testimonial-panel {
-      color: #ffffff;
-      display: none;
-      font-size: 34px;
-      font-style: italic;
-      line-height: 1.16;
-      max-width: 780px;
-      opacity: 0;
-      text-align: right;
-      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
-      transform: translateY(6px);
-      transition:
-        opacity 500ms ease,
-        transform 500ms ease;
-    }
-
-    .testimonial-panel.is-visible {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Showtimes */
-
-    .showtimes-region {
-      align-items: center;
-      display: flex;
-      height: 430px;
-      justify-content: center;
-      left: 600px;
-      position: absolute;
-      top: 195px;
-      width: 1280px;
-    }
-
-    .showtimes-grid {
-      align-content: center;
-      align-items: center;
-      column-gap: var(--showtime-column-gap);
-      display: grid;
-      grid-auto-columns: minmax(260px, auto);
-      grid-auto-flow: column;
-      grid-template-rows: repeat(var(--rows-per-column, 3), auto);
-      justify-content: center;
-      row-gap: var(--showtime-row-gap);
-      width: 100%;
-    }
-
-    .showtimes-grid.is-compact {
-      column-gap: 82px;
-    }
-
-    .showtimes-grid.is-spacious {
-      column-gap: 150px;
-    }
-
-    .showtime-item {
-      color: #ffffff;
-      font-size: var(--showtime-font-size);
-      font-weight: 700;
-      line-height: 1;
-      min-width: 360px;
-      opacity: 1;
-      text-align: left;
-      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
-      transform-origin: center center;
-      transition:
-        opacity var(--transition-page) ease,
-        transform var(--transition-page) ease;
-      white-space: nowrap;
-    }
-
-    .showtime-item.is-moving {
-      z-index: 2;
-    }
-
-    .showtime-item.is-next {
-      color: var(--vaq-gold);
-    }
-
-    .showtime-item.is-entering {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-
-    .showtime-item.is-exiting {
-      opacity: 0;
-      transform: translateY(-12px);
-    }
-
-    .showtime-item.is-departing {
-      color: rgba(255, 255, 255, 0.62);
-      transform: translateY(-10px) scale(0.96);
-    }
-
-    .showtime-meridiem {
-      font-size: 0.52em;
-      padding-left: 9px;
-    }
-
-    .showtimes-end-message {
-      color: #ffffff;
-      font-size: 54px;
-      font-weight: 700;
-      grid-column: 1 / -1;
-      line-height: 1.12;
-      max-width: 880px;
-      opacity: 0.96;
-      padding: 28px 38px;
-      text-align: center;
-      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
-    }
-
-    .showtimes-end-message span {
-      color: rgba(255, 255, 255, 0.86);
-      display: block;
-      font-size: 0.62em;
-      line-height: 1.18;
-      margin-top: 12px;
-    }
-
-    /* Advisory */
-
-    .advisory-region {
-      align-items: center;
-      bottom: 10px;
-      display: grid;
-      gap: 22px;
-      grid-template-columns: 72px minmax(0, 1fr);
-      left: 600px;
-      min-height: 74px;
-      position: absolute;
-      width: 1280px;
-    }
-
-    .advisory-icon {
-      align-items: center;
-      background: var(--vaq-green);
-      border-radius: 999px;
-      box-shadow:
-        inset 0 0 0 4px rgba(255,255,255,0.10),
-        0 3px 6px rgba(0,0,0,0.24);
-      display: flex;
-      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
-      height: 72px;
-      justify-content: center;
-      width: 72px;
-    }
-
-    .advisory-icon img {
-      display: block;
-      max-height: calc(100% - 6px);
-      max-width: calc(100% - 6px);
-    }
-
-    .advisory-text {
-      color: #ffffff;
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      line-height: 1.16;
-      margin: 0;
-      max-height: 74px;
-      overflow: hidden;
-      opacity: 1;
-      text-shadow: 0 3px 3px rgba(0, 0, 0, 0.30);
-      transform: translateY(0);
-      transition:
-        opacity 500ms ease,
-        transform 500ms ease;
-    }
-
-    .advisory-text.is-fading {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-
-    @keyframes slowRotate {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(-360deg);
-      }
-    }
-    @keyframes accessibilityIconSettle {
-      from {
-        opacity: 0;
-        transform: translateY(8px) scale(0.92);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-  </style>
-</head>
 
 <body>
   <main class="page">
@@ -624,6 +24,18 @@
       <div id="status-panel" class="status-panel" hidden></div>
 
       <section id="sign-layout" class="sign-layout" hidden>
+        <section class="mobile-summary" aria-label="Today’s 4D showtimes mobile summary">
+          <h1 id="mobile-film-title" class="mobile-film-title">4D Showtimes</h1>
+
+          <div class="mobile-showtimes-card">
+            <p class="mobile-section-label">Today’s showtimes</p>
+            <div id="mobile-showtimes-list" class="mobile-showtimes-list"></div>
+          </div>
+
+          <div id="mobile-accessibility-icons" class="mobile-accessibility-icons"></div>
+
+          <p id="mobile-advisory-text" class="mobile-advisory-text"></p>
+        </section>
         <div class="poster-region">
           <div id="poster-frame" class="poster-frame" aria-hidden="true"></div>
           <div class="poster-glow" aria-hidden="true"></div>
@@ -741,6 +153,10 @@
     };
 
     const ui = {
+      mobileFilmTitle: document.getElementById('mobile-film-title'),
+      mobileShowtimesList: document.getElementById('mobile-showtimes-list'),
+      mobileAccessibilityIcons: document.getElementById('mobile-accessibility-icons'),
+      mobileAdvisoryText: document.getElementById('mobile-advisory-text'),
       statusPanel: document.getElementById('status-panel'),
       signLayout: document.getElementById('sign-layout'),
       posterFrame: document.getElementById('poster-frame'),
@@ -756,6 +172,57 @@
       advisoryRegion: document.getElementById('advisory-region'),
       advisoryText: document.getElementById('advisory-text')
     };
+
+    function renderMobileSummary(data) {
+      const futureShowtimes = getFutureShowtimes(data.showtimes);
+      const activeAccessibilityItems = getActiveAccessibilityItems(data.accessibility).slice(0, 5);
+      const activeAdvisories = getActiveTextItems(data.advisories);
+
+      ui.mobileFilmTitle.textContent = data.film_title || '4D Showtimes';
+
+      ui.mobileShowtimesList.innerHTML = '';
+
+      if (!futureShowtimes.length) {
+        ui.mobileShowtimesList.innerHTML = `
+          <div class="mobile-end-message">
+            Shows have ended for today.
+          </div>
+        `;
+      } else {
+        futureShowtimes.forEach((showtime, index) => {
+          const item = document.createElement('div');
+          item.className = 'mobile-showtime-item';
+          item.classList.toggle('is-next', index === 0);
+          item.textContent = formatShowtime(showtime.show_at);
+          ui.mobileShowtimesList.appendChild(item);
+        });
+      }
+
+      ui.mobileAccessibilityIcons.innerHTML = '';
+
+      activeAccessibilityItems.forEach((item) => {
+        const circle = document.createElement('div');
+        circle.className = 'mobile-accessibility-icon';
+        circle.title = item.text;
+
+        const img = document.createElement('img');
+        img.src = ACCESSIBILITY_ICON_BY_KEY[item.key] || ACCESSIBILITY_ICON_BY_KEY.information;
+        img.alt = '';
+
+        circle.appendChild(img);
+        ui.mobileAccessibilityIcons.appendChild(circle);
+      });
+
+      ui.mobileAccessibilityIcons.hidden = activeAccessibilityItems.length === 0;
+
+      if (activeAdvisories.length) {
+        ui.mobileAdvisoryText.textContent = activeAdvisories[0].text;
+        ui.mobileAdvisoryText.hidden = false;
+      } else {
+        ui.mobileAdvisoryText.textContent = '';
+        ui.mobileAdvisoryText.hidden = true;
+      }
+    }
 
     function showStatus(message) {
       clearTimers();
@@ -1515,6 +982,8 @@
 
       state.lastPayloadSignature = getPayloadSignature(data);
       state.schedule = data;
+
+      renderMobileSummary(data);
 
       renderPoster(data);
       renderAccessibility(data);
