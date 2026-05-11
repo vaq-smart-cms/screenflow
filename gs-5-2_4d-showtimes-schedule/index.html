@@ -362,9 +362,11 @@
     .accessibility-icon {
       align-items: center;
       animation: accessibilityIconSettle 520ms ease both;
+      aspect-ratio: 1 / 1;
       background: var(--vaq-blue);
       border-radius: 999px;
       display: flex;
+      flex: 0 0 auto;
       filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.30));
       height: 92px;
       justify-content: center;
@@ -394,12 +396,12 @@
     }
 
     .accessibility-icons[data-count="5"] {
-      gap: 22px;
+      gap: 12px;
     }
 
     .accessibility-icons[data-count="5"] .accessibility-icon {
-      height: 90px;
-      width: 90px;
+      height: 76px;
+      width: 76px;
     }
 
     .accessibility-icons.is-muted {

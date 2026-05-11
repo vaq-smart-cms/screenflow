@@ -1364,6 +1364,10 @@ select:disabled {
 
 /* Shared actions panel controls */
 
+.actions-panel {
+  margin-top: 16px;
+}
+
 .actions-panel .inline-action-row {
   align-items: stretch;
 }
