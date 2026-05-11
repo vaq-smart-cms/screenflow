@@ -38,13 +38,6 @@
         <p id="session-text">Signed in as: Admin User</p>
       </div>
       <div class="inline-action-row">
-        <label class="theme-toggle-control" title="Toggle Night Mode">
-          <span class="theme-toggle-label">Night Mode</span>
-          <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
-          <span class="theme-toggle-track" aria-hidden="true">
-            <span class="theme-toggle-knob"></span>
-          </span>
-        </label>
         <a class="button-link" href="./admin.html">
           <button class="neutral" type="button">← Back to Calendar</button>
         </a>
@@ -133,12 +126,19 @@
         </button>
       </div>
 
-      <!-- E — Actions -->
-      <div class="panel">
+     <!-- E — Actions -->
+      <div class="panel actions-panel">
         <h2>Actions</h2>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div class="inline-action-row">
           <button id="duplicate-load-button" class="neutral" type="button">Duplicate Load</button>
           <button id="delete-load-button" class="danger" type="button">Delete Load</button>
+          <label class="theme-toggle-control" title="Toggle Night Mode">
+            <span class="theme-toggle-label">Night Mode</span>
+            <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-knob"></span>
+            </span>
+          </label>
         </div>
       </div>
     </div>
