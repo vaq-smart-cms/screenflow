@@ -84,6 +84,10 @@
     const TRANSITION_DURATION_MS = 520;
     const BOUNDARY_FUDGE_MS = 250;
 
+    const PUBLIC_NO_SCHEDULE_MESSAGE = "Stay tuned! We're still setting up today’s schedule... 🐟";
+    const MOBILE_NO_SCHEDULE_MESSAGE = "Ask your supervisor to build today’s schedule! ⌚";
+    const LOAD_ERROR_MESSAGE = 'Program schedule could not be loaded right now.';
+
     const LAYOUT = {
       leftX: 0,
       rightX: 950,
@@ -118,15 +122,22 @@
       }
     }
 
-    function showStatus(message) {
+    function showStatus(message, options = {}) {
       clearLineTimers();
       clearTransitionTimer();
+
       statusPanel.hidden = false;
       statusPanel.textContent = message;
+
       grid.hidden = true;
-      mobileSchedule.hidden = true;
       grid.innerHTML = '';
       state.tileElementsById.clear();
+
+      if (options.keepMobileVisible) {
+        mobileSchedule.hidden = false;
+      } else {
+        mobileSchedule.hidden = true;
+      }
     }
 
     function showGrid() {
@@ -471,6 +482,16 @@
       showGrid();
     }
 
+    function renderMobileEmptySchedule(message = MOBILE_NO_SCHEDULE_MESSAGE) {
+      mobileProgramList.innerHTML = `
+        <div class="mobile-empty-message">
+          ${message}
+        </div>
+      `;
+
+      mobileSchedule.hidden = false;
+    }
+
     function renderMobileSchedule(entries, programStates) {
       mobileProgramList.innerHTML = '';
 
@@ -530,7 +551,10 @@
 
       renderMobileSchedule(visible, programStates);
 
-      if (!visible.length) return showStatus('No programs scheduled today');
+      if (!visible.length) {
+        renderMobileEmptySchedule('No remaining programs scheduled today.');
+        return showStatus('Thanks for visiting! Today’s programs have finished.', { keepMobileVisible: true });
+      }
 
       reconcile(visible, programStates);
 
@@ -543,6 +567,7 @@
 
     async function initialize() {
       showStatus('Loading program schedule...');
+      startMobileDateTimeClock();
 
       const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE_NAME }).format(new Date());
 
@@ -551,8 +576,14 @@
         supabaseClient.from('program_schedule_sets').select('*').eq('schedule_date', today).eq('mode', 'live').maybeSingle()
       ]);
 
-      if (locRes.error || schedRes.error || !schedRes.data) {
-        return showStatus('Schedule unavailable');
+      if (locRes.error || schedRes.error) {
+        renderMobileEmptySchedule(LOAD_ERROR_MESSAGE);
+        return showStatus(LOAD_ERROR_MESSAGE, { keepMobileVisible: true });
+      }
+
+      if (!schedRes.data) {
+        renderMobileEmptySchedule(MOBILE_NO_SCHEDULE_MESSAGE);
+        return showStatus(PUBLIC_NO_SCHEDULE_MESSAGE, { keepMobileVisible: true });
       }
 
       const locMap = Object.fromEntries(locRes.data.map(l => [l.location_key, l]));
@@ -586,7 +617,6 @@
 
       state.visibleEntries = visible;
       showGrid();
-      startMobileDateTimeClock();
       refreshQueue();
     }
 
