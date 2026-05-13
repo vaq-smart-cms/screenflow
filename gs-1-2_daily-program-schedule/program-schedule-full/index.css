@@ -45,16 +45,12 @@
 
   --title-color: rgba(255, 255, 255, 0.98);
   --meta-color: rgba(255, 255, 255, 0.92);
-  --description-color: rgba(255, 255, 255, 0.94);
 
   --page-fallback: #113466;
   --status-bg: rgba(0, 0, 0, 0.22);
   --status-text: #ffffff;
 
   --page-fade-duration: 450ms;
-  --line-fade-duration: 380ms;
-  --meta-hold-ms: 3200;
-  --desc-hold-ms: 3200;
 }
 
 * {
@@ -269,8 +265,7 @@ body {
 /* Shared line styling:
    Slightly looser line-height improves glyph rendering and accessibility,
    especially for italic forms and narrow descenders. */
-.program-meta,
-.program-description {
+.program-meta {
   position: absolute;
   left: 0;
   top: 0;
@@ -301,18 +296,8 @@ body {
   line-height: 1.2;
 }
 
-.program-description {
-  color: var(--description-color);
-  font-size: 23px;
-  line-height: 1.18;
-}
-
 .program-tile.is-current .program-meta {
   color: var(--active-meta-color);
-}
-
-.program-tile.is-current .program-description {
-  color: var(--active-description-color);
 }
 
 .program-tile.is-current {
@@ -553,14 +538,6 @@ body {
     font-style: italic;
     font-weight: 400;
     line-height: 1.1;
-  }
-
-  .mobile-program-description {
-    color: rgba(255, 255, 255, 0.88);
-    font-size: 17px;
-    font-style: italic;
-    line-height: 1.2;
-    margin: 8px 0 0;
   }
 
   .mobile-empty-message {

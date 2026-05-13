@@ -78,9 +78,6 @@
     const TIMEZONE_NAME = 'America/Vancouver';
     const TILE_OPACITY = 0.80;
 
-    const META_HOLD_MS = 4000;
-    const DESC_HOLD_MS = 4000;
-
     const TRANSITION_DURATION_MS = 520;
     const BOUNDARY_FUDGE_MS = 250;
     const DATA_REFRESH_MS = 10000;
@@ -104,7 +101,6 @@
       tileElementsById: new Map(),
       transitionTimerId: null,
       liveRefreshTimerId: null,
-      lineTimerIds: [],
       lastPayloadSignature: ''
     };
 
@@ -112,11 +108,6 @@
     const grid = document.getElementById('grid');
     const mobileSchedule = document.getElementById('mobile-schedule');
     const mobileProgramList = document.getElementById('mobile-program-list');
-
-    function clearLineTimers() {
-      state.lineTimerIds.forEach(clearTimeout);
-      state.lineTimerIds = [];
-    }
 
     function clearTransitionTimer() {
       if (state.transitionTimerId) {
@@ -126,7 +117,6 @@
     }
 
     function showStatus(message, options = {}) {
-      clearLineTimers();
       clearTransitionTimer();
 
       statusPanel.hidden = false;
@@ -332,38 +322,6 @@
       return `${formatTime12Hour(e.start_time)} @ ${e.location_name}`;
     }
 
-    function scheduleLineSwap(slot, hasDescription) {
-      if (!slot) return;
-
-      slot.classList.remove('show-description');
-      slot.classList.add('show-meta');
-
-      if (!hasDescription) {
-        return;
-      }
-
-      const toDesc = () => {
-        slot.classList.remove('show-meta');
-        slot.classList.add('show-description');
-      };
-
-      const toMeta = () => {
-        slot.classList.remove('show-description');
-        slot.classList.add('show-meta');
-      };
-
-      const t1 = setTimeout(() => {
-        toDesc();
-        const t2 = setTimeout(() => {
-          toMeta();
-          scheduleLineSwap(slot, hasDescription);
-        }, DESC_HOLD_MS + 380);
-        state.lineTimerIds.push(t2);
-      }, META_HOLD_MS);
-
-      state.lineTimerIds.push(t1);
-    }
-
     function applyTileStateClasses(tile, entryId, programStates) {
       tile.classList.toggle('is-next', programStates.nextIds.has(entryId));
     }
@@ -409,22 +367,14 @@
       meta.className = 'program-meta';
       meta.textContent = buildMetaLine(entry);
 
-      const desc = document.createElement('div');
-      desc.className = 'program-description';
-      desc.textContent = String(entry.description || '').trim();
-
-      slot.append(meta, desc);
+      slot.append(meta);
       content.append(title, slot);
       tile.append(icon, content);
-
-      scheduleLineSwap(slot, !!String(entry.description || '').trim());
 
       return tile;
     }
 
     function reconcile(newEntries, programStates) {
-      clearLineTimers();
-
       const oldIds = new Set(state.visibleEntries.map(e => e.id));
       const newIds = new Set(newEntries.map(e => e.id));
 
@@ -444,7 +394,6 @@
       newEntries.forEach((e, i) => {
         const pos = getTilePosition(i);
         const existing = state.tileElementsById.get(e.id);
-        const hasDescription = !!String(e.description || '').trim();
 
         if (existing) {
           existing.style.transitionDelay = `${i * 18}ms`;
@@ -456,14 +405,10 @@
 
           const titleEl = existing.querySelector('.program-title');
           const metaEl = existing.querySelector('.program-meta');
-          const descEl = existing.querySelector('.program-description');
-          const slotEl = existing.querySelector('.program-line-slot');
 
           if (titleEl) titleEl.textContent = e.title;
           if (metaEl) metaEl.textContent = buildMetaLine(e);
-          if (descEl) descEl.textContent = String(e.description || '').trim();
-
-          scheduleLineSwap(slotEl, hasDescription);
+          
         } else {
           const t = createTile(e, i, programStates);
           t.style.opacity = '0';
@@ -534,13 +479,6 @@
         location.textContent = entry.location_name;
 
         content.append(time, title, location);
-
-        if (String(entry.description || '').trim()) {
-          const description = document.createElement('p');
-          description.className = 'mobile-program-description';
-          description.textContent = String(entry.description || '').trim();
-          content.appendChild(description);
-        }
 
         item.append(icon, content);
         mobileProgramList.appendChild(item);

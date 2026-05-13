@@ -215,10 +215,48 @@
       position: relative;
       z-index: 2;
       min-width: 0;
+      min-height: 170px;
+    }
+
+    .program-info-layer,
+    .program-description-layer {
+      position: absolute;
+      inset: 22px 34px 26px 26px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 22px 34px 26px 26px;
+      transition:
+        opacity 420ms ease,
+        transform 420ms ease;
+    }
+
+    .program-info-layer {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .program-description-layer {
+      color: rgba(255, 255, 255, 0.96);
+      font-size: 33px;
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.16;
+      opacity: 0;
+      overflow: hidden;
+      text-wrap: balance;
+      transform: translateY(8px);
+    }
+
+    .program-content.show-info .program-info-layer,
+    .program-content.show-description .program-description-layer {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .program-content.show-description .program-info-layer,
+    .program-content.show-info .program-description-layer {
+      opacity: 0;
+      transform: translateY(-8px);
     }
 
     .program-title {
@@ -276,13 +314,16 @@
     const BOUNDARY_FUDGE_MS = 250;
     const MAX_NEXT_PROGRAMS = 3;
     const NEXT_PROGRAM_GRACE_MINUTES = 5;
+    const INFO_HOLD_MS = 5000;
+    const DESCRIPTION_HOLD_MS = 6500;
 
     const state = {
       allEntries: [],
       renderedSignature: '',
       payloadSignature: '',
       boundaryTimerId: null,
-      liveRefreshTimerId: null
+      liveRefreshTimerId: null,
+      swapTimerIds: []
     };
 
     const statusPanel = document.getElementById('status-panel');
@@ -303,6 +344,11 @@
       }
     }
 
+    function clearSwapTimers() {
+      state.swapTimerIds.forEach(clearTimeout);
+      state.swapTimerIds = [];
+    }
+
     function normalizeHexColor(hex) {
       return /^#[0-9a-fA-F]{6}$/.test(hex || '') ? hex : '#446688';
     }
@@ -317,6 +363,7 @@
 
     function showStatus(message) {
       clearBoundaryTimer();
+      clearSwapTimers();
       statusPanel.hidden = false;
       statusPanel.textContent = message;
       moduleEl.hidden = true;
@@ -423,6 +470,36 @@
         .sort((a, b) => a - b)[0] ?? null;
     }
 
+    function scheduleDescriptionSwap(content, hasDescription) {
+      if (!content || !hasDescription) return;
+
+      content.classList.remove('show-description');
+      content.classList.add('show-info');
+
+      const showDescription = () => {
+        content.classList.remove('show-info');
+        content.classList.add('show-description');
+      };
+
+      const showInfo = () => {
+        content.classList.remove('show-description');
+        content.classList.add('show-info');
+      };
+
+      const firstTimer = setTimeout(() => {
+        showDescription();
+
+        const secondTimer = setTimeout(() => {
+          showInfo();
+          scheduleDescriptionSwap(content, hasDescription);
+        }, DESCRIPTION_HOLD_MS);
+
+        state.swapTimerIds.push(secondTimer);
+      }, INFO_HOLD_MS);
+
+      state.swapTimerIds.push(firstTimer);
+    }
+
     function createCard(entry) {
       const card = document.createElement('article');
       card.className = 'program-card entering';
@@ -438,7 +515,10 @@
       icon.appendChild(img);
 
       const content = document.createElement('div');
-      content.className = 'program-content';
+      content.className = 'program-content show-info';
+
+      const infoLayer = document.createElement('div');
+      infoLayer.className = 'program-info-layer';
 
       const title = document.createElement('div');
       title.className = 'program-title';
@@ -448,13 +528,23 @@
       meta.className = 'program-meta';
       meta.textContent = buildMetaLine(entry);
 
-      content.append(title, meta);
+      infoLayer.append(title, meta);
+
+      const descriptionLayer = document.createElement('div');
+      descriptionLayer.className = 'program-description-layer';
+      descriptionLayer.textContent = String(entry.description || '').trim();
+
+      content.append(infoLayer, descriptionLayer);
       card.append(icon, content);
+
+      scheduleDescriptionSwap(content, !!descriptionLayer.textContent);
 
       return card;
     }
 
     function renderNextPrograms(nextPrograms) {
+      clearSwapTimers();
+
       const signature = JSON.stringify(nextPrograms.map(entry => ({
         id: entry.id,
         title: entry.title,
@@ -463,7 +553,8 @@
         location_key: entry.location_key,
         location_name: entry.location_name,
         hex_color: entry.hex_color,
-        icon_path: entry.icon_path
+        icon_path: entry.icon_path,
+        description: entry.description || ''
       })));
       if (signature === state.renderedSignature) {
         showModule();
