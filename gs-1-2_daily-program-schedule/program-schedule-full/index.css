@@ -484,7 +484,7 @@ body {
       linear-gradient(
         90deg,
         color-mix(in srgb, var(--mobile-location-color) 72%, transparent),
-        rgba(0, 0, 0, 0.22)
+        rgba(0, 0, 0, 0.42)
       );
     border-radius: 18px;
     box-shadow:
