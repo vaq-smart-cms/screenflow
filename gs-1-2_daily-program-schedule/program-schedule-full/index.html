@@ -83,6 +83,7 @@
 
     const TRANSITION_DURATION_MS = 520;
     const BOUNDARY_FUDGE_MS = 250;
+    const DATA_REFRESH_MS = 10000;
 
     const PUBLIC_NO_SCHEDULE_MESSAGE = "Stay tuned! We're still setting up today’s schedule... 🐟";
     const MOBILE_NO_SCHEDULE_MESSAGE = "You otter' build the schedule for today! 🦦⌚";
@@ -102,7 +103,9 @@
       visibleEntries: [],
       tileElementsById: new Map(),
       transitionTimerId: null,
-      lineTimerIds: []
+      liveRefreshTimerId: null,
+      lineTimerIds: [],
+      lastPayloadSignature: ''
     };
 
     const statusPanel = document.getElementById('status-panel');
@@ -565,11 +568,25 @@
       state.transitionTimerId = setTimeout(refreshQueue, ms);
     }
 
-    async function initialize() {
-      showStatus('Loading program schedule...');
-      startMobileDateTimeClock();
+    function getTodayInVancouver() {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE_NAME
+      }).format(new Date());
+    }
 
-      const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE_NAME }).format(new Date());
+    function getPayloadSignature(scheduleData, locationStylesData) {
+      if (!scheduleData) return '';
+
+      return JSON.stringify({
+        schedule_id: scheduleData.id,
+        updated_at: scheduleData.updated_at,
+        entries_json: scheduleData.entries_json,
+        location_styles: locationStylesData
+      });
+    }
+
+    async function fetchLiveSchedule() {
+      const today = getTodayInVancouver();
 
       const [locRes, schedRes] = await Promise.all([
         supabaseClient.from('program_location_styles').select('*').eq('is_active', true),
@@ -577,18 +594,22 @@
       ]);
 
       if (locRes.error || schedRes.error) {
-        renderMobileEmptySchedule(LOAD_ERROR_MESSAGE);
-        return showStatus(LOAD_ERROR_MESSAGE, { keepMobileVisible: true });
+        throw locRes.error || schedRes.error;
       }
 
-      if (!schedRes.data) {
-        renderMobileEmptySchedule(MOBILE_NO_SCHEDULE_MESSAGE);
-        return showStatus(PUBLIC_NO_SCHEDULE_MESSAGE, { keepMobileVisible: true });
-      }
+      return {
+        locationStyles: locRes.data || [],
+        schedule: schedRes.data || null
+      };
+    }
 
-      const locMap = Object.fromEntries(locRes.data.map(l => [l.location_key, l]));
+    function applyLiveSchedule(locationStyles, schedule) {
+      const locMap = Object.fromEntries(locationStyles.map(l => [l.location_key, l]));
 
-      state.allEntries = schedRes.data.entries_json
+      state.locationStyles = locationStyles;
+      state.liveSchedule = schedule;
+
+      state.allEntries = schedule.entries_json
         .filter(e => !e.is_cancelled)
         .map(e => ({
           ...e,
@@ -600,24 +621,72 @@
         }))
         .sort((a, b) => a.start_minutes - b.start_minutes);
 
-      grid.innerHTML = '';
-      state.tileElementsById.clear();
-
-      const now = getCurrentMinutesInVancouver();
-      const visible = getVisibleEntries(state.allEntries, now);
-      const programStates = resolveNextProgramStates(state.allEntries, now);
-
-      renderMobileSchedule(visible, programStates);
-
-      visible.forEach((e, i) => {
-        const t = createTile(e, i, programStates);
-        grid.appendChild(t);
-        state.tileElementsById.set(e.id, t);
-      });
-
-      state.visibleEntries = visible;
-      showGrid();
       refreshQueue();
+    }
+
+    function scheduleLiveRefresh() {
+      if (state.liveRefreshTimerId) {
+        clearTimeout(state.liveRefreshTimerId);
+        state.liveRefreshTimerId = null;
+      }
+
+      state.liveRefreshTimerId = setTimeout(async () => {
+        try {
+          const liveData = await fetchLiveSchedule();
+          const nextSignature = getPayloadSignature(liveData.schedule, liveData.locationStyles);
+
+          if (!liveData.schedule) {
+            if (state.lastPayloadSignature !== '') {
+              state.lastPayloadSignature = '';
+              state.allEntries = [];
+              renderMobileEmptySchedule(MOBILE_NO_SCHEDULE_MESSAGE);
+              showStatus(PUBLIC_NO_SCHEDULE_MESSAGE, { keepMobileVisible: true });
+            }
+
+            scheduleLiveRefresh();
+            return;
+          }
+
+          if (nextSignature !== state.lastPayloadSignature) {
+            state.lastPayloadSignature = nextSignature;
+            applyLiveSchedule(liveData.locationStyles, liveData.schedule);
+          }
+        } catch (error) {
+          console.error('Live program schedule refresh failed:', error);
+        }
+
+        scheduleLiveRefresh();
+      }, DATA_REFRESH_MS);
+    }
+
+    async function initialize() {
+      showStatus('Loading program schedule...');
+      startMobileDateTimeClock();
+
+      try {
+        const liveData = await fetchLiveSchedule();
+
+        if (!liveData.schedule) {
+          state.lastPayloadSignature = '';
+          renderMobileEmptySchedule(MOBILE_NO_SCHEDULE_MESSAGE);
+          showStatus(PUBLIC_NO_SCHEDULE_MESSAGE, { keepMobileVisible: true });
+          scheduleLiveRefresh();
+          return;
+        }
+
+        state.lastPayloadSignature = getPayloadSignature(liveData.schedule, liveData.locationStyles);
+
+        grid.innerHTML = '';
+        state.tileElementsById.clear();
+
+        applyLiveSchedule(liveData.locationStyles, liveData.schedule);
+        scheduleLiveRefresh();
+      } catch (error) {
+        console.error('Failed to load live program schedule:', error);
+        renderMobileEmptySchedule(LOAD_ERROR_MESSAGE);
+        showStatus(LOAD_ERROR_MESSAGE, { keepMobileVisible: true });
+        scheduleLiveRefresh();
+      }
     }
 
     document.addEventListener('DOMContentLoaded', initialize);

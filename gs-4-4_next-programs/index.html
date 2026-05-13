@@ -272,6 +272,7 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const TIMEZONE_NAME = 'America/Vancouver';
+    const DATA_REFRESH_MS = 10000;
     const BOUNDARY_FUDGE_MS = 250;
     const MAX_NEXT_PROGRAMS = 3;
     const NEXT_PROGRAM_GRACE_MINUTES = 5;
@@ -279,17 +280,26 @@
     const state = {
       allEntries: [],
       renderedSignature: '',
-      refreshTimerId: null
+      payloadSignature: '',
+      boundaryTimerId: null,
+      liveRefreshTimerId: null
     };
 
     const statusPanel = document.getElementById('status-panel');
     const moduleEl = document.getElementById('module');
     const cardsList = document.getElementById('cards-list');
 
-    function clearRefreshTimer() {
-      if (state.refreshTimerId) {
-        clearTimeout(state.refreshTimerId);
-        state.refreshTimerId = null;
+    function clearBoundaryTimer() {
+      if (state.boundaryTimerId) {
+        clearTimeout(state.boundaryTimerId);
+        state.boundaryTimerId = null;
+      }
+    }
+
+    function clearLiveRefreshTimer() {
+      if (state.liveRefreshTimerId) {
+        clearTimeout(state.liveRefreshTimerId);
+        state.liveRefreshTimerId = null;
       }
     }
 
@@ -306,7 +316,7 @@
     }
 
     function showStatus(message) {
-      clearRefreshTimer();
+      clearBoundaryTimer();
       statusPanel.hidden = false;
       statusPanel.textContent = message;
       moduleEl.hidden = true;
@@ -445,7 +455,16 @@
     }
 
     function renderNextPrograms(nextPrograms) {
-      const signature = nextPrograms.map(entry => entry.id).join('|');
+      const signature = JSON.stringify(nextPrograms.map(entry => ({
+        id: entry.id,
+        title: entry.title,
+        start_time: entry.start_time,
+        end_time: entry.end_time,
+        location_key: entry.location_key,
+        location_name: entry.location_name,
+        hex_color: entry.hex_color,
+        icon_path: entry.icon_path
+      })));
       if (signature === state.renderedSignature) {
         showModule();
         return;
@@ -469,13 +488,15 @@
     }
 
     function scheduleBoundaryRefresh() {
-      clearRefreshTimer();
+      clearBoundaryTimer();
+
       const nowMinutes = getCurrentMinutesInVancouver();
       const nextBoundary = getNextBoundaryMinutes(state.allEntries, nowMinutes);
+
       if (nextBoundary === null) return;
 
       const waitMs = getMillisecondsUntilVancouverMinute(nextBoundary) + BOUNDARY_FUDGE_MS;
-      state.refreshTimerId = setTimeout(refreshProgramsFromCache, waitMs);
+      state.boundaryTimerId = setTimeout(refreshProgramsFromCache, waitMs);
     }
 
     function refreshProgramsFromCache() {
@@ -490,33 +511,26 @@
       scheduleBoundaryRefresh();
     }
 
-    async function initialize() {
-      showStatus('Loading program schedule...');
+    function getTodayDateString() {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: TIMEZONE_NAME
+      }).format(new Date());
+    }
 
-      const today = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE_NAME }).format(new Date());
+    function getPayloadSignature(scheduleData, locationData) {
+      return JSON.stringify({
+        schedule_updated_at: scheduleData?.updated_at || '',
+        entries_json: scheduleData?.entries_json || [],
+        locations: locationData || []
+      });
+    }
 
-      const [locationResponse, scheduleResponse] = await Promise.all([
-        supabaseClient
-          .from('program_location_styles')
-          .select('*')
-          .eq('is_active', true),
-        supabaseClient
-          .from('program_schedule_sets')
-          .select('*')
-          .eq('schedule_date', today)
-          .eq('mode', 'live')
-          .maybeSingle()
-      ]);
-
-      if (locationResponse.error || scheduleResponse.error || !scheduleResponse.data) {
-        return showStatus('Schedule unavailable');
-      }
-
+    function normalizeScheduleEntries(scheduleData, locationData) {
       const locationMap = Object.fromEntries(
-        locationResponse.data.map(location => [location.location_key, location])
+        locationData.map(location => [location.location_key, location])
       );
 
-      state.allEntries = (scheduleResponse.data.entries_json || [])
+      return (scheduleData.entries_json || [])
         .filter(entry => !entry.is_cancelled)
         .map(entry => ({
           ...entry,
@@ -531,12 +545,90 @@
           if (a.end_minutes !== b.end_minutes) return a.end_minutes - b.end_minutes;
           return (a.title || '').localeCompare(b.title || '');
         });
+    }
+
+    async function fetchLiveScheduleData() {
+      const today = getTodayDateString();
+
+      const [locationResponse, scheduleResponse] = await Promise.all([
+        supabaseClient
+          .from('program_location_styles')
+          .select('*')
+          .eq('is_active', true),
+        supabaseClient
+          .from('program_schedule_sets')
+          .select('*')
+          .eq('schedule_date', today)
+          .eq('mode', 'live')
+          .maybeSingle()
+      ]);
+
+      if (locationResponse.error) throw locationResponse.error;
+      if (scheduleResponse.error) throw scheduleResponse.error;
+
+      return {
+        locations: locationResponse.data || [],
+        schedule: scheduleResponse.data
+      };
+    }
+
+    function applyLiveScheduleData(scheduleData, locationData) {
+      state.payloadSignature = getPayloadSignature(scheduleData, locationData);
+      state.allEntries = normalizeScheduleEntries(scheduleData, locationData);
 
       if (!state.allEntries.length) {
-        return showStatus('No programs scheduled today');
+        showStatus('No programs scheduled today');
+        return;
       }
 
       refreshProgramsFromCache();
+    }
+
+    function scheduleLiveRefresh() {
+      clearLiveRefreshTimer();
+
+      state.liveRefreshTimerId = setTimeout(async () => {
+        try {
+          const { schedule, locations } = await fetchLiveScheduleData();
+
+          if (!schedule) {
+            showStatus('Schedule unavailable');
+            scheduleLiveRefresh();
+            return;
+          }
+
+          const nextPayloadSignature = getPayloadSignature(schedule, locations);
+
+          if (nextPayloadSignature !== state.payloadSignature) {
+            applyLiveScheduleData(schedule, locations);
+          }
+        } catch (error) {
+          console.error('Failed to refresh live next-program signage data:', error);
+        }
+
+        scheduleLiveRefresh();
+      }, DATA_REFRESH_MS);
+    }
+
+    async function initialize() {
+      showStatus('Loading program schedule...');
+
+      try {
+        const { schedule, locations } = await fetchLiveScheduleData();
+
+        if (!schedule) {
+          showStatus('Schedule unavailable');
+          scheduleLiveRefresh();
+          return;
+        }
+
+        applyLiveScheduleData(schedule, locations);
+        scheduleLiveRefresh();
+      } catch (error) {
+        console.error('Failed to load live next-program signage data:', error);
+        showStatus('Schedule unavailable');
+        scheduleLiveRefresh();
+      }
     }
 
     document.addEventListener('DOMContentLoaded', initialize);
