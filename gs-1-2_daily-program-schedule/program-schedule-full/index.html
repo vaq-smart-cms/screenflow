@@ -28,20 +28,6 @@
     <div class="content-layer">
       <div id="status-panel" class="status-panel" hidden></div>
 
-      <section id="mobile-schedule" class="mobile-schedule" hidden>
-        <header class="mobile-schedule-header">
-          <p class="mobile-kicker">Today at Vancouver Aquarium</p>
-
-          <h1 class="mobile-title">Program Schedule</h1>
-
-          <h2 id="mobile-datetime" class="mobile-datetime">
-            Monday, April 13 • 2:47 p.m.
-          </h2>
-        </header>
-
-        <div id="mobile-program-list" class="mobile-program-list"></div>
-      </section>
-
       <div id="grid" class="grid" hidden></div>
     </div>
   </main>
@@ -62,7 +48,6 @@
     const DATA_REFRESH_MS = 10000;
 
     const PUBLIC_NO_SCHEDULE_MESSAGE = "Stay tuned! We're still setting up today’s schedule... 🐟";
-    const MOBILE_NO_SCHEDULE_MESSAGE = "You otter' build the schedule for today! 🦦⌚";
     const LOAD_ERROR_MESSAGE = 'Program schedule could not be loaded right now.';
 
     const LAYOUT = {
@@ -85,9 +70,7 @@
 
     const statusPanel = document.getElementById('status-panel');
     const grid = document.getElementById('grid');
-    const mobileSchedule = document.getElementById('mobile-schedule');
-    const mobileProgramList = document.getElementById('mobile-program-list');
-
+    
     function clearTransitionTimer() {
       if (state.transitionTimerId) {
         clearTimeout(state.transitionTimerId);
@@ -95,7 +78,7 @@
       }
     }
 
-    function showStatus(message, options = {}) {
+    function showStatus(message) {
       clearTransitionTimer();
 
       statusPanel.hidden = false;
@@ -104,18 +87,11 @@
       grid.hidden = true;
       grid.innerHTML = '';
       state.tileElementsById.clear();
-
-      if (options.keepMobileVisible) {
-        mobileSchedule.hidden = false;
-      } else {
-        mobileSchedule.hidden = true;
-      }
     }
 
     function showGrid() {
       statusPanel.hidden = true;
       grid.hidden = false;
-      mobileSchedule.hidden = false;
     }
 
     function getCurrentVancouverParts() {
@@ -168,48 +144,12 @@
       return h * 60 + m;
     }
 
-    function formatMobileDateTime() {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: TIMEZONE_NAME,
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-        .format(new Date())
-        .replace(' a.m.', ' a.m.')
-        .replace(' p.m.', ' p.m.')
-        .replace(',', ' •');
-    }
-
     function formatTime12Hour(t) {
       if (!t) return '';
       const [h, m] = t.split(':').map(Number);
       const suffix = h >= 12 ? 'p.m.' : 'a.m.';
       const hour = h % 12 || 12;
       return `${hour}:${String(m).padStart(2,'0')} ${suffix}`;
-    }
-
-    let mobileDateTimeTimerId = null;
-
-    function startMobileDateTimeClock() {
-      const el = document.getElementById('mobile-datetime');
-
-      if (!el) return;
-
-      const update = () => {
-        el.textContent = formatMobileDateTime();
-      };
-
-      update();
-
-      if (mobileDateTimeTimerId) {
-        clearInterval(mobileDateTimeTimerId);
-      }
-
-      mobileDateTimeTimerId = setInterval(update, 60000);
     }
 
     function normalizeHexColor(hex) {
@@ -409,71 +349,13 @@
       showGrid();
     }
 
-    function renderMobileEmptySchedule(message = MOBILE_NO_SCHEDULE_MESSAGE) {
-      mobileProgramList.innerHTML = `
-        <div class="mobile-empty-message">
-          ${message}
-        </div>
-      `;
-
-      mobileSchedule.hidden = false;
-    }
-
-    function renderMobileSchedule(entries, programStates) {
-      mobileProgramList.innerHTML = '';
-
-      if (!entries.length) {
-        mobileProgramList.innerHTML = `
-          <div class="mobile-empty-message">
-            No remaining programs scheduled today.
-          </div>
-        `;
-        return;
-      }
-
-      entries.forEach((entry) => {
-        const item = document.createElement('article');
-        item.className = 'mobile-program-card';
-        item.classList.toggle('is-next', programStates.nextIds.has(entry.id));
-        item.style.setProperty('--mobile-location-color', normalizeHexColor(entry.hex_color));
-
-        const icon = document.createElement('img');
-        icon.className = 'mobile-program-icon';
-        icon.src = entry.icon_path;
-        icon.alt = '';
-
-        const content = document.createElement('div');
-        content.className = 'mobile-program-content';
-
-        const time = document.createElement('div');
-        time.className = 'mobile-program-time';
-        time.textContent = formatTime12Hour(entry.start_time);
-
-        const title = document.createElement('h2');
-        title.className = 'mobile-program-title';
-        title.textContent = entry.title;
-
-        const location = document.createElement('div');
-        location.className = 'mobile-program-location';
-        location.textContent = entry.location_name;
-
-        content.append(time, title, location);
-
-        item.append(icon, content);
-        mobileProgramList.appendChild(item);
-      });
-    }
-
     function refreshQueue() {
       const now = getCurrentMinutesInVancouver();
       const visible = getVisibleEntries(state.allEntries, now);
       const programStates = resolveNextProgramStates(state.allEntries, now);
 
-      renderMobileSchedule(visible, programStates);
-
       if (!visible.length) {
-        renderMobileEmptySchedule('No remaining programs scheduled today.');
-        return showStatus('Thanks for visiting! Today’s programs have finished.', { keepMobileVisible: true });
+        return showStatus('Thanks for visiting! Today’s programs have finished.');
       }
 
       reconcile(visible, programStates);
@@ -556,8 +438,7 @@
             if (state.lastPayloadSignature !== '') {
               state.lastPayloadSignature = '';
               state.allEntries = [];
-              renderMobileEmptySchedule(MOBILE_NO_SCHEDULE_MESSAGE);
-              showStatus(PUBLIC_NO_SCHEDULE_MESSAGE, { keepMobileVisible: true });
+              showStatus(PUBLIC_NO_SCHEDULE_MESSAGE);
             }
 
             scheduleLiveRefresh();
@@ -578,15 +459,13 @@
 
     async function initialize() {
       showStatus('Loading program schedule...');
-      startMobileDateTimeClock();
-
+      
       try {
         const liveData = await fetchLiveSchedule();
 
         if (!liveData.schedule) {
           state.lastPayloadSignature = '';
-          renderMobileEmptySchedule(MOBILE_NO_SCHEDULE_MESSAGE);
-          showStatus(PUBLIC_NO_SCHEDULE_MESSAGE, { keepMobileVisible: true });
+          showStatus(PUBLIC_NO_SCHEDULE_MESSAGE);
           scheduleLiveRefresh();
           return;
         }
@@ -600,8 +479,7 @@
         scheduleLiveRefresh();
       } catch (error) {
         console.error('Failed to load live program schedule:', error);
-        renderMobileEmptySchedule(LOAD_ERROR_MESSAGE);
-        showStatus(LOAD_ERROR_MESSAGE, { keepMobileVisible: true });
+        showStatus(LOAD_ERROR_MESSAGE);
         scheduleLiveRefresh();
       }
     }
