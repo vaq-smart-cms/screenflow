@@ -3,30 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta
-    id="viewport-meta"
     name="viewport"
     content="width=1920, initial-scale=0.6667, minimum-scale=0.6667, maximum-scale=0.6667, user-scalable=no"
   />
-  <script>
-    (function setResponsiveViewport() {
-      const isLikelyMobile =
-        window.matchMedia('(pointer: coarse)').matches &&
-        window.screen.width <= 900;
-
-      if (!isLikelyMobile) return;
-
-      document.documentElement.classList.add('is-mobile-view');
-
-      const viewportMeta = document.getElementById('viewport-meta');
-
-      if (viewportMeta) {
-        viewportMeta.setAttribute(
-          'content',
-          'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes'
-        );
-      }
-    })();
-  </script>
   <title>VAQ 4D Showtimes</title>
   <link rel="stylesheet" href="./index.css?v=1" />
 </head>
@@ -45,18 +24,6 @@
       <div id="status-panel" class="status-panel" hidden></div>
 
       <section id="sign-layout" class="sign-layout" hidden>
-        <section class="mobile-summary" aria-label="Today’s 4D showtimes mobile summary">
-          <h1 id="mobile-film-title" class="mobile-film-title">4D Showtimes</h1>
-
-          <div class="mobile-showtimes-card">
-            <p class="mobile-section-label">Today’s showtimes</p>
-            <div id="mobile-showtimes-list" class="mobile-showtimes-list"></div>
-          </div>
-
-          <div id="mobile-accessibility-icons" class="mobile-accessibility-icons"></div>
-
-          <p id="mobile-advisory-text" class="mobile-advisory-text"></p>
-        </section>
         <div class="poster-region">
           <div id="poster-frame" class="poster-frame" aria-hidden="true"></div>
           <div class="poster-glow" aria-hidden="true"></div>
@@ -174,10 +141,6 @@
     };
 
     const ui = {
-      mobileFilmTitle: document.getElementById('mobile-film-title'),
-      mobileShowtimesList: document.getElementById('mobile-showtimes-list'),
-      mobileAccessibilityIcons: document.getElementById('mobile-accessibility-icons'),
-      mobileAdvisoryText: document.getElementById('mobile-advisory-text'),
       statusPanel: document.getElementById('status-panel'),
       signLayout: document.getElementById('sign-layout'),
       posterFrame: document.getElementById('poster-frame'),
@@ -193,57 +156,6 @@
       advisoryRegion: document.getElementById('advisory-region'),
       advisoryText: document.getElementById('advisory-text')
     };
-
-    function renderMobileSummary(data) {
-      const futureShowtimes = getFutureShowtimes(data.showtimes);
-      const activeAccessibilityItems = getActiveAccessibilityItems(data.accessibility).slice(0, 5);
-      const activeAdvisories = getActiveTextItems(data.advisories);
-
-      ui.mobileFilmTitle.textContent = data.film_title || '4D Showtimes';
-
-      ui.mobileShowtimesList.innerHTML = '';
-
-      if (!futureShowtimes.length) {
-        ui.mobileShowtimesList.innerHTML = `
-          <div class="mobile-end-message">
-            Shows have ended for today.
-          </div>
-        `;
-      } else {
-        futureShowtimes.forEach((showtime, index) => {
-          const item = document.createElement('div');
-          item.className = 'mobile-showtime-item';
-          item.classList.toggle('is-next', index === 0);
-          item.textContent = formatShowtime(showtime.show_at);
-          ui.mobileShowtimesList.appendChild(item);
-        });
-      }
-
-      ui.mobileAccessibilityIcons.innerHTML = '';
-
-      activeAccessibilityItems.forEach((item) => {
-        const circle = document.createElement('div');
-        circle.className = 'mobile-accessibility-icon';
-        circle.title = item.text;
-
-        const img = document.createElement('img');
-        img.src = ACCESSIBILITY_ICON_BY_KEY[item.key] || ACCESSIBILITY_ICON_BY_KEY.information;
-        img.alt = '';
-
-        circle.appendChild(img);
-        ui.mobileAccessibilityIcons.appendChild(circle);
-      });
-
-      ui.mobileAccessibilityIcons.hidden = activeAccessibilityItems.length === 0;
-
-      if (activeAdvisories.length) {
-        ui.mobileAdvisoryText.textContent = activeAdvisories[0].text;
-        ui.mobileAdvisoryText.hidden = false;
-      } else {
-        ui.mobileAdvisoryText.textContent = '';
-        ui.mobileAdvisoryText.hidden = true;
-      }
-    }
 
     function showStatus(message) {
       clearTimers();
@@ -1003,8 +915,6 @@
 
       state.lastPayloadSignature = getPayloadSignature(data);
       state.schedule = data;
-
-      renderMobileSummary(data);
 
       renderPoster(data);
       renderAccessibility(data);
