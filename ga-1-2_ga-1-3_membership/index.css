@@ -1,0 +1,301 @@
+@font-face {
+  font-family: "Bliss Pro";
+  font-style: normal;
+  font-weight: 400;
+  src:
+    url("../assets/BlissPro-Regular.woff2") format("woff2"),
+    url("../assets/BlissPro-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Bliss Pro";
+  font-style: italic;
+  font-weight: 400;
+  src:
+    url("../assets/BlissPro-Italic.woff2") format("woff2"),
+    url("../assets/BlissPro-Italic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Bliss Pro";
+  font-style: normal;
+  font-weight: 700;
+  src:
+    url("../assets/BlissPro-Bold.woff2") format("woff2"),
+    url("../assets/BlissPro-Bold.woff") format("woff");
+}
+
+:root {
+  --accent-gold: #f3bc43;
+  --body-bg: #142845;
+  --body-top: 270px;
+  --crest-size: 320px;
+  --cycle-duration: 40s;
+  --screen-height: 1080px;
+  --screen-width: 1536px;
+  --title-color: #2e4852;
+  --title-x-adjust: 0px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: #000;
+  height: var(--screen-height);
+  margin: 0;
+  overflow: hidden;
+  width: var(--screen-width);
+}
+
+body {
+  color: #fff;
+  font-family: "Bliss Pro", Arial, sans-serif;
+  font-weight: 400;
+}
+
+.screen {
+  background: #fff;
+  height: var(--screen-height);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+  width: var(--screen-width);
+}
+
+.title-band {
+  background: #fff;
+  height: var(--body-top);
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 2;
+}
+
+.title-band::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 28%,
+    rgba(109, 171, 190, 0.98) 51%,
+    rgba(87, 150, 170, 0.95) 67%,
+    rgba(34, 74, 93, 0.52) 100%
+  );
+  bottom: 0;
+  content: "";
+  height: 42px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.page-title {
+  color: var(--title-color);
+  font-size: 76px;
+  font-weight: 700;
+  left: calc(68px + var(--title-x-adjust));
+  letter-spacing: 0.4px;
+  line-height: 1;
+  margin: 0;
+  position: absolute;
+  top: 88px;
+  z-index: 3;
+}
+
+.content-bg {
+  background:
+    linear-gradient(rgba(20, 40, 69, 0.94), rgba(20, 40, 69, 0.94)),
+    url("../assets/RotCircAnim_5000x5000.jpg") center center / 2500px 2500px no-repeat;
+  height: calc(var(--screen-height) - var(--body-top));
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  top: var(--body-top);
+  width: 100%;
+  z-index: 1;
+}
+
+.content-bg::before {
+  animation: rotateWater 135s linear infinite;
+  background: url("../assets/RotCircAnim_5000x5000.jpg") center center / 2500px 2500px no-repeat;
+  content: "";
+  height: 2600px;
+  left: 50%;
+  opacity: 0.13;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transform-origin: center;
+  width: 2600px;
+}
+
+.content-bg::after {
+  background: rgba(13, 32, 57, 0.66);
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.slides {
+  inset: 0;
+  position: absolute;
+  z-index: 4;
+}
+
+.tier-slide {
+  animation: tierFade var(--cycle-duration) linear infinite;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.tier-slide:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.tier-slide:nth-child(2) {
+  animation-delay: calc(var(--cycle-duration) / -3 * 2);
+}
+
+.tier-slide:nth-child(3) {
+  animation-delay: calc(var(--cycle-duration) / -3);
+}
+
+.crest {
+  height: var(--crest-size);
+  object-fit: contain;
+  position: absolute;
+  right: 110px;
+  top: 62px;
+  width: var(--crest-size);
+  z-index: 5;
+}
+
+.tier-content {
+  left: 68px;
+  position: absolute;
+  top: 302px;
+  width: 1365px;
+  z-index: 4;
+}
+
+.tier-name {
+  font-size: 68px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 0.98;
+  margin: 0 0 14px;
+}
+
+.tier-subtitle {
+  font-size: 32px;
+  font-style: italic;
+  line-height: 1.1;
+  margin: 0 0 58px;
+}
+
+.price-list {
+  display: grid;
+  gap: 31px;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  margin: 0;
+  width: 1305px;
+}
+
+.label,
+.price-row {
+  align-items: baseline;
+  display: flex;
+  min-height: 70px;
+}
+
+.label {
+  color: #fff;
+  font-size: 58px;
+  letter-spacing: 1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.category {
+  color: var(--accent-gold);
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 9px;
+  margin-right: 18px;
+}
+
+.age {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 5px;
+}
+
+.price-row {
+  justify-content: flex-start;
+}
+
+.amount {
+  color: var(--accent-gold);
+  font-size: 58px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  line-height: 1;
+}
+
+.tax {
+  color: #fff;
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  margin-left: 14px;
+}
+
+.footer-copy {
+  bottom: 66px;
+  left: 68px;
+  position: absolute;
+  z-index: 4;
+}
+
+.footer-headline {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  line-height: 1.1;
+  margin: 0 0 4px;
+}
+
+.footer-subline {
+  font-size: 32px;
+  font-style: italic;
+  line-height: 1.1;
+  margin: 0;
+}
+
+@keyframes rotateWater {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes tierFade {
+  0%, 28% {
+    opacity: 1;
+  }
+
+  32%, 96% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
