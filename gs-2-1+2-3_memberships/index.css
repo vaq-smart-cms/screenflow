@@ -1,38 +1,13 @@
-@font-face {
-  font-family: "Bliss Pro";
-  font-style: normal;
-  font-weight: 400;
-  src:
-    url("../assets/BlissPro-Regular.woff2") format("woff2"),
-    url("../assets/BlissPro-Regular.woff") format("woff");
-}
-
-@font-face {
-  font-family: "Bliss Pro";
-  font-style: italic;
-  font-weight: 400;
-  src:
-    url("../assets/BlissPro-Italic.woff2") format("woff2"),
-    url("../assets/BlissPro-Italic.woff") format("woff");
-}
-
-@font-face {
-  font-family: "Bliss Pro";
-  font-style: normal;
-  font-weight: 700;
-  src:
-    url("../assets/BlissPro-Bold.woff2") format("woff2"),
-    url("../assets/BlissPro-Bold.woff") format("woff");
-}
-
+/* =========================
+   Global / Base
+========================= */
 :root {
   --accent-gold: #f3bc43;
-  --body-bg: #142845;
   --body-top: 270px;
-  --crest-size: 320px;
+  --crest-size: 292px;
   --cycle-duration: 40s;
   --screen-height: 1080px;
-  --screen-width: 1536px;
+  --screen-width: 1152px;
   --title-color: #2e4852;
   --title-gap-fix: -8px;
   --title-x-adjust: 0px;
@@ -44,21 +19,58 @@
 
 html,
 body {
-  background: #000;
+  background: transparent;
   height: var(--screen-height);
   margin: 0;
   overflow: hidden;
+  padding: 0;
   width: var(--screen-width);
 }
 
 body {
-  color: #fff;
-  font-family: "Bliss Pro", Arial, sans-serif;
+  color: #ffffff;
+  font-family: 'BlissPro', Arial, sans-serif;
   font-weight: 400;
 }
 
+/* =========================
+   Fonts
+========================= */
+@font-face {
+  font-display: swap;
+  font-family: 'BlissPro';
+  font-style: normal;
+  font-weight: 400;
+  src:
+    url('../assets/BlissPro-Regular.woff2') format('woff2'),
+    url('../assets/BlissPro-Regular.woff') format('woff');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'BlissPro';
+  font-style: italic;
+  font-weight: 400;
+  src:
+    url('../assets/BlissPro-Italic.woff2') format('woff2'),
+    url('../assets/BlissPro-Italic.woff') format('woff');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'BlissPro';
+  font-style: normal;
+  font-weight: 700;
+  src:
+    url('../assets/BlissPro-Bold.woff2') format('woff2'),
+    url('../assets/BlissPro-Bold.woff') format('woff');
+}
+
+/* =========================
+   Signage Frame
+========================= */
 .screen {
-  background: #fff;
+  background: #000000;
   height: var(--screen-height);
   isolation: isolate;
   overflow: hidden;
@@ -82,8 +94,8 @@ body {
 }
 
 .title-band {
-  background-color: #fff;
-  background-image: url("../assets/Titlebar_RptX_10x270.jpg");
+  background-color: #ffffff;
+  background-image: url('../assets/Titlebar_RptX_10x270.jpg');
   background-position: left top;
   background-repeat: repeat-x;
   background-size: auto 270px;
@@ -94,23 +106,6 @@ body {
   top: 0;
   width: calc(100% - var(--title-gap-fix));
   z-index: 3;
-}
-
-.title-band::after {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0) 28%,
-    rgba(109, 171, 190, 0.98) 51%,
-    rgba(87, 150, 170, 0.95) 67%,
-    rgba(34, 74, 93, 0.52) 100%
-  );
-  bottom: 0;
-  content: "";
-  height: 42px;
-  left: 0;
-  position: absolute;
-  width: 100%;
 }
 
 .page-title {
@@ -138,24 +133,28 @@ body {
 }
 
 .content-bg::before {
-  animation: rotateWater 135s linear infinite;
-  background: url("../assets/RotCircAnim_5000x5000.jpg") center center / 2500px 2500px no-repeat;
-  content: "";
-  height: 2600px;
-  left: 50%;
-  opacity: 0.13;
+  animation: slowRotate 200s linear infinite;
+  background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+  background-repeat: no-repeat;
+  background-size: 5000px 5000px;
+  content: '';
+  height: 5000px;
+  left: -1924px;
+  opacity: 1;
+  pointer-events: none;
   position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(0deg);
-  transform-origin: center;
-  width: 2600px;
+  top: -3500px;
+  transform-origin: center center;
+  width: 5000px;
+  z-index: 1;
 }
 
 .content-bg::after {
-  background: rgba(13, 32, 57, 0.66);
-  content: "";
+  background: rgba(13, 32, 57, 0.08);
+  content: '';
   inset: 0;
   position: absolute;
+  z-index: 2;
 }
 
 .slides {
@@ -164,6 +163,9 @@ body {
   z-index: 5;
 }
 
+/* =========================
+   Membership Slides
+========================= */
 .tier-slide {
   animation: tierFade var(--cycle-duration) linear infinite;
   inset: 0;
@@ -187,7 +189,7 @@ body {
   height: var(--crest-size);
   object-fit: contain;
   position: absolute;
-  right: 110px;
+  right: 58px;
   top: 62px;
   width: var(--crest-size);
   z-index: 6;
@@ -197,12 +199,12 @@ body {
   left: 68px;
   position: absolute;
   top: 302px;
-  width: 1365px;
+  width: 1016px;
   z-index: 4;
 }
 
 .tier-name {
-  font-size: 68px;
+  font-size: 64px;
   font-weight: 700;
   letter-spacing: 0.3px;
   line-height: 0.98;
@@ -210,7 +212,7 @@ body {
 }
 
 .tier-subtitle {
-  font-size: 32px;
+  font-size: 31px;
   font-style: italic;
   line-height: 1.1;
   margin: 0 0 58px;
@@ -219,9 +221,9 @@ body {
 .price-list {
   display: grid;
   gap: 31px;
-  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-columns: minmax(0, 1fr) 214px;
   margin: 0;
-  width: 1305px;
+  width: 1016px;
 }
 
 .label,
@@ -232,8 +234,8 @@ body {
 }
 
 .label {
-  color: #fff;
-  font-size: 58px;
+  color: #ffffff;
+  font-size: 54px;
   letter-spacing: 1px;
   line-height: 1;
   white-space: nowrap;
@@ -244,13 +246,13 @@ body {
   display: inline-block;
   font-weight: 700;
   letter-spacing: 5px;
-  margin-right: 18px;
+  margin-right: 14px;
 }
 
 .age {
-  color: #fff;
+  color: #ffffff;
   font-weight: 700;
-  letter-spacing: 5px;
+  letter-spacing: 3px;
 }
 
 .price-row {
@@ -259,18 +261,19 @@ body {
 
 .amount {
   color: var(--accent-gold);
-  font-size: 58px;
+  font-size: 56px;
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
-  letter-spacing: 5px;
+  letter-spacing: 3px;
   line-height: 1;
 }
 
 .tax {
-  color: #fff;
-  font-size: 34px;
+  color: #ffffff;
+  font-size: 32px;
   font-weight: 400;
   letter-spacing: 0.5px;
-  margin-left: 14px;
+  margin-left: 12px;
 }
 
 .footer-copy {
@@ -281,7 +284,7 @@ body {
 }
 
 .footer-headline {
-  font-size: 40px;
+  font-size: 39px;
   font-weight: 700;
   letter-spacing: 0.1px;
   line-height: 1.1;
@@ -289,12 +292,15 @@ body {
 }
 
 .footer-subline {
-  font-size: 32px;
+  font-size: 31px;
   font-style: italic;
   line-height: 1.1;
   margin: 0;
 }
 
+/* =========================
+   Animation
+========================= */
 @keyframes slowRotate {
   from {
     transform: rotate(0deg);
@@ -305,11 +311,13 @@ body {
 }
 
 @keyframes tierFade {
-  0%, 28% {
+  0%,
+  28% {
     opacity: 1;
   }
 
-  32%, 96% {
+  32%,
+  96% {
     opacity: 0;
   }
 
