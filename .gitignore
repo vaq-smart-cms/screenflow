@@ -8,4 +8,4 @@ node_modules/
 *.log
 
 # Backups locally of archive CSS, etc
-gs-5-2_4d-showtimes-schedule/archive/
+gs-5-2_4d-showtimes-schedule/archive/_archive/
