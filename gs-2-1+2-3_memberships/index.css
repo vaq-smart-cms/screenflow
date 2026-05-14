@@ -122,38 +122,13 @@ body {
 }
 
 .content-bg {
-  background: rgba(13, 32, 57, 0.08);
+  background: transparent;
   height: calc(var(--screen-height) - var(--body-top));
   left: 0;
   overflow: hidden;
   position: absolute;
   top: var(--body-top);
   width: 100%;
-  z-index: 2;
-}
-
-.content-bg::before {
-  animation: slowRotate 200s linear infinite;
-  background-image: url('../assets/RotCircAnim_5000x5000.jpg');
-  background-repeat: no-repeat;
-  background-size: 5000px 5000px;
-  content: '';
-  height: 5000px;
-  left: -1924px;
-  opacity: 1;
-  pointer-events: none;
-  position: absolute;
-  top: -3500px;
-  transform-origin: center center;
-  width: 5000px;
-  z-index: 1;
-}
-
-.content-bg::after {
-  background: rgba(13, 32, 57, 0.08);
-  content: '';
-  inset: 0;
-  position: absolute;
   z-index: 2;
 }
 
@@ -221,7 +196,7 @@ body {
 .price-list {
   display: grid;
   gap: 31px;
-  grid-template-columns: minmax(0, 1fr) 214px;
+  grid-template-columns: minmax(0, 1fr) 306px;
   margin: 0;
   width: 1016px;
 }
@@ -257,6 +232,7 @@ body {
 
 .price-row {
   justify-content: flex-start;
+  white-space: nowrap;
 }
 
 .amount {
@@ -274,6 +250,7 @@ body {
   font-weight: 400;
   letter-spacing: 0.5px;
   margin-left: 12px;
+  white-space: nowrap;
 }
 
 .footer-copy {
