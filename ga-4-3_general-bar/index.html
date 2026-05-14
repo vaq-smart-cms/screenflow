@@ -9,25 +9,29 @@
 
   <style>
     html, body {
+      width: 384px;
+      height: 1080px;
       margin: 0;
       padding: 0;
-      background: #000; /* fallback / letterboxing if ever scaled */
+      overflow: hidden;
     }
 
     .panel {
-      width: 768px;
+      width: 384px;
       height: 1080px;
-      max-width: 768px;
-      max-height: 1080px;
-
       background-color: #7d9b2d;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: transparent; /* invisible but forces render */
+      font-size: 1px;
     }
   </style>
 </head>
 
 <body>
-
-  <div class="panel"></div>
-
+  <div class="panel">&nbsp;</div>
 </body>
 </html>
