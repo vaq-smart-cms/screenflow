@@ -34,6 +34,7 @@
   --screen-height: 1080px;
   --screen-width: 1536px;
   --title-color: #2e4852;
+  --title-gap-fix: -8px;
   --title-x-adjust: 0px;
 }
 
@@ -66,12 +67,17 @@ body {
 }
 
 .title-band {
-  background: #fff;
+  background-color: #fff;
+  background-image: url("../assets/Titlebar_RptX_10x270.jpg");
+  background-position: left top;
+  background-repeat: repeat-x;
+  background-size: auto 270px;
   height: var(--body-top);
-  left: 0;
+  left: var(--title-gap-fix);
+  overflow: hidden;
   position: absolute;
   top: 0;
-  width: 100%;
+  width: calc(100% - var(--title-gap-fix));
   z-index: 2;
 }
 
@@ -224,7 +230,7 @@ body {
   color: var(--accent-gold);
   display: inline-block;
   font-weight: 700;
-  letter-spacing: 9px;
+  letter-spacing: 5px;
   margin-right: 18px;
 }
 
