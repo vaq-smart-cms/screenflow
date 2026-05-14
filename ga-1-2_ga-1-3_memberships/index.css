@@ -95,23 +95,6 @@ body {
   z-index: 3;
 }
 
-.title-band::after {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0) 28%,
-    rgba(109, 171, 190, 0.98) 51%,
-    rgba(87, 150, 170, 0.95) 67%,
-    rgba(34, 74, 93, 0.52) 100%
-  );
-  bottom: 0;
-  content: "";
-  height: 42px;
-  left: 0;
-  position: absolute;
-  width: 100%;
-}
-
 .page-title {
   color: var(--title-color);
   font-size: 76px;
