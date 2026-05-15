@@ -1,0 +1,314 @@
+@font-face {
+  font-display: swap;
+  font-family: 'BlissPro';
+  font-style: normal;
+  font-weight: 700;
+  src:
+    url('../assets/BlissPro-Bold.woff2') format('woff2'),
+    url('../assets/BlissPro-Bold.woff') format('woff');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'BlissPro';
+  font-style: italic;
+  font-weight: 400;
+  src:
+    url('../assets/BlissPro-Italic.woff2') format('woff2'),
+    url('../assets/BlissPro-Italic.woff') format('woff');
+}
+
+:root {
+  --page-width: 1920px;
+  --page-height: 810px;
+
+  --page-fallback: #113466;
+
+  --outer-padding-x: 20px;
+  --outer-padding-y: 20px;
+
+  --poster-width: 498px;
+  --poster-height: 720px;
+
+  --poster-frame-width: 534px;
+  --poster-frame-height: 758px;
+  --poster-gap: 54px;
+
+  --poster-primary: #404020;
+  --poster-secondary: #c0c0e0;
+
+  --transition-page: 820ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--page-fallback);
+  height: var(--page-height);
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  width: var(--page-width);
+}
+
+body {
+  color: #ffffff;
+  font-family: 'BlissPro', Arial, sans-serif;
+  position: relative;
+}
+
+.page {
+  background: var(--page-fallback);
+  height: var(--page-height);
+  overflow: hidden;
+  position: relative;
+  width: var(--page-width);
+}
+
+.bg-rotator {
+  animation: slowRotate 200s linear infinite;
+  background-image: url('../assets/RotCircAnim_5000x5000.jpg');
+  background-repeat: no-repeat;
+  background-size: 5000px 5000px;
+  height: 5000px;
+  left: -1732px;
+  pointer-events: none;
+  position: absolute;
+  top: -3500px;
+  transform-origin: center center;
+  width: 5000px;
+  z-index: 1;
+}
+
+.content-layer {
+  height: 100%;
+  padding: var(--outer-padding-y) var(--outer-padding-x);
+  position: relative;
+  width: 100%;
+  z-index: 2;
+}
+
+.status-panel {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 18px;
+  color: #ffffff;
+  display: flex;
+  font-size: 40px;
+  font-weight: 700;
+  inset: 20px;
+  justify-content: center;
+  line-height: 1.15;
+  padding: 40px;
+  position: absolute;
+  text-align: center;
+  z-index: 10;
+}
+
+.status-panel[hidden],
+.poster-slideshow[hidden] {
+  display: none !important;
+}
+
+/* Poster slideshow */
+
+.poster-slideshow {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.poster-row {
+  align-items: center;
+  display: grid;
+  gap: var(--poster-gap);
+  grid-template-columns: repeat(3, var(--poster-frame-width));
+  height: var(--poster-frame-height);
+  justify-content: center;
+  perspective: 2200px;
+  perspective-origin: center center;
+  width: calc((var(--poster-frame-width) * 3) + (var(--poster-gap) * 2));
+}
+
+.poster-slot {
+  backface-visibility: hidden;
+  height: var(--poster-frame-height);
+  opacity: 0;
+  position: relative;
+  transform:
+    translateY(14px)
+    rotateY(-16deg)
+    scale(0.985);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  transition:
+    opacity var(--transition-page) ease,
+    transform var(--transition-page) cubic-bezier(0.2, 0.7, 0.2, 1);
+  width: var(--poster-frame-width);
+  will-change: opacity, transform;
+}
+
+.poster-slot.is-visible {
+  opacity: 1;
+  transform:
+    translateY(0)
+    rotateY(0deg)
+    scale(1);
+}
+
+.poster-slot.is-entering {
+  animation: posterSwivelIn var(--transition-page) cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.poster-slot.is-exiting {
+  animation: posterSwivelOut var(--transition-page) cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.poster-frame {
+  background:
+    linear-gradient(
+      180deg,
+      var(--poster-primary) 0%,
+      var(--poster-secondary) 100%
+    );
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 22px rgba(255, 255, 255, 0.22),
+    0 4px 16px rgba(0, 0, 0, 0.50);
+  height: var(--poster-frame-height);
+  left: 0;
+  position: absolute;
+  top: 0;
+  transition: background var(--transition-page) ease;
+  width: var(--poster-frame-width);
+  z-index: 1;
+}
+
+.poster-glow {
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.04) 42%,
+      rgba(255, 255, 255, 0.00) 72%
+    );
+  filter: blur(18px);
+  height: 760px;
+  left: -10px;
+  opacity: 0.70;
+  pointer-events: none;
+  position: absolute;
+  top: -4px;
+  width: 552px;
+  z-index: 1;
+}
+
+.poster-image {
+  background: rgba(255, 255, 255, 0.08);
+  border: 4px solid var(--poster-primary);
+  border-radius: 7px;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.26);
+  display: block;
+  height: var(--poster-height);
+  left: 18px;
+  object-fit: cover;
+  position: absolute;
+  top: 19px;
+  transition: border-color var(--transition-page) ease;
+  width: var(--poster-width);
+  z-index: 2;
+}
+
+.poster-fallback {
+  align-items: center;
+  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.22);
+  border: 4px solid var(--poster-primary);
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.86);
+  display: none;
+  font-size: 44px;
+  font-weight: 700;
+  height: var(--poster-height);
+  justify-content: center;
+  left: 18px;
+  line-height: 1.08;
+  padding: 32px;
+  position: absolute;
+  text-align: center;
+  top: 19px;
+  transition: border-color var(--transition-page) ease;
+  width: var(--poster-width);
+  z-index: 2;
+}
+
+/* Animations */
+
+@keyframes slowRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes posterSwivelOut {
+  0% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      rotateY(0deg)
+      scale(1);
+  }
+
+  45% {
+    opacity: 0.92;
+    transform:
+      translateY(-3px)
+      rotateY(-72deg)
+      scale(0.992);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translateY(-5px)
+      rotateY(-90deg)
+      scale(0.975);
+  }
+}
+
+@keyframes posterSwivelIn {
+  0% {
+    opacity: 0;
+    transform:
+      translateY(5px)
+      rotateY(90deg)
+      scale(0.975);
+  }
+
+  55% {
+    opacity: 0.96;
+    transform:
+      translateY(-2px)
+      rotateY(-8deg)
+      scale(1.006);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      rotateY(0deg)
+      scale(1);
+  }
+}
