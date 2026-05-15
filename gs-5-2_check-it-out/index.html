@@ -71,8 +71,8 @@
     ];
 
     const SLOT_COUNT = 3;
-    const ROTATION_MS = 9000;
-    const TRANSITION_MS = 720;
+    const ROTATION_MS = 8500;
+    const TRANSITION_MS = 820;
     const STARTUP_STAGGER_MS = 130;
 
     const FALLBACK_PRIMARY = '#404020';
@@ -391,17 +391,19 @@
         return;
       }
 
+      slot.classList.remove('is-entering');
       slot.classList.add('is-exiting');
 
       window.setTimeout(() => {
         applyPoster();
-        slot.classList.remove('is-exiting');
-        slot.classList.add('is-entering');
 
-        requestAnimationFrame(() => {
+        slot.classList.remove('is-exiting');
+        slot.classList.add('is-entering', 'is-visible');
+
+        window.setTimeout(() => {
           slot.classList.remove('is-entering');
-        });
-      }, TRANSITION_MS / 2);
+        }, TRANSITION_MS);
+      }, TRANSITION_MS);
     }
 
     function rotateOnePoster() {
