@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VAQ 4D Film Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="./admin.css?v=1">
+</head>
+
+<body>
+
+<div id="auth-panel" class="panel auth-panel">
+  <h2>Sign In</h2>
+  <p class="panel-description">Use your authorised 4D Showtimes admin login.</p>
+
+  <label class="field">
+    <span class="field-label">Email</span>
+    <input id="email-input" type="email" autocomplete="username">
+  </label>
+
+  <label class="field">
+    <span class="field-label">Password</span>
+    <input id="password-input" type="password" autocomplete="current-password">
+  </label>
+
+  <button id="sign-in-button" class="primary full-width" type="button">Sign In</button>
+  <p id="auth-message" class="status-message">Please sign in.</p>
+</div>
+
+<div id="app-shell" style="display:none;">
+
+  <div class="film-manager-top-grid">
+
+    <!-- A — Header -->
+    <div class="panel header">
+      <div>
+        <h1>4D Film Manager</h1>
+        <p id="session-text">Signed in as: Admin User</p>
+      </div>
+      <div class="inline-action-row">
+        <a class="button-link" href="./admin.html">
+          <button class="secondary" type="button">← Back to Calendar</button>
+        </a>
+        <button id="sign-out-button" class="secondary" type="button">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- B — Film List -->
+    <div class="panel">
+      <h2>Films</h2>
+      <p class="panel-description">Select a film to review or edit its guest-facing details.</p>
+      <div id="film-list">
+        <p class="panel-description">Loading films...</p>
+      </div>
+      <button id="create-film-button" class="primary" type="button">+ Create New Film</button>
+    </div>
+  </div>
+
+  <div class="film-manager-lower-grid">
+
+    <div class="film-manager-lower-left">
+      <!-- C — Film Details -->
+      <div class="panel">
+        <h2>Film Details</h2>
+        <label class="field">
+          <span class="field-label">Film Title</span>
+          <input id="film-title-input" type="text" placeholder="Example: BBC Earth: North America 4D Experience">
+        </label>
+        <label class="field">
+          <span class="field-label">Synopsis</span>
+          <textarea id="film-synopsis-input" rows="7" placeholder="Guest-facing synopsis text"></textarea>
+        </label>
+        <div class="accessibility-editor">
+          <span class="field-label">Accessibility Info</span>
+          <p class="field-help">
+            Check the accessibility features that apply to this film.
+          </p>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-1-check" type="checkbox">
+            <input id="film-accessibility-1-text" type="text" value="Wheelchair accessible seating">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-2-check" type="checkbox">
+            <input id="film-accessibility-2-text" type="text" value="Assistive listening available">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-3-check" type="checkbox">
+            <input id="film-accessibility-3-text" type="text" value="Service animals welcome">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-4-check" type="checkbox" disabled>
+            <input id="film-accessibility-4-text" type="text" placeholder="Optional accessibility item">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-accessibility-5-check" type="checkbox" disabled>
+            <input id="film-accessibility-5-text" type="text" placeholder="Optional accessibility item">
+          </label>
+        </div>
+        <div class="accessibility-editor">
+          <span class="field-label">Advisory Text</span>
+          <p class="field-help">
+            Check the advisory messages that should appear for guests.
+          </p>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-1-check" type="checkbox">
+            <input id="film-advisory-1-text" type="text" value="Features motion seats and sensory effects">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-2-check" type="checkbox">
+            <input id="film-advisory-2-text" type="text" value="Includes sudden movement, mist, wind, and scent effects">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-3-check" type="checkbox">
+            <input id="film-advisory-3-text" type="text" value="Recommended for guests who are comfortable with a more active theatre experience">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-4-check" type="checkbox" disabled>
+            <input id="film-advisory-4-text" type="text" placeholder="Optional advisory item">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-advisory-5-check" type="checkbox" disabled>
+            <input id="film-advisory-5-text" type="text" placeholder="Optional advisory item">
+          </label>
+        </div>
+        <div class="accessibility-editor">
+          <span class="field-label">Testimonials</span>
+          <p class="field-help">
+            Optional guest-facing quotes. Check only the ones that should appear.
+          </p>
+
+          <label class="accessibility-row">
+            <input id="film-testimonial-1-check" type="checkbox" disabled>
+            <input id="film-testimonial-1-text" type="text" placeholder="Optional testimonial">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-testimonial-2-check" type="checkbox" disabled>
+            <input id="film-testimonial-2-text" type="text" placeholder="Optional testimonial">
+          </label>
+
+          <label class="accessibility-row">
+            <input id="film-testimonial-3-check" type="checkbox" disabled>
+            <input id="film-testimonial-3-text" type="text" placeholder="Optional testimonial">
+          </label>
+        </div>
+        <label class="checkbox-row">
+          <input id="film-active-checkbox" type="checkbox" checked>
+          <span>Active / available in scheduler</span>
+        </label>
+        <div class="inline-action-row">
+          <button id="save-film-button" class="primary" type="button">Save Film Details</button>
+          <button id="cancel-film-edit-button" class="secondary" type="button">Cancel</button>
+        </div>
+        <p id="film-save-status" class="status-message has-top-margin"></p>
+      </div>
+    </div>
+
+    <div class="film-manager-lower-right">
+      <!-- D — Poster Code -->
+      <div class="panel">
+        <h2>Poster Code</h2>
+        <p class="panel-description">
+          Enter the one-word movie code to retrieve all poster sizes (-sm, -md, -lg).
+        </p>
+        <label class="field">
+          <span class="field-label">
+            Poster code
+          </span>
+
+          <input
+            id="film-poster-url-input"
+            type="text"
+            placeholder="na4d"
+          >
+
+          <small class="field-note">
+            Enter the film code only. Poster files are automatically matched from /film-posters/web/.
+          </small>
+        </label>
+        <div class="poster-set-preview">
+          <div class="poster-preview-card poster-preview-card-sm">
+            <img id="poster-preview-sm" class="poster-preview-image" alt="Small poster preview" src="">
+            <span>Small</span>
+          </div>
+
+          <div class="poster-preview-card poster-preview-card-md">
+            <img id="poster-preview-md" class="poster-preview-image" alt="Medium poster preview" src="">
+            <span>Medium</span>
+          </div>
+
+          <div class="poster-preview-card poster-preview-card-lg">
+            <img id="poster-preview-lg" class="poster-preview-image" alt="Large poster preview" src="">
+            <span>Large</span>
+          </div>
+        </div>
+
+        <p id="poster-preview-text" class="status-message has-top-margin">
+          Poster preview will appear here.
+        </p>
+      </div>
+
+      <!-- E — Film Theme -->
+      <div class="panel">
+        <h2>Film Theme</h2>
+        <p class="panel-description">
+          Set poster-inspired colours for Film Manager buttons and future signage styling.
+        </p>
+
+        <div class="theme-colour-grid">
+          <label class="field">
+            <span class="field-label">Primary colour</span>
+            <input id="film-theme-primary-input" type="color" value="#646e78">
+          </label>
+
+          <label class="field">
+            <span class="field-label">Secondary colour</span>
+            <input id="film-theme-secondary-input" type="color" value="#2f3a40">
+          </label>
+        </div>
+        <button id="sample-theme-button" class="secondary" type="button">
+          Sample from poster
+        </button>
+        <button id="swap-theme-colours-button" class="secondary" type="button">
+          Swap colours
+        </button>
+        <p id="film-theme-source-text" class="status-message has-top-margin">
+          Theme source: manual
+        </p>
+      </div>
+
+     <!-- F — Actions -->
+      <div class="panel actions-panel">
+        <h2>Actions</h2>
+        <div class="inline-action-row">
+          <button id="duplicate-film-button" class="secondary" type="button">Duplicate Film</button>
+          <button id="delete-film-button" class="accent" type="button">Delete Film</button>
+          <label class="theme-toggle-control" title="Toggle Night Mode">
+            <span class="theme-toggle-label">Night Mode</span>
+            <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+  </div>  
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'vaq_4d_admin_auth'
+    }
+  });
+
+  console.log('Auth storage check:', localStorage.getItem('vaq_4d_admin_auth'));
+
+  const CACHE_TTL_MS = 10 * 60 * 1000;
+
+  let FILMS = [];
+
+  const appState = {
+    selectedFilmId: null,
+    isDirty: false,
+    currentSession: null
+  };
+
+  const POSTER_BASE_PATH = './film-posters/web/';
+
+  const ACCESSIBILITY_KEY_DEFAULTS = [
+    'wheelchair',
+    'assistive',
+    'service_animal',
+    'captions',
+    'inductive'
+  ];
+
+  const ACCESSIBILITY_ICON_BY_KEY = {
+    wheelchair: '../assets/acc-wc.svg',
+    assistive: '../assets/acc-assistive.svg',
+    captions: '../assets/acc-cc.svg',
+    service_animal: '../assets/acc-svc-dog.svg',
+    inductive: '../assets/acc-induc.svg',
+    information: '../assets/information.svg'
+  };
+
+  function parseMessageEditorValue(value) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (!value) {
+      return [];
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+
+      if (!trimmed) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // Fall through to legacy pipe parsing.
+      }
+
+      return trimmed
+        .split('|')
+        .map((item, index) => ({
+          text: item.trim(),
+          is_active: true,
+          sort_order: index + 1
+        }))
+        .filter((item) => item.text);
+    }
+
+    return [];
+  }
+
+  function serializeMessageEditorValue(textInputs, checkInputs) {
+    return textInputs
+      .map((textInput, index) => ({
+        text: textInput?.value.trim() || '',
+        is_active: !!checkInputs[index]?.checked && !!textInput?.value.trim()
+      }))
+      .filter((item) => item.text);
+  }
+
+  function normalizePosterCode(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '');
+  }
+
+  function normalizeThemeColor(value, fallback = '#646e78') {
+    const cleanValue = String(value || '').trim();
+
+    return /^#[0-9a-f]{6}$/i.test(cleanValue)
+      ? cleanValue.toLowerCase()
+      : fallback;
+  }
+
+  function setThemeEditorFromFilm(film) {
+    const primary = normalizeThemeColor(film?.theme_color_primary, '#646e78');
+    const secondary = normalizeThemeColor(film?.theme_color_secondary, '#2f3a40');
+    const source = film?.theme_color_source || 'manual';
+
+    ui.filmThemePrimaryInput.value = primary;
+    ui.filmThemeSecondaryInput.value = secondary;
+
+    if (ui.filmThemeSourceText) {
+      ui.filmThemeSourceText.textContent = `Theme source: ${source}`;
+    }
+  }
+
+  function rgbToHex(r, g, b) {
+    return `#${[r, g, b]
+      .map((value) => Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0'))
+      .join('')}`;
+  }
+
+  function getColourDistance(a, b) {
+    return Math.sqrt(
+      Math.pow(a.r - b.r, 2) +
+      Math.pow(a.g - b.g, 2) +
+      Math.pow(a.b - b.b, 2)
+    );
+  }
+
+  function quantizeColour(r, g, b, step = 32) {
+    return {
+      r: Math.round(r / step) * step,
+      g: Math.round(g / step) * step,
+      b: Math.round(b / step) * step
+    };
+  }
+
+  function isUsefulThemeColour({ r, g, b }) {
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const saturation = max - min;
+    const brightness = (r + g + b) / 3;
+
+    return saturation > 24 && brightness > 28 && brightness < 235;
+  }
+
+  function getAccessibilityItemsFromEditor() {
+    return serializeMessageEditorValue(
+      ui.filmAccessibilityTexts,
+      ui.filmAccessibilityChecks,
+      {
+        keys: ACCESSIBILITY_KEY_DEFAULTS,
+        kind: 'accessibility'
+      }
+    );
+  }
+
+  function getActiveAccessibilityTextFromEditor() {
+    return getAccessibilityItemsFromEditor()
+      .filter((item) => item.is_active)
+      .map((item) => item.text)
+      .join(' | ');
+  }
+
+  function setAccessibilityEditorFromText(value) {
+    setMessageEditorFromText(
+      value,
+      ui.filmAccessibilityTexts,
+      ui.filmAccessibilityChecks,
+      [
+        'Wheelchair access and designated wheelchair seating',
+        'Audio technology providing direct sound to hearing-impaired guests',
+        'Service animals welcome',
+        'Closed captioning units available upon request',
+        'Wireless audio transmission directly to hearing aids via electromagnetic induction'
+      ],
+      {
+        keys: ACCESSIBILITY_KEY_DEFAULTS,
+        kind: 'accessibility'
+      }
+    );
+  }
+
+  function refreshAccessibilityCheckboxStates() {
+    ui.filmAccessibilityTexts.forEach((textInput, index) => {
+      const checkbox = ui.filmAccessibilityChecks[index];
+      const hasText = !!textInput?.value.trim();
+
+      if (!checkbox) return;
+
+      checkbox.disabled = !hasText;
+
+      if (!hasText) {
+        checkbox.checked = false;
+      }
+    });
+  }
+
+  function getItemsFromMessageEditor(textInputs, checkInputs) {
+    return textInputs
+      .map((textInput, index) => {
+        const text = textInput?.value.trim() || '';
+        const isActive = !!checkInputs[index]?.checked;
+
+        return {
+          text,
+          is_active: isActive && !!text
+        };
+      });
+  }
+
+  function getActiveTextFromMessageEditor(textInputs, checkInputs) {
+    return getItemsFromMessageEditor(textInputs, checkInputs)
+      .filter((item) => item.is_active)
+      .map((item) => item.text)
+      .join(' | ');
+  }
+
+  function setMessageEditorFromText(value, textInputs, checkInputs, defaultItems = [], options = {}) {
+    const parsedItems = parseMessageEditorValue(value);
+    const keys = options.keys || [];
+
+    textInputs.forEach((textInput, index) => {
+      if (!textInput) return;
+
+      const savedItem = parsedItems[index] || null;
+      const fallbackText = defaultItems[index] || '';
+      const displayText = savedItem?.text || fallbackText;
+
+      textInput.value = displayText;
+
+      const checkbox = checkInputs[index];
+      if (!checkbox) return;
+
+      checkbox.checked = savedItem
+        ? !!savedItem.is_active
+        : false;
+
+      checkbox.disabled = !displayText;
+    });
+  }
+
+  function refreshMessageCheckboxStates(textInputs, checkInputs) {
+    textInputs.forEach((textInput, index) => {
+      const checkbox = checkInputs[index];
+      const hasText = !!textInput?.value.trim();
+
+      if (!checkbox) return;
+
+      checkbox.disabled = !hasText;
+
+      if (!hasText) {
+        checkbox.checked = false;
+      }
+    });
+  }
+
+  function getActiveDisplayTextFromStoredMessageValue(value) {
+    const parsed = parseMessageEditorValue(value);
+
+    return parsed
+      .filter((item) => item.is_active)
+      .map((item) => item.text)
+      .join(' | ');
+  }
+
+  function getPosterCodeFromStoredValue(value) {
+    const cleanValue = String(value || '').trim();
+
+    if (!cleanValue) return '';
+
+    const filename = cleanValue.split('/').pop() || cleanValue;
+
+    return filename
+      .replace(/_poster_(sm|md|lg)\.jpe?g$/i, '')
+      .toLowerCase();
+  }
+
+  function buildPosterFilenameFromCode(code, size) {
+    const cleanCode = normalizePosterCode(code);
+
+    if (!cleanCode) return '';
+
+    return `${cleanCode}_poster_${size}.jpg`;
+  }
+
+  function swapThemeColours() {
+    const primary = ui.filmThemePrimaryInput.value;
+    const secondary = ui.filmThemeSecondaryInput.value;
+
+    ui.filmThemePrimaryInput.value = secondary;
+    ui.filmThemeSecondaryInput.value = primary;
+
+    if (ui.filmThemeSourceText) {
+      ui.filmThemeSourceText.textContent = 'Theme source: manual';
+    }
+
+    setFilmDirtyState(true);
+  }
+
+  function buildPosterUrlFromCode(code, size) {
+    const filename = buildPosterFilenameFromCode(code, size);
+
+    if (!filename) return '';
+
+    return `${POSTER_BASE_PATH}${filename}`;
+  }
+
+  const ui = {
+    authPanel: document.getElementById('auth-panel'),
+    appShell: document.getElementById('app-shell'),
+    emailInput: document.getElementById('email-input'),
+    passwordInput: document.getElementById('password-input'),
+    signInButton: document.getElementById('sign-in-button'),
+    signOutButton: document.getElementById('sign-out-button'),
+    nightModeToggle: document.getElementById('night-mode-toggle'),
+    authMessage: document.getElementById('auth-message'),
+    sessionText: document.getElementById('session-text'),
+
+    filmList: document.getElementById('film-list'),
+    createFilmButton: document.getElementById('create-film-button'),
+    filmSaveStatus: document.getElementById('film-save-status'),
+
+    filmTitleInput: document.getElementById('film-title-input'),
+    filmSynopsisInput: document.getElementById('film-synopsis-input'),
+    filmAccessibilityChecks: [
+      document.getElementById('film-accessibility-1-check'),
+      document.getElementById('film-accessibility-2-check'),
+      document.getElementById('film-accessibility-3-check'),
+      document.getElementById('film-accessibility-4-check'),
+      document.getElementById('film-accessibility-5-check')
+    ],
+    filmAccessibilityTexts: [
+      document.getElementById('film-accessibility-1-text'),
+      document.getElementById('film-accessibility-2-text'),
+      document.getElementById('film-accessibility-3-text'),
+      document.getElementById('film-accessibility-4-text'),
+      document.getElementById('film-accessibility-5-text')
+    ],
+    filmAdvisoryChecks: [
+      document.getElementById('film-advisory-1-check'),
+      document.getElementById('film-advisory-2-check'),
+      document.getElementById('film-advisory-3-check'),
+      document.getElementById('film-advisory-4-check'),
+      document.getElementById('film-advisory-5-check')
+    ],
+    filmAdvisoryTexts: [
+      document.getElementById('film-advisory-1-text'),
+      document.getElementById('film-advisory-2-text'),
+      document.getElementById('film-advisory-3-text'),
+      document.getElementById('film-advisory-4-text'),
+      document.getElementById('film-advisory-5-text')
+    ],
+    filmTestimonialChecks: [
+      document.getElementById('film-testimonial-1-check'),
+      document.getElementById('film-testimonial-2-check'),
+      document.getElementById('film-testimonial-3-check')
+    ],
+    filmTestimonialTexts: [
+      document.getElementById('film-testimonial-1-text'),
+      document.getElementById('film-testimonial-2-text'),
+      document.getElementById('film-testimonial-3-text')
+    ],
+    filmActiveCheckbox: document.getElementById('film-active-checkbox'),
+    saveFilmButton: document.getElementById('save-film-button'),
+    cancelFilmEditButton: document.getElementById('cancel-film-edit-button'),
+
+    filmPosterUrlInput: document.getElementById('film-poster-url-input'),
+    posterPreviewSm: document.getElementById('poster-preview-sm'),
+    posterPreviewMd: document.getElementById('poster-preview-md'),
+    posterPreviewLg: document.getElementById('poster-preview-lg'),
+    posterPreviewText: document.getElementById('poster-preview-text'),
+
+    filmThemePrimaryInput: document.getElementById('film-theme-primary-input'),
+    filmThemeSecondaryInput: document.getElementById('film-theme-secondary-input'),
+    filmThemeSourceText: document.getElementById('film-theme-source-text'),
+    sampleThemeButton: document.getElementById('sample-theme-button'),
+    swapThemeColoursButton: document.getElementById('swap-theme-colours-button'),
+
+    duplicateFilmButton: document.getElementById('duplicate-film-button'),
+    deleteFilmButton: document.getElementById('delete-film-button')
+  };
+
+
+  function getUserSessionKey(session, suffix) {
+    const userKey = session?.user?.id || session?.user?.email || 'unknown-user';
+    return `vaq_4d_admin_${userKey}_${suffix}`;
+  }
+
+  function readNightModePreference(session) {
+    return localStorage.getItem(getUserSessionKey(session, 'night_mode')) === 'true';
+  }
+
+  function writeNightModePreference(session, isEnabled) {
+    if (!session) return;
+    localStorage.setItem(getUserSessionKey(session, 'night_mode'), String(isEnabled));
+  }
+
+  function applyNightModePreference(isEnabled) {
+    document.body.classList.toggle('theme-night', !!isEnabled);
+
+    if (ui.nightModeToggle) {
+      ui.nightModeToggle.checked = !!isEnabled;
+    }
+  }
+
+  function handleNightModeToggle() {
+    const isEnabled = !!ui.nightModeToggle?.checked;
+    applyNightModePreference(isEnabled);
+    writeNightModePreference(appState.currentSession, isEnabled);
+  }
+
+  function readCache(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      const isFresh = Date.now() - parsed.savedAt < CACHE_TTL_MS;
+
+      return isFresh ? parsed.value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeCache(key, value) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          savedAt: Date.now(),
+          value
+        })
+      );
+    } catch {
+      // Ignore cache write failures.
+    }
+  }
+
+  function clearFilmCaches() {
+    localStorage.removeItem('vaq_4d_active_films');
+    localStorage.removeItem('vaq_4d_films_all');
+  }
+
+  function setAuthenticatedUi(session) {
+    const isAuthed = !!session;
+
+    ui.authPanel.style.display = isAuthed ? 'none' : 'block';
+    ui.appShell.style.display = isAuthed ? 'block' : 'none';
+
+    if (session) {
+      ui.sessionText.textContent = `Signed in as: ${session.user.email}`;
+    }
+  }
+
+  async function waitForSession(maxAttempts = 12, delayMs = 250) {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        return null;
+      }
+
+      if (data?.session) {
+        return data.session;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    return null;
+  }
+
+  async function handleSignIn() {
+    const email = ui.emailInput.value.trim();
+    const password = ui.passwordInput.value;
+
+    if (!email || !password) {
+      ui.authMessage.textContent = 'Enter your email and password.';
+      return;
+    }
+
+    ui.signInButton.disabled = true;
+    ui.authMessage.textContent = 'Signing in...';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    ui.signInButton.disabled = false;
+
+    if (error) {
+      ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
+      return;
+    }
+
+    ui.authMessage.textContent = 'Sign-in successful.';
+    await initializeFilmManager();
+  }
+
+  async function handleSignOut() {
+    await supabaseClient.auth.signOut();
+
+    FILMS = [];
+    appState.selectedFilmId = null;
+
+    ui.passwordInput.value = '';
+    ui.authMessage.textContent = 'Signed out.';
+    setAuthenticatedUi(null);
+  }
+
+  function stripWrappingQuotes(value) {
+    return String(value || '')
+      .trim()
+      .replace(/^["“”]+|["“”]+$/g, '');
+  }
+
+  function formatTestimonialForDisplay(value) {
+    const cleanValue = stripWrappingQuotes(value);
+
+    return cleanValue ? `"${cleanValue}"` : '';
+  }
+
+  async function fetchFilms() {
+    const cachedFilms = readCache('vaq_4d_films_all');
+    if (cachedFilms) {
+      FILMS = cachedFilms;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('films')
+      .select('id, title, poster_url, synopsis, advisory_text, accessibility_text, testimonial, is_active, sort_order, theme_color_primary, theme_color_secondary, theme_color_source, created_at, updated_at')
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('title', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch films:', error);
+      FILMS = [];
+      ui.filmList.innerHTML = `<p style="color:#a14f17;">Could not load films: ${error.message}</p>`;
+      return;
+    }
+
+    FILMS = (data || []).map((film) => ({
+      ...film,
+      theme_color_primary: film.theme_color_primary || '#646e78',
+      theme_color_secondary: film.theme_color_secondary || '#2f3a40',
+      theme_color_source: film.theme_color_source || 'manual'
+    }));
+    writeCache('vaq_4d_films_all', FILMS);
+  }
+
+  function setFilmSaveStatus(message, isError = false) {
+    if (!ui.filmSaveStatus) return;
+
+    ui.filmSaveStatus.textContent = message;
+    ui.filmSaveStatus.style.color = isError ? '#a14f17' : 'var(--text-soft)';
+  }
+
+  function cancelFilmEdit() {
+    if (!appState.selectedFilmId) {
+      setFilmDirtyState(false);
+      renderFilmDetails();
+      renderPosterPreview();
+      return;
+    }
+
+    if (!confirmDiscardUnsavedChanges()) return;
+
+    setFilmDirtyState(false);
+    renderFilmDetails();
+    renderPosterPreview();
+    setFilmSaveStatus('Changes cancelled.');
+  }
+
+  function setFilmDirtyState(isDirty) {
+    appState.isDirty = isDirty;
+
+    if (!ui.filmSaveStatus) return;
+
+    if (isDirty) {
+      ui.filmSaveStatus.textContent = 'Unsaved changes';
+      ui.filmSaveStatus.style.color = '#a14f17';
+    } else if (ui.filmSaveStatus.textContent === 'Unsaved changes') {
+      ui.filmSaveStatus.textContent = '';
+      ui.filmSaveStatus.style.color = 'var(--text-soft)';
+    }
+  }
+
+  function confirmDiscardUnsavedChanges() {
+    if (!appState.isDirty) return true;
+
+    return window.confirm('You have unsaved film changes. Discard them?');
+  }
+
+  async function sampleThemeColoursFromPoster() {
+    const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
+
+    if (!posterCode) {
+      setFilmSaveStatus('Enter a poster code before sampling theme colours.', true);
+      return;
+    }
+
+    const posterUrl = buildPosterUrlFromCode(posterCode, 'md');
+
+    ui.sampleThemeButton.disabled = true;
+    setFilmSaveStatus('Sampling poster colours...');
+
+    try {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+
+      const imageLoaded = new Promise((resolve, reject) => {
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Could not load the medium poster image.'));
+      });
+
+      image.src = `${posterUrl}?v=${Date.now()}`;
+
+      await imageLoaded;
+
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+
+      const sampleWidth = 80;
+      const sampleHeight = Math.max(
+        1,
+        Math.round((image.naturalHeight / image.naturalWidth) * sampleWidth)
+      );
+
+      canvas.width = sampleWidth;
+      canvas.height = sampleHeight;
+
+      context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+
+      const { data } = context.getImageData(0, 0, sampleWidth, sampleHeight);
+      const colourCounts = new Map();
+
+      for (let index = 0; index < data.length; index += 16) {
+        const alpha = data[index + 3];
+
+        if (alpha < 200) continue;
+
+        const colour = quantizeColour(data[index], data[index + 1], data[index + 2]);
+
+        if (!isUsefulThemeColour(colour)) continue;
+
+        const key = `${colour.r},${colour.g},${colour.b}`;
+        colourCounts.set(key, (colourCounts.get(key) || 0) + 1);
+      }
+
+      const rankedColours = Array.from(colourCounts.entries())
+        .map(([key, count]) => {
+          const [r, g, b] = key.split(',').map(Number);
+
+          return {
+            r,
+            g,
+            b,
+            count
+          };
+        })
+        .sort((a, b) => b.count - a.count);
+
+      if (!rankedColours.length) {
+        throw new Error('No strong poster colours were found.');
+      }
+
+      const primary = rankedColours[0];
+      const secondary =
+        rankedColours.find((colour) => getColourDistance(primary, colour) > 90) ||
+        rankedColours[1] ||
+        primary;
+
+      ui.filmThemePrimaryInput.value = rgbToHex(primary.r, primary.g, primary.b);
+      ui.filmThemeSecondaryInput.value = rgbToHex(secondary.r, secondary.g, secondary.b);
+
+      if (ui.filmThemeSourceText) {
+        ui.filmThemeSourceText.textContent = 'Theme source: poster_sampled';
+      }
+
+      setFilmDirtyState(true);
+      setFilmSaveStatus('Poster colours sampled. Review and save to keep them.');
+    } catch (err) {
+      console.error('Poster colour sampling failed:', err);
+      setFilmSaveStatus(`Could not sample poster colours: ${err.message || err}`, true);
+    } finally {
+      ui.sampleThemeButton.disabled = false;
+    }
+  }
+
+  function renderFilmList() {
+    ui.filmList.innerHTML = '';
+
+    if (!FILMS.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'No films found.';
+      ui.filmList.appendChild(empty);
+      return;
+    }
+
+    FILMS.forEach((film) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'film-button film-theme-button';
+
+      if (film.id === appState.selectedFilmId) {
+        button.classList.add('is-selected');
+      }
+
+      if (!film.is_active) {
+        button.classList.add('is-inactive');
+      }
+
+      button.style.setProperty(
+        '--film-theme-primary',
+        normalizeThemeColor(film.theme_color_primary, '#646e78')
+      );
+
+      button.style.setProperty(
+        '--film-theme-secondary',
+        normalizeThemeColor(film.theme_color_secondary, '#2f3a40')
+      );
+
+      button.style.setProperty(
+        '--film-poster-image',
+        film.poster_url
+          ? `url("${buildPosterUrlFromCode(getPosterCodeFromStoredValue(film.poster_url), 'sm')}")`
+          : 'none'
+      );
+
+      const label = document.createElement('span');
+      label.className = 'film-theme-button-label';
+      label.textContent = film.is_active ? film.title : `${film.title} (Inactive)`;
+
+      button.appendChild(label);
+
+      button.addEventListener('click', () => {
+        if (film.id === appState.selectedFilmId) return;
+
+        if (!confirmDiscardUnsavedChanges()) return;
+
+        appState.selectedFilmId = film.id;
+        setFilmDirtyState(false);
+        renderFilmList();
+        renderFilmDetails();
+        renderPosterPreview();
+      });
+
+      ui.filmList.appendChild(button);
+    });
+  }
+
+  function renderFilmDetails() {
+    setFilmSaveStatus('');
+    const film = FILMS.find((item) => item.id === appState.selectedFilmId);
+
+    if (!film) {
+      ui.filmTitleInput.value = '';
+      ui.filmSynopsisInput.value = '';
+      setMessageEditorFromText('', ui.filmAdvisoryTexts, ui.filmAdvisoryChecks, [
+        'The 4-D experience includes flashing lights, moving seats, scents, and other sensory effects.',
+        'May not be suitable for children under 4, or individuals with light sensitivities, back issues, or scent allergies.',
+        'Please note for safety, all children 12 and under must be accompanied by an adult inside the theatre and throughout the aquarium.',
+        '',
+        ''
+      ]);
+
+      setMessageEditorFromText('', ui.filmTestimonialTexts, ui.filmTestimonialChecks, [
+        '',
+        '',
+        ''
+      ]);
+      setAccessibilityEditorFromText('');
+      ui.filmActiveCheckbox.checked = true;
+      ui.filmPosterUrlInput.value = '';
+      setThemeEditorFromFilm(null);
+      return;
+    }
+
+    ui.filmTitleInput.value = film.title || '';
+    ui.filmSynopsisInput.value = film.synopsis || '';
+    setMessageEditorFromText(film.advisory_text || '', ui.filmAdvisoryTexts, ui.filmAdvisoryChecks, [
+      'The 4-D experience includes flashing lights, moving seats, scents, and other sensory effects.',
+      'May not be suitable for children under 4, or individuals with light sensitivities, back issues, or scent allergies.',
+      'Please note for safety, all children 12 and under must be accompanied by an adult inside the theatre and throughout the aquarium.',
+      '',
+      ''
+    ]);
+
+    setMessageEditorFromText(film.testimonial || '', ui.filmTestimonialTexts, ui.filmTestimonialChecks, [
+      '',
+      '',
+      ''
+    ]);
+    setAccessibilityEditorFromText(film.accessibility_text || '');
+    ui.filmActiveCheckbox.checked = !!film.is_active;
+    ui.filmPosterUrlInput.value = getPosterCodeFromStoredValue(film.poster_url || '');
+    setThemeEditorFromFilm(film);
+  }
+
+  function renderPosterPreview() {
+    const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
+
+    const previewMap = [
+      { element: ui.posterPreviewSm, size: 'sm' },
+      { element: ui.posterPreviewMd, size: 'md' },
+      { element: ui.posterPreviewLg, size: 'lg' }
+    ];
+
+    previewMap.forEach(({ element, size }) => {
+      if (!element) return;
+
+      element.src = posterCode
+        ? buildPosterUrlFromCode(posterCode, size)
+        : '';
+
+      element.style.opacity = posterCode ? '1' : '0.28';
+    });
+
+    ui.posterPreviewText.textContent = posterCode
+      ? `Expected files: ${posterCode}_poster_sm.jpg, ${posterCode}_poster_md.jpg, ${posterCode}_poster_lg.jpg`
+      : 'Enter a poster code to preview the expected poster set.';
+  }
+
+  async function saveFilmDetails() {
+    const filmId = appState.selectedFilmId;
+
+    ui.saveFilmButton.disabled = true;
+    setFilmSaveStatus('Saving...');
+
+    try {
+      if (!filmId) {
+        alert('Select a film first.');
+        setFilmSaveStatus('');
+        return;
+      }
+
+      const posterCode = normalizePosterCode(ui.filmPosterUrlInput.value);
+
+      if (ui.filmPosterUrlInput.value.trim() !== posterCode) {
+        ui.filmPosterUrlInput.value = posterCode;
+      }
+
+      if (!posterCode) {
+        const confirmed = window.confirm(
+          'No poster code has been entered. Save this film without poster assets?'
+        );
+
+        if (!confirmed) {
+          setFilmSaveStatus('');
+          return;
+        }
+      }
+
+      const payload = {
+        title: ui.filmTitleInput.value.trim(),
+        slug: ui.filmTitleInput.value
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
+        poster_url: posterCode,
+        synopsis: ui.filmSynopsisInput.value.trim(),
+        accessibility_text: serializeMessageEditorValue(
+        ui.filmAccessibilityTexts,
+        ui.filmAccessibilityChecks,
+        {
+          keys: ACCESSIBILITY_KEY_DEFAULTS,
+          kind: 'accessibility'
+        }
+      ),
+      advisory_text: serializeMessageEditorValue(
+        ui.filmAdvisoryTexts,
+        ui.filmAdvisoryChecks,
+        {
+          kind: 'advisory'
+        }
+      ),
+      testimonial: serializeMessageEditorValue(
+        ui.filmTestimonialTexts,
+        ui.filmTestimonialChecks,
+        {
+          kind: 'testimonial'
+        }
+      ),
+        is_active: ui.filmActiveCheckbox.checked,
+        theme_color_primary: normalizeThemeColor(ui.filmThemePrimaryInput.value, '#646e78'),
+        theme_color_secondary: normalizeThemeColor(ui.filmThemeSecondaryInput.value, '#2f3a40'),
+        theme_color_source: ui.filmThemeSourceText?.textContent.includes('poster_sampled')
+          ? 'poster_sampled'
+          : 'manual',
+        updated_at: new Date().toISOString()
+      };
+
+      if (!payload.title) {
+        alert('Film title is required.');
+        setFilmSaveStatus('');
+        return;
+      }
+
+      console.log('Film save payload:', payload);
+      console.log('accessibility_text is array:', Array.isArray(payload.accessibility_text), payload.accessibility_text);
+
+      const { error } = await supabaseClient
+        .from('films')
+        .update(payload)
+        .eq('id', filmId);
+
+      if (error) {
+        console.error('Failed to save film:', error);
+
+        if (error.code === '42501') {
+          setFilmSaveStatus('Permission issue: this account cannot update films yet. Check RLS policies for the films table.', true);
+        } else if (error.code === '23505') {
+          setFilmSaveStatus('A film with this title/slug may already exist. Try a more specific title.', true);
+        } else {
+          setFilmSaveStatus(`Could not save film: ${error.message}`, true);
+        }
+
+        return;
+      }
+
+      clearFilmCaches();
+      await refreshFilmManager(filmId);
+      setFilmDirtyState(false);
+      setFilmSaveStatus('Film details saved.');
+    } catch (err) {
+      console.error('Unexpected save failure:', err);
+      setFilmSaveStatus(`Could not save film: ${err.message || err}`, true);
+    } finally {
+      ui.saveFilmButton.disabled = false;
+    }
+  }
+
+  async function createFilm() {
+    const title = window.prompt('Title for the new film:', 'New 4D Film');
+    if (!title) return;
+
+    const { data, error } = await supabaseClient
+      .from('films')
+      .insert({
+        title: title.trim(),
+        slug: title
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
+        poster_url: '',
+        synopsis: '',
+        testimonial: [],
+        advisory_text: [],
+        accessibility_text: [],
+        theme_color_primary: '#646e78',
+        theme_color_secondary: '#2f3a40',
+        theme_color_source: 'manual',
+        is_active: true,
+        sort_order: FILMS.length + 1
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to create film:', error);
+
+      if (error.code === '42501') {
+        setFilmSaveStatus('Permission issue: this account cannot create films yet. Check RLS policies for the films table.', true);
+      } else if (error.code === '23505') {
+        setFilmSaveStatus('A film with this title/slug may already exist. Try a more specific title.', true);
+      } else {
+        setFilmSaveStatus(`Could not create film: ${error.message}`, true);
+      }
+
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(data.id);
+    setFilmDirtyState(false);
+    setFilmSaveStatus('New film created.');
+  }
+
+  async function duplicateFilm() {
+    const source = FILMS.find((item) => item.id === appState.selectedFilmId);
+    if (!source) {
+      alert('Select a film first.');
+      return;
+    }
+
+    const title = window.prompt('Title for duplicated film:', `${source.title} Copy`);
+    if (!title) return;
+
+    const { data, error } = await supabaseClient
+      .from('films')
+      .insert({
+        title: title.trim(),
+        synopsis: source.synopsis || '',
+        testimonial: parseMessageEditorValue(source.testimonial),
+        advisory_text: parseMessageEditorValue(source.advisory_text),
+        accessibility_text: parseMessageEditorValue(source.accessibility_text),
+        poster_url: source.poster_url || '',
+        theme_color_primary: source.theme_color_primary || '#646e78',
+        theme_color_secondary: source.theme_color_secondary || '#2f3a40',
+        theme_color_source: source.theme_color_source || 'manual',
+        is_active: true
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to duplicate film:', error);
+      setFilmSaveStatus(`Could not duplicate film: ${error.message}`, true);
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(data.id);
+    setFilmDirtyState(false);
+    setFilmSaveStatus('Film duplicated.');
+  }
+
+  async function deleteFilm() {
+    const film = FILMS.find((item) => item.id === appState.selectedFilmId);
+    if (!film) {
+      alert('Select a film first.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete ${film.title}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    const { error } = await supabaseClient
+      .from('films')
+      .delete()
+      .eq('id', film.id);
+
+    if (error) {
+      console.error('Failed to delete film:', error);
+      setFilmSaveStatus(`Could not delete film: ${error.message}`, true);
+      return;
+    }
+
+    clearFilmCaches();
+    await refreshFilmManager(null);
+    setFilmDirtyState(false);
+    setFilmSaveStatus('Film deleted.');
+  }
+
+  async function refreshFilmManager(preferredFilmId = appState.selectedFilmId) {
+    await fetchFilms();
+
+    appState.selectedFilmId =
+      preferredFilmId ||
+      FILMS[0]?.id ||
+      null;
+
+    renderFilmList();
+    renderFilmDetails();
+    renderPosterPreview();
+    setFilmDirtyState(false);
+  }
+
+  async function initializeFilmManager() {
+    const session = await waitForSession();
+
+    if (!session) {
+      setAuthenticatedUi(null);
+      return;
+    }
+
+    setAuthenticatedUi(session);
+    appState.currentSession = session;
+    applyNightModePreference(readNightModePreference(session));
+    await refreshFilmManager();
+  }
+
+  async function initializePage() {
+    ui.signInButton.addEventListener('click', handleSignIn);
+    ui.signOutButton.addEventListener('click', handleSignOut);
+    ui.nightModeToggle.addEventListener('change', handleNightModeToggle);
+    ui.createFilmButton.addEventListener('click', createFilm);
+    ui.saveFilmButton.addEventListener('click', saveFilmDetails);
+    ui.duplicateFilmButton.addEventListener('click', duplicateFilm);
+    ui.deleteFilmButton.addEventListener('click', deleteFilm);
+    ui.cancelFilmEditButton.addEventListener('click', cancelFilmEdit);
+    ui.sampleThemeButton.addEventListener('click', sampleThemeColoursFromPoster);
+    ui.swapThemeColoursButton.addEventListener('click', swapThemeColours);
+    [
+      ui.posterPreviewSm,
+      ui.posterPreviewMd,
+      ui.posterPreviewLg
+    ].forEach((image) => {
+      if (!image) return;
+
+      image.addEventListener('error', () => {
+        image.style.opacity = '0.22';
+      });
+
+      image.addEventListener('load', () => {
+        image.style.opacity = '1';
+      });
+    });
+
+    if (ui.filmTitleInput) {
+      ui.filmTitleInput.addEventListener('input', renderPosterPreview);
+    }
+
+    if (ui.filmPosterUrlInput) {
+      ui.filmPosterUrlInput.addEventListener('change', renderPosterPreview);
+      ui.filmPosterUrlInput.addEventListener('blur', renderPosterPreview);
+    }
+
+    [
+      ui.filmTitleInput,
+      ui.filmSynopsisInput,
+      ...ui.filmAdvisoryChecks,
+      ...ui.filmAdvisoryTexts,
+      ...ui.filmTestimonialChecks,
+      ...ui.filmTestimonialTexts,
+      ui.filmPosterUrlInput,
+      ui.filmThemePrimaryInput,
+      ui.filmThemeSecondaryInput,
+      ui.filmActiveCheckbox,
+      ...ui.filmAccessibilityChecks,
+      ...ui.filmAccessibilityTexts
+    ].forEach((input) => {
+      if (!input) return;
+
+      input.addEventListener('input', () => {
+        setFilmDirtyState(true);
+      });
+
+      input.addEventListener('change', () => {
+        setFilmDirtyState(true);
+      });
+    });
+
+    ui.filmAccessibilityTexts.forEach((textInput) => {
+      if (!textInput) return;
+
+      textInput.addEventListener('input', refreshAccessibilityCheckboxStates);
+      textInput.addEventListener('change', refreshAccessibilityCheckboxStates);
+    });
+
+    ui.filmAdvisoryTexts.forEach((textInput) => {
+      if (!textInput) return;
+
+      textInput.addEventListener('input', () => {
+        refreshMessageCheckboxStates(ui.filmAdvisoryTexts, ui.filmAdvisoryChecks);
+      });
+
+      textInput.addEventListener('change', () => {
+        refreshMessageCheckboxStates(ui.filmAdvisoryTexts, ui.filmAdvisoryChecks);
+      });
+    });
+
+    ui.filmTestimonialTexts.forEach((textInput) => {
+      if (!textInput) return;
+
+      textInput.addEventListener('input', () => {
+        refreshMessageCheckboxStates(ui.filmTestimonialTexts, ui.filmTestimonialChecks);
+      });
+
+      textInput.addEventListener('change', () => {
+        refreshMessageCheckboxStates(ui.filmTestimonialTexts, ui.filmTestimonialChecks);
+      });
+    });
+
+    ui.passwordInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    ui.emailInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    window.addEventListener('beforeunload', (event) => {
+      if (!appState.isDirty) return;
+
+      event.preventDefault();
+      event.returnValue = '';
+    });
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setAuthenticatedUi(session);
+    });
+
+    await initializeFilmManager();
+  }
+
+  document.addEventListener('DOMContentLoaded', initializePage);
+</script>
+
+</body>
+</html>

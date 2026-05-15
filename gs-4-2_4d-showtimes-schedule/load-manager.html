@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>VAQ 4D Load Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./admin.css?v=1">
+</head>
+
+<body>
+
+<div id="auth-panel" class="panel" style="max-width:520px; margin:0 auto 16px;">
+  <h2>Sign In</h2>
+  <p style="color:var(--text-soft);">Use your authorised 4D Showtimes admin login.</p>
+
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Email</span>
+    <input id="email-input" type="email" autocomplete="username">
+  </label>
+
+  <label style="display:block; margin-bottom:12px;">
+    <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Password</span>
+    <input id="password-input" type="password" autocomplete="current-password">
+  </label>
+
+  <button id="sign-in-button" class="primary" type="button" style="width:100%; margin-bottom:10px;">Sign In</button>
+  <p id="auth-message" style="margin:0; color:var(--text-soft);">Please sign in.</p>
+</div>
+
+<div id="app-shell" style="display:none;">
+
+  <div class="load-manager-top-grid">
+
+    <!-- A — Header -->
+    <div class="panel header">
+      <div>
+        <h1>4D Load Manager</h1>
+        <p id="session-text">Signed in as: Admin User</p>
+      </div>
+      <div class="inline-action-row">
+        <a class="button-link" href="./admin.html">
+          <button class="neutral" type="button">← Back to Calendar</button>
+        </a>
+      </div>
+    </div>
+
+    <!-- B — Load List -->
+    <div class="panel">
+      <h2>Loads</h2>
+      <p style="color:var(--text-soft);">Select a load template to review or edit its showtimes.</p>
+      <div id="load-list">
+        <p style="color:var(--text-soft);">Loading loads...</p>
+      </div>
+      <button id="create-load-button" class="purple" type="button">+ Create New Load</button>
+    </div>
+
+  </div>
+
+  <div class="load-manager-lower-grid">
+
+    <div class="load-manager-lower-left">
+      <!-- C — Load Details -->
+      <div class="panel">
+        <h2>Load Details</h2>
+        <p id="default-lock-note" class="default-lock-note" hidden>
+          🔒 This is a default load. Duplicate it for safer changes, or check “Edit Default” to intentionally modify it.
+        </p>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Load Name</span>
+          <input id="load-name-input" type="text" placeholder="Example: Green Load">
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">
+            Load Type <span id="load-default-lock-icon" title="Default load is locked">🔒</span>
+          </span>
+
+          <select id="load-kind-select">
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="red">Red</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <label class="default-edit-row">
+          <input id="edit-default-checkbox" type="checkbox">
+          <span>Edit Default</span>
+        </label>
+        <label style="display:block; margin-bottom:12px;">
+          <span style="display:block; font-weight:bold; margin-bottom:6px; color:var(--text-soft);">Display Colour</span>
+          <div class="color-row">
+            <input id="load-color-input" type="color" value="#7d9b2d">
+            <span id="load-color-preview" class="color-preview">#7d9b2d</span>
+          </div>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <input id="load-active-checkbox" type="checkbox" checked>
+          <span>Active / available in scheduler</span>
+        </label>
+        <button id="save-load-button" class="neutral" type="button">
+          Save Load
+        </button>
+        <button id="duplicate-load-inline-button" class="neutral mobile-inline-action" type="button">
+          Duplicate Load
+        </button>
+      </div>
+    </div>
+
+    <div class="load-manager-lower-right">
+      <!-- D — Template Showtime Editor -->
+      <div class="panel">
+        <h2>Template Showtimes</h2>
+        <p style="color:var(--text-soft);">
+          These template times are copied into a date when this load is applied. Changes save automatically after editing.
+        </p>
+        <button id="save-load-times-button" class="neutral" type="button">
+          Save Pending Showtimes
+        </button>
+        <button id="add-load-time-top-button" class="neutral" type="button">
+          + Add Showtime
+        </button>
+        <div id="load-times-container">
+          <p style="color:var(--text-soft);">Select a load to edit showtimes.</p>
+        </div>
+        <button id="add-load-time-button" class="neutral" type="button">
+          + Add Showtime
+        </button>
+      </div>
+
+     <!-- E — Actions -->
+      <div class="panel actions-panel">
+        <h2>Actions</h2>
+        <div class="inline-action-row">
+          <button id="duplicate-load-button" class="neutral" type="button">Duplicate Load</button>
+          <button id="delete-load-button" class="danger" type="button">Delete Load</button>
+          <label class="theme-toggle-control" title="Toggle Night Mode">
+            <span class="theme-toggle-label">Night Mode</span>
+            <input id="night-mode-toggle" type="checkbox" aria-label="Night Mode">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+  </div>  
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ovhnttstfllvucpycuku.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_g7rnhI-o4n9TAQueJSEJXA_iDdtlcUR';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'vaq_4d_admin_auth'
+    }
+  });
+
+  const DEFAULT_SHOWTIME_INTERVAL_MINUTES = 20;
+
+  const CACHE_TTL_MS = 10 * 60 * 1000;
+
+  function readCache(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      const isFresh = Date.now() - parsed.savedAt < CACHE_TTL_MS;
+
+      return isFresh ? parsed.value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeCache(key, value) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          savedAt: Date.now(),
+          value
+        })
+      );
+    } catch {
+      // Ignore cache write failures.
+    }
+  }
+
+  function clearLoadCaches(loadId = '') {
+    localStorage.removeItem('vaq_4d_load_templates');
+
+    if (loadId) {
+      localStorage.removeItem(`vaq_4d_load_template_times_${loadId}`);
+    }
+  }
+
+  function updateLoadColorPreview() {
+    if (!ui.loadColorPreview || !ui.loadColorInput) return;
+
+    ui.loadColorPreview.textContent = ui.loadColorInput.value;
+    ui.loadColorPreview.style.background = ui.loadColorInput.value;
+    ui.loadColorPreview.style.color = '#ffffff';
+  }
+
+  let LOAD_TEMPLATES = [];
+  let LOAD_TEMPLATE_TIMES = [];
+
+  const appState = {
+    selectedLoadId: null,
+    editDefaultLoad: false,
+    currentSession: null
+  };
+
+  const ui = {
+    authPanel: document.getElementById('auth-panel'),
+    appShell: document.getElementById('app-shell'),
+    emailInput: document.getElementById('email-input'),
+    passwordInput: document.getElementById('password-input'),
+    signInButton: document.getElementById('sign-in-button'),
+    /* signOutButton: document.getElementById('sign-out-button'), */
+    nightModeToggle: document.getElementById('night-mode-toggle'),
+    authMessage: document.getElementById('auth-message'),
+    sessionText: document.getElementById('session-text'),
+
+    loadList: document.getElementById('load-list'),
+    createLoadButton: document.getElementById('create-load-button'),
+
+    loadNameInput: document.getElementById('load-name-input'),
+    loadKindSelect: document.getElementById('load-kind-select'),
+    defaultLockNote: document.getElementById('default-lock-note'),
+    editDefaultCheckbox: document.getElementById('edit-default-checkbox'),
+    loadDefaultLockIcon: document.getElementById('load-default-lock-icon'),
+    loadColorInput: document.getElementById('load-color-input'),
+    loadColorPreview: document.getElementById('load-color-preview'),
+    loadActiveCheckbox: document.getElementById('load-active-checkbox'),
+    saveLoadButton: document.getElementById('save-load-button'),
+    saveLoadTimesButton: document.getElementById('save-load-times-button'),
+
+    loadTimesContainer: document.getElementById('load-times-container'),
+    addLoadTimeTopButton: document.getElementById('add-load-time-top-button'),
+    addLoadTimeButton: document.getElementById('add-load-time-button'),
+
+    duplicateLoadButton: document.getElementById('duplicate-load-button'),
+    duplicateLoadInlineButton: document.getElementById('duplicate-load-inline-button'),
+    deleteLoadButton: document.getElementById('delete-load-button')
+  };
+
+
+  function getUserSessionKey(session, suffix) {
+    const userKey = session?.user?.id || session?.user?.email || 'unknown-user';
+    return `vaq_4d_admin_${userKey}_${suffix}`;
+  }
+
+  function readNightModePreference(session) {
+    return localStorage.getItem(getUserSessionKey(session, 'night_mode')) === 'true';
+  }
+
+  function writeNightModePreference(session, isEnabled) {
+    if (!session) return;
+    localStorage.setItem(getUserSessionKey(session, 'night_mode'), String(isEnabled));
+  }
+
+  function applyNightModePreference(isEnabled) {
+    document.body.classList.toggle('theme-night', !!isEnabled);
+
+    if (ui.nightModeToggle) {
+      ui.nightModeToggle.checked = !!isEnabled;
+    }
+  }
+
+  function handleNightModeToggle() {
+    const isEnabled = !!ui.nightModeToggle?.checked;
+    applyNightModePreference(isEnabled);
+    writeNightModePreference(appState.currentSession, isEnabled);
+  }
+
+  function setAuthenticatedUi(session) {
+    const isAuthed = !!session;
+
+    ui.authPanel.style.display = isAuthed ? 'none' : 'block';
+    ui.appShell.style.display = isAuthed ? 'block' : 'none';
+
+    if (session) {
+      ui.sessionText.textContent = `Signed in as: ${session.user.email}`;
+    }
+  }
+
+  async function waitForSession(maxAttempts = 12, delayMs = 250) {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error('Session check failed:', error);
+        return null;
+      }
+
+      if (data?.session) {
+        return data.session;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    return null;
+  }
+
+  async function handleSignIn() {
+    const email = ui.emailInput.value.trim();
+    const password = ui.passwordInput.value;
+
+    if (!email || !password) {
+      ui.authMessage.textContent = 'Enter your email and password.';
+      return;
+    }
+
+    ui.signInButton.disabled = true;
+    ui.authMessage.textContent = 'Signing in...';
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    ui.signInButton.disabled = false;
+
+    if (error) {
+      ui.authMessage.textContent = `Sign-in failed: ${error.message}`;
+      return;
+    }
+
+    ui.authMessage.textContent = 'Sign-in successful.';
+    await initializeLoadManager();
+  }
+
+  async function handleSignOut() {
+    await supabaseClient.auth.signOut();
+
+    LOAD_TEMPLATES = [];
+    LOAD_TEMPLATE_TIMES = [];
+    appState.selectedLoadId = null;
+
+    ui.passwordInput.value = '';
+    ui.authMessage.textContent = 'Signed out.';
+    setAuthenticatedUi(null);
+  }
+
+  async function fetchLoads() {
+    const cachedLoads = readCache('vaq_4d_load_templates');
+    if (cachedLoads) {
+      LOAD_TEMPLATES = cachedLoads;
+    }
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .select('id, name, load_kind, display_color, is_active, is_system_default, created_at, updated_at')
+      .order('is_system_default', { ascending: false })
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch load templates:', error);
+      LOAD_TEMPLATES = [];
+      ui.loadList.innerHTML = `<p style="color:#a14f17;">Could not load templates: ${error.message}</p>`;
+      return;
+    }
+
+    LOAD_TEMPLATES = data || [];
+
+    writeCache('vaq_4d_load_templates', LOAD_TEMPLATES);
+
+  }
+
+  async function fetchLoadTimes(loadId) {
+    
+    if (!loadId) {
+      LOAD_TEMPLATE_TIMES = [];
+      return;
+    }
+
+    const cacheKey = `vaq_4d_load_template_times_${loadId}`;
+    const cachedTimes = readCache(cacheKey);
+
+    if (cachedTimes) {
+      LOAD_TEMPLATE_TIMES = cachedTimes;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('load_template_times')
+      .select('id, load_template_id, show_time, sort_order, is_after_hours')
+      .eq('load_template_id', loadId)
+      .order('show_time', { ascending: true });
+
+    if (error) {
+      console.error('Failed to fetch load template times:', error);
+      LOAD_TEMPLATE_TIMES = [];
+      return;
+    }
+
+    LOAD_TEMPLATE_TIMES = data || [];
+
+    writeCache(cacheKey, LOAD_TEMPLATE_TIMES);
+
+  }
+
+  function sortLoadTemplateTimes() {
+    LOAD_TEMPLATE_TIMES.sort((a, b) => {
+      return String(a.show_time || '').localeCompare(String(b.show_time || ''));
+    });
+  }
+
+  function getLoadButtonColor(load) {
+    if (load.load_kind === 'green') return '#7d9b2d';
+    if (load.load_kind === 'yellow') return '#f3bc43';
+    if (load.load_kind === 'red') return '#c73232';
+
+    return load.display_color || '#646e78';
+  }
+
+  function getSelectedLoad() {
+    return LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId) || null;
+  }
+
+  function canModifySelectedLoad() {
+    const load = getSelectedLoad();
+
+    if (!load) return false;
+    if (!load.is_system_default) return true;
+
+    return appState.editDefaultLoad;
+  }
+
+  function warnLockedDefaultLoad() {
+    alert('This default load is locked. Check “Edit Default” first, or duplicate the load for safer changes.');
+  }
+
+  function updateDefaultLoadLockState() {
+    const load = getSelectedLoad();
+    const isDefaultLoad = !!load?.is_system_default;
+    const canEditLoad = !isDefaultLoad || appState.editDefaultLoad;
+    const fixedColor = getFixedLoadColorByKind(ui.loadKindSelect.value);
+
+    if (ui.editDefaultCheckbox) {
+      ui.editDefaultCheckbox.checked = appState.editDefaultLoad;
+      ui.editDefaultCheckbox.disabled = !isDefaultLoad;
+    }
+
+    if (ui.defaultLockNote) {
+      ui.defaultLockNote.hidden = !isDefaultLoad || appState.editDefaultLoad;
+    }
+
+    if (ui.loadDefaultLockIcon) {
+      ui.loadDefaultLockIcon.hidden = !isDefaultLoad;
+      ui.loadDefaultLockIcon.textContent = canEditLoad ? '🔓' : '🔒';
+      ui.loadDefaultLockIcon.title = canEditLoad
+        ? 'Default load editing is unlocked'
+        : 'Default load is locked';
+    }
+
+    if (!load) {
+      ui.addLoadTimeTopButton.disabled = true;
+      ui.addLoadTimeButton.disabled = true;
+      ui.saveLoadTimesButton.disabled = true;
+      return;
+    }
+
+    ui.saveLoadTimesButton.disabled = !canEditLoad;
+
+    ui.loadNameInput.disabled = !canEditLoad;
+    ui.loadKindSelect.disabled = !canEditLoad;
+    ui.loadColorInput.disabled = !canEditLoad || !!fixedColor;
+    ui.loadActiveCheckbox.disabled = !canEditLoad;
+    ui.saveLoadButton.disabled = !canEditLoad;
+
+    ui.addLoadTimeTopButton.disabled = !canEditLoad;
+    ui.addLoadTimeButton.disabled = !canEditLoad;
+  }
+
+  function getFixedLoadColorByKind(loadKind) {
+    const colorByKind = {
+      green: '#7d9b2d',
+      red: '#c73232',
+      yellow: '#f3bc43'
+    };
+
+    return colorByKind[loadKind] || '';
+  }
+
+  function renderLoadList() {
+    ui.loadList.innerHTML = '';
+
+    if (!LOAD_TEMPLATES.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.textContent = 'No loads found.';
+      ui.loadList.appendChild(empty);
+      return;
+    }
+
+    LOAD_TEMPLATES.forEach((load) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      const buttonColor = getLoadButtonColor(load);
+      const isSelected = load.id === appState.selectedLoadId;
+
+      button.className = [
+        'load-button',
+        load.is_system_default ? 'is-system-default' : '',
+        isSelected && load.is_system_default ? 'is-selected-default' : ''
+      ].filter(Boolean).join(' ');
+      button.style.background = buttonColor;
+      button.style.color = '#ffffff';
+      button.style.margin = '0 8px 8px 0';
+      button.style.opacity = isSelected ? '1' : '0.72';
+      button.style.boxShadow = isSelected ? 'inset 0 0 0 3px rgba(255,255,255,0.45)' : 'none';
+      button.textContent = load.name;
+
+      button.addEventListener('click', async () => {
+        appState.selectedLoadId = load.id;
+        appState.editDefaultLoad = false;
+        await fetchLoadTimes(load.id);
+        renderLoadList();
+        renderLoadDetails();
+        renderLoadTimes();
+      });
+
+      ui.loadList.appendChild(button);
+    });
+  }
+
+  function renderLoadDetails() {
+    const load = LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId);
+
+    if (!load) {
+      ui.loadNameInput.value = '';
+      ui.loadKindSelect.value = 'custom';
+      ui.loadColorInput.value = '#646e78';
+      ui.loadColorInput.disabled = false;
+      ui.loadActiveCheckbox.checked = true;
+
+      updateLoadColorPreview();
+      updateDefaultLoadLockState();
+      return;
+    }
+
+    ui.loadNameInput.value = load.name || '';
+    ui.loadKindSelect.value = ['green', 'yellow', 'red', 'custom'].includes(load.load_kind)
+      ? load.load_kind
+      : 'custom';
+    const fixedColor = getFixedLoadColorByKind(ui.loadKindSelect.value);
+
+    ui.loadColorInput.value = fixedColor || load.display_color || '#646e78';
+    ui.loadColorInput.disabled = !!fixedColor;
+    ui.loadActiveCheckbox.checked = !!load.is_active;
+
+    updateLoadColorPreview();
+    updateDefaultLoadLockState();
+  }
+
+  function getTimePartsFromTimeString(timeString) {
+    if (!timeString) {
+      return { hour12: '10', minute: '30', ampm: 'AM' };
+    }
+
+    const cleanTime = String(timeString).slice(0, 5);
+    const [hourRaw, minuteRaw] = cleanTime.split(':').map(Number);
+
+    if (Number.isNaN(hourRaw) || Number.isNaN(minuteRaw)) {
+      return { hour12: '10', minute: '30', ampm: 'AM' };
+    }
+
+    let hour = hourRaw;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+
+    hour = hour % 12;
+    if (hour === 0) hour = 12;
+
+    return {
+      hour12: String(hour),
+      minute: String(minuteRaw).padStart(2, '0'),
+      ampm
+    };
+  }
+
+  function buildTimeFrom12HourParts(hour12, minute, ampm) {
+    let hour = Number(hour12);
+    const mins = Number(minute);
+
+    if (
+      Number.isNaN(hour) ||
+      Number.isNaN(mins) ||
+      hour < 1 ||
+      hour > 12 ||
+      mins < 0 ||
+      mins > 59
+    ) {
+      return null;
+    }
+
+    if (ampm === 'AM') {
+      if (hour === 12) hour = 0;
+    } else if (ampm === 'PM') {
+      if (hour !== 12) hour += 12;
+    } else {
+      return null;
+    }
+
+    return `${String(hour).padStart(2, '0')}:${String(mins).padStart(2, '0')}:00`;
+  }
+
+  function createHourOptions(selectedValue) {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 1; i <= 12; i += 1) {
+      const option = document.createElement('option');
+      option.value = String(i);
+      option.textContent = String(i);
+      if (String(i) === String(selectedValue)) option.selected = true;
+      fragment.appendChild(option);
+    }
+
+    return fragment;
+  }
+
+  function createMinuteOptions(selectedValue) {
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < 60; i += 5) {
+      const value = String(i).padStart(2, '0');
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      if (value === String(selectedValue)) option.selected = true;
+      fragment.appendChild(option);
+    }
+
+    return fragment;
+  }
+
+  function formatTimeLabel(timeString) {
+    const parts = getTimePartsFromTimeString(timeString);
+    return `${parts.hour12}:${parts.minute} ${parts.ampm}`;
+  }
+
+  function setShowtimeRowState(rowEl, state, message = '') {
+    if (!rowEl) return;
+
+    const stateEl = rowEl.querySelector('.showtime-save-state');
+    if (!stateEl) return;
+
+    rowEl.classList.remove('is-saved', 'is-unsaved', 'is-saving', 'is-error');
+    stateEl.classList.remove('is-saved', 'is-unsaved', 'is-saving', 'is-error');
+
+    rowEl.classList.add(`is-${state}`);
+    stateEl.classList.add(`is-${state}`);
+
+    const labelByState = {
+      saved: 'Saved',
+      unsaved: 'Pending save',
+      saving: 'Saving…',
+      error: message || 'Save failed'
+    };
+
+    stateEl.textContent = labelByState[state] || '';
+  }
+
+  function scheduleShowtimeAutoSave(rowEl, saveHandler) {
+    if (!rowEl || typeof saveHandler !== 'function') return;
+
+    window.clearTimeout(rowEl.autoSaveTimer);
+
+    rowEl.autoSaveTimer = window.setTimeout(() => {
+      saveHandler();
+    }, 650);
+  }
+
+  function renderLoadTimes() {
+    ui.loadTimesContainer.innerHTML = '';
+
+    if (!appState.selectedLoadId) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.className = 'showtime-empty-state';
+      empty.textContent = 'Select a load to review or edit its template showtimes.';
+      ui.loadTimesContainer.appendChild(empty);
+      return;
+    }
+
+    const selectedLoad = getSelectedLoad();
+
+    if (selectedLoad?.is_system_default && !appState.editDefaultLoad) {
+      const locked = document.createElement('p');
+      locked.className = 'showtime-empty-state';
+      locked.textContent = 'Default load showtimes are locked. Check “Edit Default” in Load Details to make changes, or duplicate this load for safer edits.';
+      ui.loadTimesContainer.appendChild(locked);
+    }
+
+    if (!LOAD_TEMPLATE_TIMES.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--text-soft)';
+      empty.className = 'showtime-empty-state';
+      empty.textContent = 'This load has no showtimes yet. Use “+ Add Showtime” to create the first one.';
+      ui.loadTimesContainer.appendChild(empty);
+      return;
+    }
+
+    sortLoadTemplateTimes();
+
+    LOAD_TEMPLATE_TIMES.forEach((timeRow) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'showtime';
+      rowEl.dataset.timeId = timeRow.id;
+
+      const timeParts = getTimePartsFromTimeString(timeRow.show_time);
+
+      const leftWrap = document.createElement('div');
+      leftWrap.className = 'showtime-time-controls';
+
+      const hourSelect = document.createElement('select');
+      hourSelect.appendChild(createHourOptions(timeParts.hour12));
+
+      const minuteSelect = document.createElement('select');
+      minuteSelect.appendChild(createMinuteOptions(timeParts.minute));
+
+      const ampmSelect = document.createElement('select');
+      ['AM', 'PM'].forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        if (value === timeParts.ampm) option.selected = true;
+        ampmSelect.appendChild(option);
+      });
+
+      const previewText = document.createElement('span');
+      previewText.style.color = 'var(--text-soft)';
+      previewText.textContent = formatTimeLabel(timeRow.show_time);
+
+      const saveStateText = document.createElement('span');
+      saveStateText.className = 'showtime-save-state is-saved';
+      saveStateText.textContent = 'Saved';
+
+      function updatePreview() {
+        const builtTime = buildTimeFrom12HourParts(
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
+
+        previewText.textContent = builtTime ? formatTimeLabel(builtTime) : 'Invalid time';
+        setShowtimeRowState(rowEl, builtTime ? 'unsaved' : 'error', builtTime ? '' : 'Invalid time');
+      }
+
+      async function saveCurrentRow() {
+        const builtTime = buildTimeFrom12HourParts(
+          hourSelect.value,
+          minuteSelect.value,
+          ampmSelect.value
+        );
+
+        if (!builtTime) {
+          setShowtimeRowState(rowEl, 'error', 'Invalid time');
+          return false;
+        }
+
+        setShowtimeRowState(rowEl, 'saving');
+
+        const result = await updateLoadTime(timeRow.id, builtTime, { silent: true });
+
+        const refreshedRow = ui.loadTimesContainer.querySelector(
+          `.showtime[data-time-id="${timeRow.id}"]`
+        );
+
+        if (result?.ok) {
+          setShowtimeRowState(refreshedRow || rowEl, 'saved');
+          return true;
+        }
+
+        setShowtimeRowState(
+          refreshedRow || rowEl,
+          'error',
+          result?.message || 'Could not save'
+        );
+
+        return false;
+      }
+
+      [hourSelect, minuteSelect, ampmSelect].forEach((selectEl) => {
+        selectEl.addEventListener('change', () => {
+          updatePreview();
+          scheduleShowtimeAutoSave(rowEl, saveCurrentRow);
+        });
+      });
+
+      leftWrap.appendChild(hourSelect);
+      leftWrap.appendChild(minuteSelect);
+      leftWrap.appendChild(ampmSelect);
+      leftWrap.appendChild(previewText);
+      leftWrap.appendChild(saveStateText);
+
+      if (timeRow.is_after_hours) {
+        const badge = document.createElement('span');
+        badge.className = 'showtime-badge';
+        badge.textContent = 'After-hours';
+        leftWrap.appendChild(badge);
+      }
+
+      const actionsWrap = document.createElement('div');
+      actionsWrap.className = 'showtime-actions';
+
+      const saveButton = document.createElement('button');
+      saveButton.className = 'showtime-save-now-button';
+      saveButton.type = 'button';
+      saveButton.textContent = 'Save Now';
+      saveButton.addEventListener('click', async () => {
+        window.clearTimeout(rowEl.autoSaveTimer);
+        await saveCurrentRow();
+      });
+
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'danger';
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', async () => {
+        const confirmed = window.confirm('Delete this showtime from the load?');
+        if (!confirmed) return;
+
+        rowEl.style.maxHeight = `${rowEl.scrollHeight}px`;
+
+        requestAnimationFrame(() => {
+          rowEl.classList.add('is-deleting');
+        });
+
+        window.setTimeout(async () => {
+          const deleted = await deleteLoadTime(timeRow.id, { skipConfirm: true });
+
+          if (!deleted) {
+            rowEl.classList.remove('is-deleting');
+            rowEl.style.maxHeight = '';
+            setShowtimeRowState(rowEl, 'error', 'Could not delete');
+          }
+        }, 230);
+      });
+
+      actionsWrap.appendChild(saveButton);
+      actionsWrap.appendChild(deleteButton);
+
+      rowEl.appendChild(leftWrap);
+      rowEl.appendChild(actionsWrap);
+
+      ui.loadTimesContainer.appendChild(rowEl);
+    });
+  }
+
+  async function saveLoadDetails() {
+    const loadId = appState.selectedLoadId;
+
+    if (!loadId) {
+      alert('Select a load first.');
+      return;
+    }
+
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return;
+    }
+
+    const payload = {
+      name: ui.loadNameInput.value.trim(),
+      load_kind: ui.loadKindSelect.value,
+      display_color: getFixedLoadColorByKind(ui.loadKindSelect.value) || ui.loadColorInput.value,
+      is_active: ui.loadActiveCheckbox.checked,
+      updated_at: new Date().toISOString()
+    };
+
+    if (!payload.name) {
+      alert('Load name is required.');
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('load_templates')
+      .update(payload)
+      .eq('id', loadId);
+
+    if (error) {
+      console.error('Failed to save load:', error);
+      alert(`Could not save load: ${error.message}`);
+      return;
+    }
+
+    clearLoadCaches(loadId);
+    await refreshLoadManager(loadId);
+    alert('Load details saved.');
+  }
+
+  async function saveAllShowtimes() {
+    const rows = ui.loadTimesContainer.querySelectorAll('.showtime');
+
+    if (!rows.length) return;
+
+    let savedCount = 0;
+    let errorCount = 0;
+
+    for (const rowEl of rows) {
+      const stateEl = rowEl.querySelector('.showtime-save-state');
+
+      if (!stateEl || !stateEl.classList.contains('is-unsaved')) {
+        continue;
+      }
+
+      const selects = rowEl.querySelectorAll('select');
+
+      const hour = selects[0]?.value;
+      const minute = selects[1]?.value;
+      const ampm = selects[2]?.value;
+
+      const builtTime = buildTimeFrom12HourParts(hour, minute, ampm);
+
+      if (!builtTime) {
+        setShowtimeRowState(rowEl, 'error', 'Invalid time');
+        errorCount++;
+        continue;
+      }
+
+      setShowtimeRowState(rowEl, 'saving');
+
+      const timeId = rowEl.dataset.timeId;
+      const result = await updateLoadTime(timeId, builtTime, { silent: true });
+
+      if (result?.ok) {
+        setShowtimeRowState(rowEl, 'saved');
+        savedCount++;
+      } else {
+        setShowtimeRowState(rowEl, 'error', result?.message || 'Could not save');
+        errorCount++;
+      }
+    }
+
+    if (errorCount) {
+      alert(`Saved ${savedCount} pending showtimes. ${errorCount} still need attention.`);
+    } else if (savedCount) {
+      alert('Pending showtimes saved.');
+    } else {
+      alert('There are no pending showtime changes to save.');
+    }
+  }
+
+  async function updateLoadTime(timeId, showTime, options = {}) {
+    if (!timeId || !showTime) return false;
+
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return false;
+    }
+
+    const normalizedTime = showTime.length === 5 ? `${showTime}:00` : showTime;
+    const isAfterHours = normalizedTime >= '17:00:00';
+
+    const duplicateTime = LOAD_TEMPLATE_TIMES.some((row) => {
+      return row.id !== timeId && row.show_time === normalizedTime;
+    });
+
+    if (duplicateTime) {
+      if (!options.silent) {
+        alert('That showtime already exists in this load. Please choose a different time.');
+      }
+
+      return {
+        ok: false,
+        reason: 'duplicate',
+        message: 'Already exists'
+      };
+    }
+
+    const { error } = await supabaseClient
+      .from('load_template_times')
+      .update({
+        show_time: normalizedTime,
+        is_after_hours: isAfterHours
+      })
+      .eq('id', timeId);
+
+    if (error) {
+      console.error('Failed to update load time:', error);
+
+      if (error.code === '23505') {
+        if (!options.silent) {
+          alert('That showtime already exists in this load. Please choose a different time.');
+        }
+
+        return {
+          ok: false,
+          reason: 'duplicate',
+          message: 'Already exists'
+        };
+      }
+
+      if (!options.silent) {
+        alert(`Could not update time: ${error.message}`);
+      }
+
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'Could not save'
+      };
+    }
+
+    const updatedRow = LOAD_TEMPLATE_TIMES.find((row) => row.id === timeId);
+
+    if (updatedRow) {
+      updatedRow.show_time = normalizedTime;
+      updatedRow.is_after_hours = isAfterHours;
+    }
+
+    sortLoadTemplateTimes();
+
+    localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
+    writeCache(`vaq_4d_load_template_times_${appState.selectedLoadId}`, LOAD_TEMPLATE_TIMES);
+
+    renderLoadTimes();
+
+    requestAnimationFrame(() => {
+      const movedRow = ui.loadTimesContainer.querySelector(
+        `.showtime[data-time-id="${timeId}"]`
+      );
+
+      if (!movedRow) return;
+
+      movedRow.classList.add('is-reordered');
+      movedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      window.setTimeout(() => {
+        movedRow.classList.remove('is-reordered');
+      }, 950);
+    });
+
+    return {
+      ok: true
+    };
+  }
+
+  async function deleteLoadTime(timeId, options = {}) {
+    if (!timeId) return;
+
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return;
+    }
+
+    if (!options.skipConfirm) {
+      const confirmed = window.confirm('Delete this showtime from the load?');
+      if (!confirmed) return false;
+    }
+
+    const { error } = await supabaseClient
+      .from('load_template_times')
+      .delete()
+      .eq('id', timeId);
+
+    if (error) {
+      console.error('Failed to delete load time:', error);
+      alert(`Could not delete time: ${error.message}`);
+      return false;
+    }
+
+    LOAD_TEMPLATE_TIMES = LOAD_TEMPLATE_TIMES.filter((row) => row.id !== timeId);
+
+    localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
+    writeCache(`vaq_4d_load_template_times_${appState.selectedLoadId}`, LOAD_TEMPLATE_TIMES);
+
+    renderLoadTimes();
+    return true;
+  }
+
+  async function addLoadTime() {
+    if (!appState.selectedLoadId) {
+      alert('Select a load first.');
+      return;
+    }
+
+    if (!canModifySelectedLoad()) {
+      warnLockedDefaultLoad();
+      return;
+    }
+
+    const existingRows = LOAD_TEMPLATE_TIMES
+      .slice()
+      .sort((a, b) => String(a.show_time).localeCompare(String(b.show_time)));
+
+    let defaultTime = '10:30:00';
+
+    if (existingRows.length) {
+      const lastTime = String(existingRows[existingRows.length - 1].show_time || '10:30:00').slice(0, 5);
+      const [hh, mm] = lastTime.split(':').map(Number);
+
+      if (!Number.isNaN(hh) && !Number.isNaN(mm)) {
+        const tempDate = new Date(2000, 0, 1, hh, mm);
+        tempDate.setMinutes(
+          tempDate.getMinutes() + DEFAULT_SHOWTIME_INTERVAL_MINUTES
+        );
+
+        defaultTime = `${String(tempDate.getHours()).padStart(2, '0')}:${String(tempDate.getMinutes()).padStart(2, '0')}:00`;
+      }
+    }
+
+    const nextSortOrder = (LOAD_TEMPLATE_TIMES.reduce((max, row) => {
+      const value = Number(row.sort_order);
+      return Number.isFinite(value) ? Math.max(max, value) : max;
+    }, 0) || 0) + 1;
+
+    const { data, error } = await supabaseClient
+      .from('load_template_times')
+      .insert({
+        load_template_id: appState.selectedLoadId,
+        show_time: defaultTime,
+        sort_order: nextSortOrder,
+        is_after_hours: defaultTime >= '17:00:00'
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to add load time:', error);
+      alert(`Could not add time: ${error.message}`);
+      return;
+    }
+
+    localStorage.removeItem(`vaq_4d_load_template_times_${appState.selectedLoadId}`);
+    await refreshLoadManager(appState.selectedLoadId);
+
+    requestAnimationFrame(() => {
+      const newestRow = ui.loadTimesContainer.querySelector(
+        `.showtime[data-time-id="${data.id}"]`
+      );
+
+      if (!newestRow) return;
+
+      newestRow.classList.add('showtime-new');
+      newestRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const firstSelect = newestRow.querySelector('select');
+      if (firstSelect) firstSelect.focus();
+
+      window.setTimeout(() => {
+        newestRow.classList.remove('showtime-new');
+      }, 2200);
+    });
+  }
+
+  async function createLoad() {
+    const name = window.prompt('Name for the new load:', 'New Custom Load');
+    if (!name) return;
+
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .insert({
+        name: name.trim(),
+        load_kind: 'custom',
+        display_color: '#7b5bbd',
+        is_active: true,
+        is_system_default: false
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to create load:', error);
+      alert(`Could not create load: ${error.message}`);
+      return;
+    }
+
+    clearLoadCaches();
+    await refreshLoadManager(data.id);
+  }
+
+  async function duplicateLoad() {
+    const source = LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId);
+    if (!source) {
+      alert('Select a load first.');
+      return;
+    }
+
+    const name = window.prompt('Name for duplicated load:', `${source.name} Copy`);
+    if (!name) return;
+
+    const { data, error } = await supabaseClient
+      .from('load_templates')
+      .insert({
+        name: name.trim(),
+        load_kind: 'custom',
+        display_color: source.display_color || '#646e78',
+        is_active: true,
+        is_system_default: false
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to duplicate load:', error);
+      alert(`Could not duplicate load: ${error.message}`);
+      return;
+    }
+
+    const copiedTimes = LOAD_TEMPLATE_TIMES.map((row) => {
+      const showTime = row.show_time || '10:30:00';
+
+      return {
+        load_template_id: data.id,
+        show_time: showTime,
+        sort_order: row.sort_order,
+        is_after_hours: row.is_after_hours ?? showTime >= '17:00:00'
+      };
+    });
+
+    if (copiedTimes.length) {
+      const timesResult = await supabaseClient
+        .from('load_template_times')
+        .insert(copiedTimes);
+
+      if (timesResult.error) {
+        console.error('Failed to copy load times:', timesResult.error);
+        alert(`Load duplicated, but times could not be copied: ${timesResult.error.message}`);
+      }
+    }
+
+    clearLoadCaches(data.id);
+    clearLoadCaches(appState.selectedLoadId);
+    await refreshLoadManager(data.id);
+  }
+
+  async function deleteLoad() {
+    const load = LOAD_TEMPLATES.find((item) => item.id === appState.selectedLoadId);
+    if (!load) {
+      alert('Select a load first.');
+      return;
+    }
+
+    if (load.is_system_default) {
+      alert('System default loads cannot be deleted. You can edit their times or duplicate them instead.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete ${load.name}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    const timesResult = await supabaseClient
+      .from('load_template_times')
+      .delete()
+      .eq('load_template_id', load.id);
+
+    if (timesResult.error) {
+      console.error('Failed to delete load times:', timesResult.error);
+      alert(`Could not delete load times: ${timesResult.error.message}`);
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from('load_templates')
+      .delete()
+      .eq('id', load.id);
+
+    if (error) {
+      console.error('Failed to delete load:', error);
+      alert(`Could not delete load: ${error.message}`);
+      return;
+    }
+
+    clearLoadCaches(load.id);
+    await refreshLoadManager(null);
+  }
+
+  async function refreshLoadManager(preferredLoadId = appState.selectedLoadId) {
+    try {
+      await fetchLoads();
+      appState.selectedLoadId =
+        preferredLoadId ||
+        LOAD_TEMPLATES[0]?.id ||
+        null;
+
+      await fetchLoadTimes(appState.selectedLoadId);
+
+      renderLoadList();
+      renderLoadDetails();
+      renderLoadTimes();
+      updateDefaultLoadLockState();
+
+    } catch (err) {
+      console.error('refreshLoadManager() failed:', err);
+      ui.loadList.innerHTML = `<p style="color:#a14f17;">Load Manager failed: ${err.message || err}</p>`;
+    }
+  }
+
+  async function initializeLoadManager() {
+    const session = await waitForSession();
+
+    if (!session) {
+      setAuthenticatedUi(null);
+      return;
+    }
+
+    setAuthenticatedUi(session);
+    appState.currentSession = session;
+    applyNightModePreference(readNightModePreference(session));
+    await refreshLoadManager();
+  }
+
+  async function initializePage() {
+    ui.signInButton.addEventListener('click', handleSignIn);
+    /* ui.signOutButton.addEventListener('click', handleSignOut); */
+    ui.nightModeToggle.addEventListener('change', handleNightModeToggle);
+    ui.saveLoadButton.addEventListener('click', saveLoadDetails);
+    ui.saveLoadTimesButton.addEventListener('click', saveAllShowtimes);
+    ui.addLoadTimeTopButton.addEventListener('click', addLoadTime);
+    ui.addLoadTimeButton.addEventListener('click', addLoadTime);
+    ui.createLoadButton.addEventListener('click', createLoad);
+    ui.duplicateLoadButton.addEventListener('click', duplicateLoad);
+    ui.duplicateLoadInlineButton.addEventListener('click', duplicateLoad);
+    ui.deleteLoadButton.addEventListener('click', deleteLoad);
+
+    ui.passwordInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    ui.emailInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSignIn();
+      }
+    });
+
+    ui.loadKindSelect.addEventListener('change', () => {
+      const fixedColor = getFixedLoadColorByKind(ui.loadKindSelect.value);
+
+      if (fixedColor) {
+        ui.loadColorInput.value = fixedColor;
+        ui.loadColorInput.disabled = true;
+      } else {
+        ui.loadColorInput.disabled = false;
+      }
+
+      updateLoadColorPreview();
+
+      const suggestedNameByKind = {
+        green: 'Green Load',
+        red: 'Red Load',
+        yellow: 'Yellow Load'
+      };
+
+      const currentName = ui.loadNameInput.value.trim();
+      const previousSuggestedNames = Object.values(suggestedNameByKind);
+
+      if (
+        suggestedNameByKind[ui.loadKindSelect.value] &&
+        (!currentName || previousSuggestedNames.includes(currentName))
+      ) {
+        ui.loadNameInput.value = suggestedNameByKind[ui.loadKindSelect.value];
+      }
+    });
+
+    ui.editDefaultCheckbox.addEventListener('change', () => {
+      appState.editDefaultLoad = ui.editDefaultCheckbox.checked;
+      updateDefaultLoadLockState();
+    });
+
+    ui.loadColorInput.addEventListener('input', updateLoadColorPreview);
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setAuthenticatedUi(session);
+    });
+    await initializeLoadManager();
+  }
+
+  document.addEventListener('DOMContentLoaded', initializePage);
+</script>
+
+</body>
+</html>
