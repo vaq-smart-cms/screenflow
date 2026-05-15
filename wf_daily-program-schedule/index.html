@@ -415,7 +415,7 @@
           start_minutes: parseTimeToMinutes(e.start_time),
           end_minutes: parseTimeToMinutes(e.end_time),
           location_name: locMap[e.location_key]?.display_name || e.location_key,
-          icon_path: `./assets/icons/${e.location_key}.svg`,
+          icon_path: `../gs-1-2_daily-program-schedule/program-schedule-full/assets/icons/${e.location_key}.svg`,
           hex_color: locMap[e.location_key]?.hex_color || '#446688'
         }))
         .sort((a, b) => a.start_minutes - b.start_minutes);
