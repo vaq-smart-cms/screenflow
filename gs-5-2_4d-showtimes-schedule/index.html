@@ -676,6 +676,127 @@
       ui.nextShowSeparator.hidden = !timeText;
     }
 
+    function getShowtimeGridLayout(showtimeCount) {
+      const layout = {
+        columnCount: 1,
+        rowsPerColumn: Math.max(1, showtimeCount),
+        fontSize: '82px',
+        columnGap: '0px',
+        rowGap: '24px'
+      };
+
+      if (showtimeCount <= 1) {
+        return {
+          ...layout,
+          fontSize: '92px',
+          rowGap: '0px'
+        };
+      }
+
+      if (showtimeCount === 2) {
+        return {
+          ...layout,
+          rowsPerColumn: 2,
+          fontSize: '88px',
+          rowGap: '30px'
+        };
+      }
+
+      if (showtimeCount === 3) {
+        return {
+          ...layout,
+          rowsPerColumn: 3,
+          fontSize: '82px',
+          rowGap: '26px'
+        };
+      }
+
+      if (showtimeCount === 4) {
+        return {
+          columnCount: 2,
+          rowsPerColumn: 2,
+          fontSize: '84px',
+          columnGap: '150px',
+          rowGap: '30px'
+        };
+      }
+
+      if (showtimeCount === 5 || showtimeCount === 6) {
+        return {
+          columnCount: 2,
+          rowsPerColumn: 3,
+          fontSize: '76px',
+          columnGap: '140px',
+          rowGap: '24px'
+        };
+      }
+
+      if (showtimeCount === 7 || showtimeCount === 8) {
+        return {
+          columnCount: 2,
+          rowsPerColumn: 4,
+          fontSize: '68px',
+          columnGap: '125px',
+          rowGap: '20px'
+        };
+      }
+
+      if (showtimeCount === 9) {
+        return {
+          columnCount: 3,
+          rowsPerColumn: 3,
+          fontSize: '68px',
+          columnGap: '100px',
+          rowGap: '20px'
+        };
+      }
+
+      if (showtimeCount <= 12) {
+        return {
+          columnCount: 3,
+          rowsPerColumn: 4,
+          fontSize: '60px',
+          columnGap: '84px',
+          rowGap: '17px'
+        };
+      }
+
+      if (showtimeCount <= 16) {
+        return {
+          columnCount: 4,
+          rowsPerColumn: 4,
+          fontSize: '58px',
+          columnGap: '64px',
+          rowGap: '16px'
+        };
+      }
+
+      return {
+        columnCount: 4,
+        rowsPerColumn: Math.ceil(showtimeCount / 4),
+        fontSize: '52px',
+        columnGap: '54px',
+        rowGap: '13px'
+      };
+    }
+
+    function applyShowtimeGridLayout(showtimeCount) {
+      const layout = getShowtimeGridLayout(showtimeCount);
+
+      ui.showtimesGrid.className = [
+        'showtimes-grid',
+        `showtimes-count-${showtimeCount}`,
+        `showtimes-columns-${layout.columnCount}`,
+        `showtimes-rows-${layout.rowsPerColumn}`
+      ].join(' ');
+
+      ui.showtimesGrid.style.setProperty('--showtime-column-gap', layout.columnGap);
+      ui.showtimesGrid.style.setProperty('--showtime-column-count', String(layout.columnCount));
+      ui.showtimesGrid.style.setProperty('--showtime-font-size', layout.fontSize);
+      ui.showtimesGrid.style.setProperty('--showtime-row-gap', layout.rowGap);
+      ui.showtimesGrid.style.setProperty('--rows-per-column', String(layout.rowsPerColumn));
+    }
+
     function renderShowtimes(data) {
       const previousPositions = captureShowtimePositions();
       const futureShowtimes = getFutureShowtimes(data.showtimes);
@@ -710,6 +831,7 @@
         state.showtimeElementsById.clear();
         state.visibleShowtimeIds.clear();
 
+        ui.showtimesGrid.className = 'showtimes-grid';
         ui.showtimesGrid.innerHTML = `
           <div class="showtimes-end-message">
             Shows have ended for today
@@ -723,27 +845,8 @@
       ui.signLayout.classList.remove('is-ended');
 
       const showtimeCount = futureShowtimes.length;
-      const rowsPerColumn = Math.max(1, Math.ceil(showtimeCount / 3));
 
-      ui.showtimesGrid.style.setProperty('--rows-per-column', String(rowsPerColumn));
-
-      if (showtimeCount <= 3) {
-        ui.showtimesGrid.style.setProperty('--showtime-font-size', '78px');
-        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '150px');
-        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '28px');
-      } else if (showtimeCount <= 5) {
-        ui.showtimesGrid.style.setProperty('--showtime-font-size', '70px');
-        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '130px');
-        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '24px');
-      } else if (showtimeCount <= 7) {
-        ui.showtimesGrid.style.setProperty('--showtime-font-size', '64px');
-        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '110px');
-        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '22px');
-      } else {
-        ui.showtimesGrid.style.setProperty('--showtime-font-size', '58px');
-        ui.showtimesGrid.style.setProperty('--showtime-column-gap', '82px');
-        ui.showtimesGrid.style.setProperty('--showtime-row-gap', '18px');
-      }
+      applyShowtimeGridLayout(showtimeCount);
       setNextShowTile('Next show', formatShowtime(futureShowtimes[0].show_at));
 
       const nextVisibleIds = new Set(futureShowtimes.map((showtime) => showtime.id));

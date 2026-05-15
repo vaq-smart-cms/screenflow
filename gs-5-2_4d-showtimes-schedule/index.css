@@ -40,8 +40,10 @@
   --poster-frame-width: 534px;
   --poster-frame-height: 758px;
 
-  --showtime-font-size: 64px;
-  --showtime-column-gap: 110px;
+  --rows-per-column: 3;
+  --showtime-column-count: 2;
+  --showtime-font-size: 72px;
+  --showtime-column-gap: 120px;
   --showtime-row-gap: 22px;
 
   --tile-height: 138px;
@@ -441,7 +443,7 @@ body {
   display: grid;
   grid-auto-columns: minmax(260px, auto);
   grid-auto-flow: column;
-  grid-template-rows: repeat(var(--rows-per-column, 3), auto);
+  grid-template-rows: repeat(var(--rows-per-column), max-content);
   justify-content: center;
   row-gap: var(--showtime-row-gap);
   width: 100%;
