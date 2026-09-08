@@ -16,7 +16,8 @@
       ],
       "adminUrl": "https://vaq-smart-cms.github.io/screenflow/admin.html",
       "documentationUrl": "knowledge-base/daily-pricing/",
-      "status": "live"
+      "status": "live",
+      "image": "assets/cms-daily-pricing.webp"
     },
     {
       "id": "daily-program-schedule",
@@ -30,7 +31,8 @@
       ],
       "adminUrl": "https://vaq-smart-cms.github.io/screenflow/gs-1-2_daily-program-schedule/admin.html",
       "documentationUrl": "knowledge-base/daily-program-schedule/",
-      "status": "live"
+      "status": "live",
+      "image": "assets/cms-program-schedule.webp"
     },
     {
       "id": "4d-showtimes",
@@ -44,7 +46,8 @@
       ],
       "adminUrl": "https://vaq-smart-cms.github.io/screenflow/gs-5-2_4d-showtimes-schedule/admin.html",
       "documentationUrl": "knowledge-base/4d-showtimes/",
-      "status": "live"
+      "status": "live",
+      "image": "assets/cms-4d-showtimes.webp"
     }
   ],
   "systems": [
@@ -71,7 +74,7 @@
       "service": "Supabase",
       "role": "Database + authentication backend",
       "organization": "Vancouver Aquarium digital signage projects",
-      "resource": "Company projects \u2014 authorised access required",
+      "resource": "Company projects — authorised access required",
       "description": "Provides the structured data, authentication and backend services used by the VAQ signage CMS applications. Staff must have permission to the appropriate Vancouver Aquarium Supabase projects.",
       "links": [
         {
@@ -85,7 +88,7 @@
       "service": "Kuusoft / NexSigns",
       "role": "Device + channel deployment",
       "organization": "Vancouver Aquarium signage deployment",
-      "resource": "OnePass / NexSigns \u2014 authorised access required",
+      "resource": "OnePass / NexSigns — authorised access required",
       "description": "Deploys web signage content to the physical Vancouver Aquarium digital signage players and screens. Staff must have approved access to the Vancouver Aquarium OnePass / NexSigns account.",
       "links": [
         {

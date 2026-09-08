@@ -40,39 +40,64 @@ function renderCmsLaunchpad(items) {
   }
 
   cmsLaunchpad.innerHTML = items.map(item => `
-    <article class="cms-card cms-card-${escapeResourceAttribute(item.status || 'live')}">
-      <div class="cms-card-head">
-        <span class="cms-eyebrow">${escapeResourceHtml(item.eyebrow || '')}</span>
-        <span class="cms-status">${escapeResourceHtml(resourceStatusLabel(item.status))}</span>
-      </div>
+    <article
+      class="cms-card cms-card-${escapeResourceAttribute(item.status || 'live')}"
+      data-cms-id="${escapeResourceAttribute(item.id || '')}"
+    >
+      ${renderCmsMedia(item)}
 
-      <h3>${escapeResourceHtml(item.name || '')}</h3>
+      <div class="cms-card-content">
+        <div class="cms-card-head">
+          <span class="cms-eyebrow">${escapeResourceHtml(item.eyebrow || '')}</span>
+          <span class="cms-status">${escapeResourceHtml(resourceStatusLabel(item.status))}</span>
+        </div>
 
-      <p class="cms-description">
-        ${escapeResourceHtml(item.description || '')}
-      </p>
+        <h3>${escapeResourceHtml(item.name || '')}</h3>
 
-      ${renderFlow(item.flow)}
+        <p class="cms-description">
+          ${escapeResourceHtml(item.description || '')}
+        </p>
 
-      <div class="cms-actions">
-        <a
-          class="resource-button resource-button-admin"
-          href="${escapeResourceAttribute(item.adminUrl || '#')}"
-          target="_blank"
-          rel="noopener"
-        >
-          Open Admin
-        </a>
+        ${renderFlow(item.flow)}
 
-        <a
-          class="resource-button resource-button-docs"
-          href="${escapeResourceAttribute(item.documentationUrl || '#')}"
-        >
-          Documentation
-        </a>
+        <div class="cms-actions">
+          <a
+            class="resource-button resource-button-admin"
+            href="${escapeResourceAttribute(item.adminUrl || '#')}"
+            target="_blank"
+            rel="noopener"
+          >
+            Open Admin
+          </a>
+
+          <a
+            class="resource-button resource-button-docs"
+            href="${escapeResourceAttribute(item.documentationUrl || '#')}"
+          >
+            Documentation
+          </a>
+        </div>
       </div>
     </article>
   `).join('');
+}
+
+function renderCmsMedia(item) {
+  if (!item || !item.image) {
+    return '';
+  }
+
+  return `
+    <div class="cms-card-media" aria-hidden="true">
+      <img
+        src="${escapeResourceAttribute(item.image)}"
+        alt=""
+        width="1200"
+        height="500"
+        decoding="async"
+      >
+    </div>
+  `;
 }
 
 function renderFlow(flow) {
