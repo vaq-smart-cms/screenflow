@@ -1842,7 +1842,29 @@
       }
     }
 
-  </style>
+      .top-header-actions {
+      display: inline-grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .top-header-actions > .top-sign-out-button {
+      justify-content: center;
+    }
+
+    .top-help-button {
+      background: var(--vaq-green);
+      border-color: var(--vaq-green-dark);
+      box-shadow: 0 2px 8px rgba(125, 155, 45, 0.18);
+      text-decoration: none;
+    }
+
+    .top-help-button:hover {
+      background: var(--vaq-green-dark);
+      border-color: var(--vaq-green-dark);
+    }
+</style>
 </head>
 <body>
   <div class="page-shell">
@@ -1852,7 +1874,10 @@
       <div class="header-auth-row">
         <div id="top-auth-group" class="top-auth-group" style="display:none">
           <div id="session-status" class="top-session-status"></div>
-          <button id="top-sign-out-button" type="button" class="top-sign-out-button"><span class="signout-x" aria-hidden="true">✖</span><span>Sign Out</span></button>
+          <div class="top-header-actions">
+            <a class="top-sign-out-button top-help-button" href="../control-room/knowledge-base/daily-program-schedule/">Help</a>
+            <button id="top-sign-out-button" type="button" class="top-sign-out-button"><span class="signout-x" aria-hidden="true">✖</span><span>Sign Out</span></button>
+          </div>
         </div>
       </div>
       <div class="page-title-block">

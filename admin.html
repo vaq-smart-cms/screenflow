@@ -574,6 +574,43 @@
       width: 128px;
     }
   }
+  .top-header-actions {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 10px;
+  }
+
+  .top-header-actions > * {
+    justify-content: center;
+  }
+
+  .top-help-button {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--green-dark);
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-height: 42px;
+    font: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+    background: var(--green);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(125, 155, 45, 0.18);
+    text-decoration: none;
+    transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  }
+
+  .top-help-button:hover {
+    background: var(--green-dark);
+    border-color: var(--green-dark);
+    transform: translateY(-1px);
+  }
+
+  #logoutBtnHeader[hidden] {
+    display: none;
+  }
 </style>
 
 </head>
@@ -589,7 +626,10 @@
         <p class="page-subtitle">Draft new prices, preview how they look, and publish them live to the digital signage.</p>
       </div>
       <div class="page-topbar-actions">
-        <button id="logoutBtnHeader" type="button">Sign Out</button>
+        <div class="top-header-actions">
+          <a class="top-help-button" href="control-room/knowledge-base/daily-pricing/">Help</a>
+          <button id="logoutBtnHeader" type="button" hidden>Sign Out</button>
+        </div>
         <div class="page-brand-lockup">
           <img src="assets/vaq-full-logo.svg" alt="Vancouver Aquarium" class="page-brand-logo page-brand-logo-header">
         </div>
@@ -793,12 +833,14 @@
   let livePricingData = cloneData(defaultPricingData);
 
   function showLoginScreen(message = "Not signed in.") {
+    document.getElementById("logoutBtnHeader").hidden = true;
     document.getElementById("loginScreen").style.display = "block";
     document.getElementById("adminApp").style.display = "none";
     document.getElementById("loginStatus").textContent = message;
   }
 
   function showAdminApp() {
+    document.getElementById("logoutBtnHeader").hidden = false;
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("adminApp").style.display = "block";
   }
